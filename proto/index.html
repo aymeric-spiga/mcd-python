@@ -1,0 +1,108 @@
+
+<!-- Author Aymeric Spiga LMD -->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="utf-8" />
+<title>MCD. Simple Python interface</title>
+<script language="JavaScript" type="text/JavaScript" src="martian_time.js"></script>
+</head>
+
+<body onload="DefaultDateValues();DefaultTimeValues();Convert2Ls();PlaceValues(0.,0.)">
+
+<!-- aussi possible: get a la place de post. pour avoir un beau lien -->
+
+<form name="calendar" action="./cgi-bin/mcdcgi.py" method="post">
+
+<table align="center" border="1" width="1200" bgcolor="#F5DEB3">
+<tr>
+<td align="center">
+<b>Step 1 : CHOOSE EARTH TIME</b><br />
+Year / Month / Day @ hh:mm:ss [UTC time]<br />
+<input type="text" size="3" name="year"> / <input type="text" size="1" name="month"> / <input type="text" size="1" name="day"> @
+<input type="text" size="1" name="hours">:<input type="text" size="1" name="minutes">:<input type="text" size="1" name="seconds"><br />
+<input type="button" value="SAVE CHANGES" onClick="Convert2Ls();" style="font-weight:bold"><br />
+</td>
+<td align="center">
+Earth Julian Date <input type="text" size="6" name="julian" readonly="readonly"><br />
+Martian year <input type="text" size="1" name="martianyear" readonly="readonly"> <br />
+Martian month <input type="text" size="1" name="martianmonth" readonly="readonly"> / 12<br />
+Martian sol <input type="text" size="2" name="sol" readonly="readonly"> / 669
+</td>
+</tr>
+<tr>
+<td align="center">
+<b>Step 2 : CHOOSE COORDINATES ON MARS</b><br />
+<ul>
+<li>Latitude   
+<input type="radio" name="islatfree" value="0" checked> Value: <input type="text" size="2" name="latitude" value="0.">
+<input type="radio" name="islatfree" value="1"> All [-90 ; 90]
+</li>
+<li>Longitude  
+<input type="radio" name="islonfree" value="0" checked> Value: <input type="text" size="2" name="longitude" value="0.">
+<input type="radio" name="islonfree" value="1"> All [-180 ; 180]
+</li>
+<li>Local Time  
+<input type="radio" name="isloctfree" value="0" checked> Value: <input type="text" size="2" name="localtime" value="0.">
+<input type="radio" name="isloctfree" value="1"> All [0 ; 24]
+</li>
+<li>Altitude   
+<input type="radio" name="isaltfree" value="0" checked> Value: <input type="text" size="2" name="altitude" value="10.">
+<input type="radio" name="isaltfree" value="1"> All [0 ; 100000] km
+</li>
+</ul>
+</td>
+<td align="center">
+[Advanced settings for well-informed Martians]<br />
+<ul>
+<li>Force Martian solar longitude to be <input type="text" size="3" name="ls"> degrees</li> 
+<li>High resolution topography? <input type="radio" name="hrkey" value="1" checked /> Yes <input type="radio" name="hrkey" value="0" /> No </li>
+<li>Dust scenario? <select name="dust">
+<option value="1"         >MY24 min solar</option>
+<option value="2" selected>MY24 ave solar</option>
+<option value="3"         >MY24 max solar</option>
+<option value="4"         >dust storm tau=4 min solar</option>
+<option value="5"         >dust storm tau=4 ave solar</option>
+<option value="6"         >dust storm tau=4 max solar</option>
+<option value="7"         >warm scenario (dusty, max solar)</option>
+<option value="8"         >cold scenario (low dust, min solar)</option>
+</select></li>
+<li>Presets
+<!--<input type="button" value="Now!" onClick="DefaultDateValues();DefaultTimeValues();Convert2Ls();">-->
+<input type="button" value="Curiosity" onClick="DateAndTimeValues(2012,8,6,00,00,00);Convert2Ls();PlaceValues(137.2,-4.6)">
+<input type="button" value="Phoenix" onClick="DateAndTimeValues(2008,5,25,23,38,23);Convert2Ls();PlaceValues(234.25,68.22)">
+<input type="button" value="Opportunity" onClick="DateAndTimeValues(2004,1,25,4,55,0);Convert2Ls();PlaceValues(354.47,-1.95)">
+<input type="button" value="Spirit" onClick="DateAndTimeValues(2004,1,4,4,26,0);Convert2Ls();PlaceValues(175.48,-14.57)"><br />
+<input type="button" value="Pathfinder" onClick="DateAndTimeValues(1997,7,4,16,56,55);Convert2Ls();PlaceValues(-33.22,19.13)">
+<input type="button" value="Viking Lander 2" onClick="DateAndTimeValues(1976,9,3,22,58,20);Convert2Ls();PlaceValues(-225.74,47.97)">
+<input type="button" value="Viking Lander 1" onClick="DateAndTimeValues(1976,7,20,11,53,6);Convert2Ls();PlaceValues(-49.97,22.48)">
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td align="center">
+<b>Step 3 : </b> <input type="submit" value="SUBMIT" style="font-weight:bold"/>
+</td>
+<td align="center">
+Based on the <a href="http://www-mars.lmd.jussieu.fr">Mars Climate Database</a> (c) LMD/OU/IAA/ESA/CNES.
+</td>
+</tr>
+
+
+</table>
+
+
+
+</body>
+</html>
+
+<!--
+<form action="/cgi-bin/checkbox.cgi" method="POST" target="_blank">
+<input type="checkbox" name="maths" value="on" /> Maths
+<input type="checkbox" name="physics" value="on" /> Physics
+<input type="submit" value="Select Subject" />
+</form>
+-->
