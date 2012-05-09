@@ -237,10 +237,13 @@ class mcd:
       self.prepare(ndx=nd) ; self.xcoord = np.linspace(start,end,nd)
       for i in range(nd): self.lat = self.xcoord[i] ; self.update() ; self.put1d(i)
 
-    def profile(self,nd=20,start=0.,end=100000.):
+    def profile(self,nd=20,start=0.,end=100000.,tabperso=None):
     ### retrieve an altitude slice (profile)
       self.xlabel = "Altitude (m)"
-      self.prepare(ndx=nd) ; self.xcoord = np.linspace(start,end,nd)
+      if tabperso is not None: nd = len(tabperso)
+      self.prepare(ndx=nd) 
+      if tabperso is None:  self.xcoord = np.linspace(start,end,nd)
+      else:                 self.xcoord = tabperso
       for i in range(nd): self.xz = self.xcoord[i] ; self.update() ; self.put1d(i)
 
     def latlon(self,ndx=37,startx=-180.,endx=180.,ndy=19,starty=-90.,endy=90.):
@@ -292,3 +295,4 @@ class mcd:
       for i in range(len(tabtodo)): mpl.subplot(subv,subh,i+1) ; self.makemap2d(tabtodo[i])
 
     ### TODO: makeplot2d, plot2d, passer plot settings, vecteurs, plot loct pas fixe
+
