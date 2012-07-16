@@ -246,6 +246,12 @@ class mcd:
       else:                 self.xcoord = tabperso
       for i in range(nd): self.xz = self.xcoord[i] ; self.update() ; self.put1d(i)
 
+    def seasonal(self,nd=12,start=0.,end=360.):
+    ### retrieve a seasonal slice
+      self.xlabel = "Areocentric longitude (degrees)"
+      self.prepare(ndx=nd) ; self.xcoord = np.linspace(start,end,nd)
+      for i in range(nd): self.xdate = self.xcoord[i] ; self.update() ; self.put1d(i)
+
     def latlon(self,ndx=37,startx=-180.,endx=180.,ndy=19,starty=-90.,endy=90.):
     ### retrieve a latitude/longitude slice
       self.xlabel = "East longitude (degrees)" ; self.ylabel = "North latitude (degrees)"
@@ -282,17 +288,23 @@ class mcd:
       self.meanvartab[i,j,1:5] = self.meanvar[0:4]  ## note: var numbering according to MCD manual is kept
       self.extvartab[i,j,1:100] = self.extvar[0:99] ## note: var numbering according to MCD manual is kept
 
-    def makemap2d(self,choice):
+    def makemap2d(self,choice,incwind=False):
     ### one 2D map is created for the user-defined variable in choice.
+      self.latlon() ## a map is implicitely a lat-lon plot. otherwise it is a plot (cf. makeplot2d)
       (field, fieldlab) = self.definefield(choice)
-      myplot.maplatlon(self.xcoord,self.ycoord,field,title=fieldlab,proj="moll")
+      if incwind:
+          (windx, fieldlabwx) = self.definefield("u")
+          (windy, fieldlabwy) = self.definefield("v")
+          myplot.maplatlon(self.xcoord,self.ycoord,field,title=fieldlab,proj="cyl",vecx=windx,vecy=windy)
+      else:
+          myplot.maplatlon(self.xcoord,self.ycoord,field,title=fieldlab,proj="moll")
 
-    def map2d(self,tabtodo):
+    def map2d(self,tabtodo,incwind=False):
     ### complete 2D figure with possible multiplots
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       fig = mpl.figure() ; subv,subh = myplot.definesubplot( len(tabtodo) , fig ) 
-      for i in range(len(tabtodo)): mpl.subplot(subv,subh,i+1) ; self.makemap2d(tabtodo[i])
+      for i in range(len(tabtodo)): mpl.subplot(subv,subh,i+1) ; self.makemap2d(tabtodo[i],incwind=incwind)
 
     ### TODO: makeplot2d, plot2d, passer plot settings, vecteurs, plot loct pas fixe
 
