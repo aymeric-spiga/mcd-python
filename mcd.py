@@ -59,6 +59,11 @@ class mcd:
 
     def getextvarlab(self,num):
         whichfield = { \
+        91: "Pressure (Pa)", \
+        92: "Density (kg/m3)", \
+        93: "Temperature (K)", \
+        94: "W-E wind component (m/s)", \
+        95: "S-N wind component (m/s)", \
 	1: "Radial distance from planet center (m)",\
 	2: "Altitude above areoid (Mars geoid) (m)",\
 	3: "Altitude above local surface (m)",\
@@ -110,8 +115,41 @@ class mcd:
 	49: "R: Molecular gas constant (J K-1 kg-1)",\
 	50: "Air viscosity estimation (N s m-2)"
         }
-        if num not in whichfield: errormess("Incorrect subscript in extvar.")
+        if num not in whichfield: myplot.errormess("Incorrect subscript in extvar.")
         return whichfield[num]
+
+    def convertlab(self,num):        
+        ## a conversion from text inquiries to extvar numbers. to be completed.
+        if num == "p": num = 91
+        elif num == "rho": num = 92
+        elif num == "t": num = 93
+        elif num == "u": num = 94
+        elif num == "v": num = 95
+        elif num == "tsurf": num = 15
+        elif num == "topo": num = 4
+        elif num == "h": num = 13
+        elif num == "ps": num = 19
+        elif num == "tau": num = 36
+        elif num == "mtot": num = 40
+        elif num == "icetot": num = 42
+        elif num == "ps_ddv": num = 22
+        elif num == "h2ovap": num = 41
+        elif num == "h2oice": num = 43
+        elif num == "cp": num = 8
+        elif num == "rho_ddv": num = 10
+        elif num == "tsurfmx": num = 16
+        elif num == "tsurfmn": num = 17
+        elif num == "lwdown": num = 31
+        elif num == "swdown": num = 32
+        elif num == "lwup": num = 33
+        elif num == "swup": num = 34
+        elif num == "o3": num = 44
+        elif num == "o": num = 46
+        elif num == "co": num = 48
+        elif num == "visc": num = 50
+        elif num == "co2ice": num = 35
+        elif not isinstance(num, np.int): myplot.errormess("field reference not found.")
+        return num
 
 ###################
 ### One request ###
@@ -125,6 +163,9 @@ class mcd:
          fmcd.call_mcd(self.zkey,self.xz,self.lon,self.lat,self.hrkey, \
              self.datekey,self.xdate,self.loct,self.dset,self.dust, \
              self.perturkey,self.seedin,self.gwlength,self.extvarkey )
+        ## we use the end of extvar (unused) to store meanvar. this is convenient for getextvar(lab)
+        self.extvar[90] = self.pres ; self.extvar[91] = self.dens
+        self.extvar[92] = self.temp ; self.extvar[93] = self.zonwind ; self.extvar[94] = self.merwind
 
     def printset(self):
     # print main settings
@@ -138,9 +179,7 @@ class mcd:
 
     def printcoord(self):
     # print requested space-time coordinates
-        print "----------------------------------------------------------------"
         print "LAT",self.lat,"LON",self.lon,"LOCT",self.loct,"XDATE",self.xdate
-        print "----------------------------------------------------------------"
 
     def printmeanvar(self):
     # print mean MCD variables
@@ -152,16 +191,28 @@ class mcd:
 
     def printextvar(self,num):
     # print extra MCD variables
-        print self.getextvarlab(num) + " ---> " + str(self.extvar[num-1])
+        num = self.convertlab(num)
+        print self.getextvarlab(num) + " ..... " + str(self.extvar[num-1])
 
     def printallextvar(self):
     # print all extra MCD variables    
         for i in range(50): self.printextvar(i+1)
 
+    def htmlprinttabextvar(self,tabtodo):
+        print "Results from the Mars Climate Database"
+        print "<ul>"
+        for i in range(len(tabtodo)): print "<li>" ; self.printextvar(tabtodo[i]) ; print "</li>"
+        print "</ul>"
+        print "<hr>"
+        print "SETTINGS<br />"
+        self.printcoord()
+        self.printset()
+
     def printmcd(self):
     # 1. call MCD 2. print settings 3. print mean vars
         self.update()
         self.printcoord()
+        print "-------------------------------------------"
         self.printmeanvar()
 
 ########################
@@ -186,24 +237,8 @@ class mcd:
 
     def definefield(self,choice):
     ### for analysis or plot purposes, set field and field label from user-defined choice
-    ### --- choice can be a MCD number for extvar
-      if isinstance(choice, np.int):    field = self.getextvar(choice); fieldlab = self.getextvarlab(choice)
-      else:
-       if choice == "t": 	field = self.temptab ; fieldlab="Temperature (K)"
-       elif choice == "p":  	field = self.prestab ; fieldlab="Pressure (Pa)"
-       elif choice == "rho":	field = self.denstab ; fieldlab="Density (kg/m3)"
-       elif choice == "u":	field = self.zonwindtab ; fieldlab="W-E wind component (m/s)"
-       elif choice == "v":      field = self.merwindtab ; fieldlab="S-N wind component (m/s)"
-       elif choice == "tsurf": 	field = self.getextvar(15); fieldlab="Surface temperature (K)"
-       elif choice == "topo":	field = self.getextvar(4) ; fieldlab="Topography (m)"
-       elif choice == "h":      field = self.getextvar(13); fieldlab = "Scale height (m)"
-       elif choice == "ps":     field = self.getextvar(19); fieldlab = "Surface pressure (Pa)"
-       elif choice == "olr":    field = self.getextvar(33); fieldlab = "Outgoing longwave radiation (W/m2)"
-       elif choice == "tau":	field = self.getextvar(36); fieldlab = "Dust optical depth"
-       elif choice == "mtot":   field = self.getextvar(40); fieldlab = "Water vapor column (kg/m2)"
-       elif choice == "icetot": field = self.getextvar(42); fieldlab = "Water ice column (kg/m2)"
-       elif choice == "ps_ddv": field = self.getextvar(22); fieldlab = "Surface pressure RMS day to day variations (Pa)"
-       else:                    errormess("field reference not found.")
+      choice = self.convertlab(choice)
+      field = self.getextvar(choice); fieldlab = self.getextvarlab(choice)
       return field,fieldlab
 
 ###################
@@ -213,7 +248,7 @@ class mcd:
     def put1d(self,i):
     ## fill in subscript i in output arrays
     ## (arrays must have been correctly defined through prepare)
-      if self.prestab is None:  errormess("arrays must be prepared first through self.prepare")
+      if self.prestab is None:  myplot.errormess("arrays must be prepared first through self.prepare")
       self.prestab[i] = self.pres ; self.denstab[i] = self.dens ; self.temptab[i] = self.temp
       self.zonwindtab[i] = self.zonwind ; self.merwindtab[i] = self.merwind
       self.meanvartab[i,1:5] = self.meanvar[0:4]  ## note: var numbering according to MCD manual is kept
@@ -237,7 +272,7 @@ class mcd:
       self.prepare(ndx=nd) ; self.xcoord = np.linspace(start,end,nd)
       for i in range(nd): self.lat = self.xcoord[i] ; self.update() ; self.put1d(i)
 
-    def profile(self,nd=20,start=0.,end=100000.,tabperso=None):
+    def profile(self,nd=20,start=0.,end=120000.,tabperso=None):
     ### retrieve an altitude slice (profile)
       self.xlabel = "Altitude (m)"
       if tabperso is not None: nd = len(tabperso)
@@ -252,21 +287,13 @@ class mcd:
       self.prepare(ndx=nd) ; self.xcoord = np.linspace(start,end,nd)
       for i in range(nd): self.xdate = self.xcoord[i] ; self.update() ; self.put1d(i)
 
-    def latlon(self,ndx=37,startx=-180.,endx=180.,ndy=19,starty=-90.,endy=90.):
-    ### retrieve a latitude/longitude slice
-      self.xlabel = "East longitude (degrees)" ; self.ylabel = "North latitude (degrees)"
-      self.prepare(ndx=ndx,ndy=ndy)
-      self.xcoord = np.linspace(startx,endx,ndx) ; self.ycoord = np.linspace(starty,endy,ndy)
-      for i in range(ndx): 
-       for j in range(ndy):
-         self.lon = self.xcoord[i] ; self.lat = self.ycoord[j] ; self.update() ; self.put2d(i,j)
-
     def makeplot1d(self,choice,vertplot=0):
     ### one 1D plot is created for the user-defined variable in choice. 
       (field, fieldlab) = self.definefield(choice)
       if vertplot != 1:  absc = self.xcoord ; ordo = field ; ordolab = fieldlab ; absclab = self.xlabel
       else:              ordo = self.xcoord ; absc = field ; absclab = fieldlab ; ordolab = self.xlabel
       mpl.plot(absc,ordo,'-bo') ; mpl.ylabel(ordolab) ; mpl.xlabel(absclab) #; mpl.xticks(query.xcoord)
+      mpl.figtext(0.5, 0.01, "Mars Climate Database (c) LMD/OU/IAA/ESA/CNES", ha='center')
 
     def plot1d(self,tabtodo,vertplot=0):
     ### complete 1D figure with possible multiplots
@@ -279,18 +306,32 @@ class mcd:
 ### 2D analysis ###
 ###################
 
+    def latlon(self,ndx=37,startx=-180.,endx=180.,ndy=19,starty=-90.,endy=90.,fixedlt=False):
+    ### retrieve a latitude/longitude slice
+    ### default is: local time is not fixed. user-defined local time is at longitude 0.
+      self.xlabel = "East longitude (degrees)" ; self.ylabel = "North latitude (degrees)"
+      self.prepare(ndx=ndx,ndy=ndy)
+      self.xcoord = np.linspace(startx,endx,ndx) ; self.ycoord = np.linspace(starty,endy,ndy)
+      if not fixedlt: umst = self.loct
+      for i in range(ndx):
+       for j in range(ndy):
+         self.lon = self.xcoord[i] ; self.lat = self.ycoord[j]
+         if not fixedlt: self.loct = (umst + self.lon/15.) % 24
+         self.update() ; self.put2d(i,j)
+      if not fixedlt: self.loct = umst
+
     def put2d(self,i,j):
     ## fill in subscript i,j in output arrays
     ## (arrays must have been correctly defined through prepare)
-      if self.prestab is None:  errormess("arrays must be prepared first through self.prepare")
+      if self.prestab is None:  myplot.errormess("arrays must be prepared first through self.prepare")
       self.prestab[i,j] = self.pres ; self.denstab[i,j] = self.dens ; self.temptab[i,j] = self.temp
       self.zonwindtab[i,j] = self.zonwind ; self.merwindtab[i,j] = self.merwind
       self.meanvartab[i,j,1:5] = self.meanvar[0:4]  ## note: var numbering according to MCD manual is kept
       self.extvartab[i,j,1:100] = self.extvar[0:99] ## note: var numbering according to MCD manual is kept
 
-    def makemap2d(self,choice,incwind=False):
+    def makemap2d(self,choice,incwind=False,fixedlt=False):
     ### one 2D map is created for the user-defined variable in choice.
-      self.latlon() ## a map is implicitely a lat-lon plot. otherwise it is a plot (cf. makeplot2d)
+      self.latlon(fixedlt=fixedlt) ## a map is implicitely a lat-lon plot. otherwise it is a plot (cf. makeplot2d)
       (field, fieldlab) = self.definefield(choice)
       if incwind:
           (windx, fieldlabwx) = self.definefield("u")
@@ -298,13 +339,14 @@ class mcd:
           myplot.maplatlon(self.xcoord,self.ycoord,field,title=fieldlab,proj="cyl",vecx=windx,vecy=windy)
       else:
           myplot.maplatlon(self.xcoord,self.ycoord,field,title=fieldlab,proj="moll")
+      mpl.figtext(0.5, 0.0, "Mars Climate Database (c) LMD/OU/IAA/ESA/CNES", ha='center')
 
-    def map2d(self,tabtodo,incwind=False):
+    def map2d(self,tabtodo,incwind=False,fixedlt=False):
     ### complete 2D figure with possible multiplots
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       fig = mpl.figure() ; subv,subh = myplot.definesubplot( len(tabtodo) , fig ) 
-      for i in range(len(tabtodo)): mpl.subplot(subv,subh,i+1) ; self.makemap2d(tabtodo[i],incwind=incwind)
+      for i in range(len(tabtodo)): mpl.subplot(subv,subh,i+1) ; self.makemap2d(tabtodo[i],incwind=incwind,fixedlt=fixedlt)
 
-    ### TODO: makeplot2d, plot2d, passer plot settings, vecteurs, plot loct pas fixe
+    ### TODO: makeplot2d, plot2d, passer plot settings
 

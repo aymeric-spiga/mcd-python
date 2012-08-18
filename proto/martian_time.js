@@ -366,6 +366,86 @@ return ls;
 function PlaceValues(lon,lat){
 var lon;
 var lat;
+var savlon;
+var savlat;
+var yeah;
+savlon=document.calendar.longitude.value;
+savlat=document.calendar.latitude.value;
 document.calendar.longitude.value=lon;
 document.calendar.latitude.value=lat;
+yeah=document.calendar.toto.value;
+// to be improved. lon and lat should be separated. but for the moment
+// only mapping capabilities exist as 2D plots which means if lon is all
+// lat is all and vice versa.
+if ( document.calendar.longitude.value == "all") {
+ if ( document.calendar.altitude.value == "all") {
+    alert("Not allowed! Altitude and time must be fixed in mapping mode.");
+    document.calendar.longitude.value=savlon;
+    document.calendar.latitude.value=savlat;
+    document.calendar.toto.value=yeah;
+ }
+ if ( document.calendar.localtime.value == "all") {
+    alert("Not allowed! Altitude and time must be fixed in mapping mode.");
+    document.calendar.longitude.value=savlon;
+    document.calendar.latitude.value=savlat;
+    document.calendar.toto.value=yeah;
+ }
 }
+}
+
+function PlaceVar(var1,var2,var3,var4){
+var var1;
+var var2;
+var var3;
+var var4;
+document.calendar.var1.value=var1;
+document.calendar.var2.value=var2;
+document.calendar.var3.value=var3;
+document.calendar.var4.value=var4;
+}
+
+function DefaultSpaceTime(){
+document.calendar.localtime.value = 9
+document.calendar.altitude.value = 2
+}
+
+// this is separated from PlaceValues because
+// allows easier determination through earth time
+// if needed (e.g. example case with rovers)
+function PlaceValues2(localtime){
+var localtime;
+var savlocaltime;
+savlocaltime=document.calendar.localtime.value
+document.calendar.localtime.value=localtime;
+if ( document.calendar.localtime.value == "all" ) {
+ if ( document.calendar.altitude.value == "all" ) {
+    alert("Not allowed! Now choose either a fixed altitude or a fixed time.");
+    //document.calendar.localtime.value=savlocaltime;
+ }
+}
+if ( document.calendar.localtime.value == "all" ) {
+ if ( document.calendar.longitude.value == "all" ) {
+    alert("Not allowed! Now choose either a lander or a fixed time.");
+    //document.calendar.localtime.value=savlocaltime;
+ }
+}
+}
+function PlaceValues3(altitude){
+var altitude;
+var savaltitude;
+savaltitude=document.calendar.altitude.value
+document.calendar.altitude.value=altitude;
+if ( document.calendar.altitude.value == "all" ) {
+ if ( document.calendar.localtime.value == "all") {
+    alert("Not allowed! Now choose either a fixed time or a fixed altitude.");
+    //document.calendar.altitude.value=savaltitude;
+ }
+}
+if ( document.calendar.altitude.value == "all" ) {
+ if ( document.calendar.longitude.value == "all") {
+    alert("Not allowed! Now choose either a lander or a fixed altitude.");
+    //document.calendar.altitude.value=savaltitude;
+ }
+}
+}
+
