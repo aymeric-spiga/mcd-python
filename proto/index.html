@@ -14,6 +14,7 @@
 
 <!-- aussi possible: get a la place de post. pour avoir un beau lien -->
 
+<!--<form name="calendar" action="/marscgi-bin/mcdcgi.py" method="post"> <!--target="_new">-->
 <form name="calendar" action="./cgi-bin/mcdcgi.py" method="post"> <!--target="_new">-->
 
 <center>
@@ -314,6 +315,7 @@ Presets
 </td>
 <td align="center">
 <input type="submit" value="SUBMIT" style="font-weight:bold"/>
+<input type="button" value="RESET" style="font-weight:bold" onClick="DefaultDateValues();DefaultTimeValues();Convert2Ls();PlaceValues(0.,0.);DefaultSpaceTime()"/><br />
 </td>
 <td align="center">
 <a href="http://www-mars.lmd.jussieu.fr">Mars Climate Database</a> (c) LMD/OU/IAA/ESA/CNES.<br />

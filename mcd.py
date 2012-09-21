@@ -11,8 +11,9 @@ import fmcd
 import matplotlib.pyplot as mpl
 import myplot
 
-class mcd:
 
+class mcd():
+ 
     def __repr__(self):
     # print out a help string when help is invoked on the object
         whatprint = 'MCD object. \"help(mcd)\" for more information\n'
@@ -26,7 +27,8 @@ class mcd:
     # default settings
         ## 0. general stuff
         self.name      = "MCD v4.3 output"
-        self.dset      = '/home/aymeric/Science/MCD_v4.3/data/'
+        #self.dset      = '/home/aymeric/Science/MCD_v4.3/data/'
+        self.dset      = '/home/marshttp/MCD_v4.3/data/'
         ## 1. spatio-temporal coordinates
         self.lat       = 0.
         self.lon       = 0.
@@ -302,6 +304,29 @@ class mcd:
       fig = mpl.figure() ; subv,subh = myplot.definesubplot( len(tabtodo) , fig ) 
       for i in range(len(tabtodo)): mpl.subplot(subv,subh,i+1).grid(True, linestyle=':', color='grey') ; self.makeplot1d(tabtodo[i],vertplot)
 
+    def htmlplot1d(self,tabtodo,vertplot=0,figname="temp.png"):
+    ### complete 1D figure with possible multiplots
+    ### added in 09/2012 for online MCD
+    ### see http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
+      from matplotlib.figure import Figure
+      from matplotlib.backends.backend_agg import FigureCanvasAgg
+      if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
+      if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
+      fig = Figure(figsize=(8,8)) ; subv,subh = myplot.definesubplot( len(tabtodo) , fig )
+      for i in range(len(tabtodo)):
+        yeah = fig.add_subplot(subv,subh,i+1) #.grid(True, linestyle=':', color='grey') 
+        choice = tabtodo[i]
+        (field, fieldlab) = self.definefield(choice)
+        if vertplot != 1:  absc = self.xcoord ; ordo = field ; ordolab = fieldlab ; absclab = self.xlabel
+        else:              ordo = self.xcoord ; absc = field ; absclab = fieldlab ; ordolab = self.xlabel
+        yeah.plot(absc,ordo,'-bo') #; mpl.xticks(query.xcoord)
+        ax = fig.gca() ; ax.set_ylabel(ordolab) ; ax.set_xlabel(absclab)
+      fig.text(0.5, 0.01, "Mars Climate Database (c) LMD/OU/IAA/ESA/CNES", ha='center')
+      canvas = FigureCanvasAgg(fig)
+      # The size * the dpi gives the final image size
+      #   a4"x4" image * 80 dpi ==> 320x320 pixel image
+      canvas.print_figure(figname, dpi=80)
+
 ###################
 ### 2D analysis ###
 ###################
@@ -345,8 +370,74 @@ class mcd:
     ### complete 2D figure with possible multiplots
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
-      fig = mpl.figure() ; subv,subh = myplot.definesubplot( len(tabtodo) , fig ) 
+      fig = mpl.figure()
+      subv,subh = myplot.definesubplot( len(tabtodo) , fig ) 
       for i in range(len(tabtodo)): mpl.subplot(subv,subh,i+1) ; self.makemap2d(tabtodo[i],incwind=incwind,fixedlt=fixedlt)
+
+    def htmlmap2d(self,tabtodo,incwind=False,fixedlt=False,figname="temp.png"):
+    ### complete 2D figure with possible multiplots
+    ### added in 09/2012 for online MCD
+    ### see http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
+      from matplotlib.figure import Figure
+      from matplotlib.backends.backend_agg import FigureCanvasAgg
+      from matplotlib.cm import get_cmap
+      if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
+      if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
+      fig = Figure(figsize=(8,8)) ; subv,subh = myplot.definesubplot( len(tabtodo) , fig )
+
+      ### topocontours
+      fieldc = self.getextvar(self.convertlab("topo"))
+
+      for i in range(len(tabtodo)):
+        yeah = fig.add_subplot(subv,subh,i+1)
+        choice = tabtodo[i]
+        self.latlon(fixedlt=fixedlt) ## a map is implicitely a lat-lon plot. otherwise it is a plot (cf. makeplot2d)
+        (field, fieldlab) = self.definefield(choice)
+        if incwind: (windx, fieldlabwx) = self.definefield("u") ; (windy, fieldlabwy) = self.definefield("v")
+
+        proj="cyl" ; colorb="jet" ; ndiv=20 ; zeback="molabw" ; trans=1.0 #0.6
+        title="" ; vecx=None ; vecy=None ; stride=2
+        lon = self.xcoord
+        lat = self.ycoord
+
+        ### get lon and lat in 2D version. get lat/lon intervals
+        #numdim = len(np.array(lon).shape)
+        #if numdim == 2:     [lon2d,lat2d] = [lon,lat]
+        #elif numdim == 1:   [lon2d,lat2d] = np.meshgrid(lon,lat)
+        #else:               errormess("lon and lat arrays must be 1D or 2D")
+        #[wlon,wlat] = myplot.latinterv()
+        ### define projection and background. define x and y given the projection
+        #m = basemap.Basemap(projection='moll') marche pas
+        #m = myplot.define_proj(proj,wlon,wlat,back=zeback,blat=None,blon=None)
+        #x, y = m(lon2d, lat2d)
+        ### TEMP
+        x = lon ; y = lat
+        ## define field. bound field.
+        what_I_plot = np.transpose(field)
+        zevmin, zevmax = myplot.calculate_bounds(what_I_plot)  ## vmin=min(what_I_plot_frame), vmax=max(what_I_plot_frame))
+        what_I_plot = myplot.bounds(what_I_plot,zevmin,zevmax)
+        ## define contour field levels. define color palette
+        ticks = ndiv + 1
+        zelevels = np.linspace(zevmin,zevmax,ticks)
+        palette = get_cmap(name=colorb)
+        ## contours topo
+        zelevc = np.linspace(-8000.,20000.,20)
+        yeah.contour( x, y, np.transpose(fieldc), zelevc, colors='black',linewidths = 0.4)
+        # contour field
+        c = yeah.contourf( x, y, what_I_plot, zelevels, cmap = palette, alpha = trans )
+        Figure.colorbar(fig,c,orientation='vertical',format="%.1e")
+        ax = fig.gca() ; ax.set_title(fieldlab) ; ax.set_ylabel("Latitude") ; ax.set_xlabel("Longitude")
+        ax.set_xticks(np.arange(-180,181,45)) ; ax.set_xbound(lower=-180, upper=180)
+        ax.set_yticks(np.arange(-90,91,30)) ; ax.set_ybound(lower=-90, upper=90)
+        if incwind:
+          [x2d,y2d] = np.meshgrid(x,y)
+          yeah.quiver(x2d,y2d,np.transpose(windx),np.transpose(windy))
+      fig.text(0.5, 0.01, "Mars Climate Database (c) LMD/OU/IAA/ESA/CNES", ha='center')
+      canvas = FigureCanvasAgg(fig)
+      # The size * the dpi gives the final image size
+      #   a4"x4" image * 80 dpi ==> 320x320 pixel image
+      canvas.print_figure(figname, dpi=80)
+
 
     ### TODO: makeplot2d, plot2d, passer plot settings
 
