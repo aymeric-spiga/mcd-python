@@ -37,16 +37,15 @@ query=mcd.mcd() #FG: import from module mcd
 # FG: add tests if var==None to have values in local without forms ones
 getlat = form.getvalue("latitude")
 if getlat == None: getlat = 1
-
 if getlat == "all":  islatfree = 1 ; query.lat = -9999.
 else:                islatfree = 0 ; query.lat = float(getlat)
+
 getlon = form.getvalue("longitude")
 if getlon == None: getlon = 1
 if getlon == "all":  islonfree = 1 ; query.lon = -9999.
 else:                islonfree = 0 ; query.lon = float(getlon)
 
 getloct = form.getvalue("localtime")
-
 if getloct == None: getloct = 1
 if getloct == "all": isloctfree = 1 ; query.loct = -9999.
 else:                isloctfree = 0 ; query.loct = float(getloct)
@@ -80,11 +79,11 @@ var4 = form.getvalue("var4")
 # vartoplot = [var1]
 # fg: init var as with form values
 if var1 == None: var1="t"
-if var2 == None: var2="p"
+#if var2 == None: var2="p"
 
 vartoplot = []
 if var1 != "none": vartoplot = np.append(vartoplot,var1)
-if var2 != "none": vartoplot = np.append(vartoplot,var2)
+if var2 != "none" and var2 != None: vartoplot = np.append(vartoplot,var2)
 if var3 != "none" and var3 != None: vartoplot = np.append(vartoplot,var3)
 if var4 != "none" and var4 != None: vartoplot = np.append(vartoplot,var4)
 
@@ -127,10 +126,10 @@ if not testexist:
     else:					exit()  
 
     ### figure    
-    query.map2d(vartoplot,incwind=iswindlog,fixedlt=input_fixedlt) 
-    mpl.savefig("img/temp.png",dpi=110,bbox_inches='tight',pad_inches=0.4)
-    Image.open("img/temp.png").save(figname,'JPEG') ##lighter images   
-    ## http://www.pythonware.com/library/pil/handbook/introduction.htm
+    query.htmlmap2d(vartoplot,incwind=iswindlog,fixedlt=input_fixedlt,figname=figname) 
+    #mpl.savefig("img/temp.png",dpi=110,bbox_inches='tight',pad_inches=0.4)
+    #Image.open("img/temp.png").save(figname,'JPEG') ##lighter images   
+    ### http://www.pythonware.com/library/pil/handbook/introduction.htm
 
 ## This is quite common
 print "Content-type:text/html\n"
@@ -146,13 +145,13 @@ print header
 
 ## Now the part which differs
 if sumfree == 0: 	query.update() ; query.htmlprinttabextvar(vartoplot)  #query.printmeanvar()
-elif sumfree >= 1: 	print "<img src='"+figname+"'><br />"
+elif sumfree >= 1: 	print "<a href='../index.html'>Click here to start a new query</a><br /><img src='"+figname+"'><br />"
 else:			print "<h1>ERROR : sumfree is not or badly defined ...</h1></body></html>"
 
 
 ## This is quite common
 bottom = "<hr><a href='../index.html'>Click here to start a new query</a>.<hr></body></html>"
-print bottom
+#print bottom
 
 ##write to file object
 #f = cStringIO.StringIO()
