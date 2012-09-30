@@ -31,10 +31,18 @@ class mcd():
         self.dset      = '/home/marshttp/MCD_v4.3/data/'
         ## 1. spatio-temporal coordinates
         self.lat       = 0.
+        self.lats      = None
+        self.late      = None
         self.lon       = 0.
+        self.lons      = None
+        self.lone      = None
         self.loct      = 0.
+        self.locts     = None
+        self.locte     = None
         self.xdate     = 0.  # see datekey
         self.xz        = 10. # see zkey
+        self.xzs       = None
+        self.xze       = None
         ## 1bis. related settings
         self.zkey      = 3  # specify that xz is the altitude above surface (m)
         self.datekey   = 1  # 0 = "Earth time": xdate is given in Julian days (localtime must be set to zero)
@@ -176,7 +184,11 @@ class mcd():
 
     def getnameset(self):
     # set a name referring to settings [convenient for databases]
-        name = str(self.zkey)+str(self.xz)+str(self.lon)+str(self.lat)+str(self.hrkey)+str(self.datekey)+str(self.xdate)+str(self.loct)+str(self.dust)
+        strlat = str(self.lat)+str(self.lats)+str(self.late)
+        strlon = str(self.lon)+str(self.lons)+str(self.lone)
+        strxz = str(self.xz)+str(self.xzs)+str(self.xze)
+        strloct = str(self.loct)+str(self.locts)+str(self.locte)
+        name = str(self.zkey)+strxz+strlon+strlat+str(self.hrkey)+str(self.datekey)+str(self.xdate)+strloct+str(self.dust)
         return name
 
     def printcoord(self):
@@ -256,31 +268,51 @@ class mcd():
       self.meanvartab[i,1:5] = self.meanvar[0:4]  ## note: var numbering according to MCD manual is kept
       self.extvartab[i,1:100] = self.extvar[0:99] ## note: var numbering according to MCD manual is kept
 
-    def diurnal(self,nd=13,start=0.,end=24.):
+    def diurnal(self,nd=13):
     ### retrieve a local time slice
       self.xlabel = "Local time (Martian hour)"
-      self.prepare(ndx=nd) ; self.xcoord = np.linspace(start,end,nd)
+      self.prepare(ndx=nd) 
+      if self.locts is not None and self.locte is not None:
+          if self.locts > self.locte: yeah = self.locts ; self.locts = self.locte ; self.locte = yeah
+          self.xcoord = np.linspace(self.locts,self.locte,nd)
+      else:
+          self.xcoord = np.linspace(0.,24.,nd)
       for i in range(nd): self.loct = self.xcoord[i] ; self.update() ; self.put1d(i)
 
-    def zonal(self,nd=37,start=-180.,end=180.):
+    def zonal(self,nd=37):
     ### retrieve a longitude slice
       self.xlabel = "East longitude (degrees)"
-      self.prepare(ndx=nd) ; self.xcoord = np.linspace(start,end,nd)
+      self.prepare(ndx=nd) 
+      if self.lons is not None and self.lone is not None:
+          if self.lons > self.lone: yeah = self.lons ; self.lons = self.lone ; self.lone = yeah
+          self.xcoord = np.linspace(self.lons,self.lone,nd)
+      else:
+          self.xcoord = np.linspace(-180.,180.,nd)
       for i in range(nd): self.lon = self.xcoord[i] ; self.update() ; self.put1d(i)
 
-    def meridional(self,nd=19,start=-90.,end=90.):
+    def meridional(self,nd=19):
     ### retrieve a latitude slice
       self.xlabel = "North latitude (degrees)"
-      self.prepare(ndx=nd) ; self.xcoord = np.linspace(start,end,nd)
+      self.prepare(ndx=nd)
+      if self.lats is not None and self.late is not None: 
+          if self.lats > self.late: yeah = self.lats ; self.lats = self.late ; self.late = yeah
+          self.xcoord = np.linspace(self.lats,self.late,nd)
+      else:                                               
+          self.xcoord = np.linspace(-90.,90.,nd)
       for i in range(nd): self.lat = self.xcoord[i] ; self.update() ; self.put1d(i)
 
-    def profile(self,nd=20,start=0.,end=120000.,tabperso=None):
+    def profile(self,nd=20,tabperso=None):
     ### retrieve an altitude slice (profile)
       self.xlabel = "Altitude (m)"
       if tabperso is not None: nd = len(tabperso)
       self.prepare(ndx=nd) 
-      if tabperso is None:  self.xcoord = np.linspace(start,end,nd)
-      else:                 self.xcoord = tabperso
+      if tabperso is not None:
+          self.xcoord = tabperso
+      elif self.xzs is not None and self.xze is not None:
+          ## here we should code the log axis for pressure
+          self.xcoord = np.linspace(self.xzs,self.xze,nd)
+      else:
+          self.xcoord = np.linspace(0.,120000.,nd)
       for i in range(nd): self.xz = self.xcoord[i] ; self.update() ; self.put1d(i)
 
     def seasonal(self,nd=12,start=0.,end=360.):
@@ -331,12 +363,21 @@ class mcd():
 ### 2D analysis ###
 ###################
 
-    def latlon(self,ndx=37,startx=-180.,endx=180.,ndy=19,starty=-90.,endy=90.,fixedlt=False):
+    def latlon(self,ndx=37,ndy=19,fixedlt=False):
     ### retrieve a latitude/longitude slice
     ### default is: local time is not fixed. user-defined local time is at longitude 0.
       self.xlabel = "East longitude (degrees)" ; self.ylabel = "North latitude (degrees)"
       self.prepare(ndx=ndx,ndy=ndy)
-      self.xcoord = np.linspace(startx,endx,ndx) ; self.ycoord = np.linspace(starty,endy,ndy)
+      if self.lons is not None and self.lone is not None:
+          if self.lons > self.lone: yeah = self.lons ; self.lons = self.lone ; self.lone = yeah
+          self.xcoord = np.linspace(self.lons,self.lone,ndx)
+      else:
+          self.xcoord = np.linspace(-180.,180.,ndx)
+      if self.lats is not None and self.late is not None:
+          if self.lats > self.late: yeah = self.lats ; self.lats = self.late ; self.late = yeah
+          self.ycoord = np.linspace(self.lats,self.late,ndy)
+      else:
+          self.ycoord = np.linspace(-90.,90.,ndy)
       if not fixedlt: umst = self.loct
       for i in range(ndx):
        for j in range(ndy):
@@ -354,27 +395,30 @@ class mcd():
       self.meanvartab[i,j,1:5] = self.meanvar[0:4]  ## note: var numbering according to MCD manual is kept
       self.extvartab[i,j,1:100] = self.extvar[0:99] ## note: var numbering according to MCD manual is kept
 
-    def makemap2d(self,choice,incwind=False,fixedlt=False):
+    def makemap2d(self,choice,incwind=False,fixedlt=False,proj="cyl"):
     ### one 2D map is created for the user-defined variable in choice.
       self.latlon(fixedlt=fixedlt) ## a map is implicitely a lat-lon plot. otherwise it is a plot (cf. makeplot2d)
-      (field, fieldlab) = self.definefield(choice)
-      if incwind:
+      if choice == "wind" or incwind:
           (windx, fieldlabwx) = self.definefield("u")
           (windy, fieldlabwy) = self.definefield("v")
-          myplot.maplatlon(self.xcoord,self.ycoord,field,title=fieldlab,proj="cyl",vecx=windx,vecy=windy)
-      else:
-          myplot.maplatlon(self.xcoord,self.ycoord,field,title=fieldlab,proj="moll")
+      if choice == "wind":
+          field = np.sqrt(windx*windx + windy*windy)
+          fieldlab = "Horizontal wind speed (m/s)"
+      else:    
+          (field, fieldlab) = self.definefield(choice)
+      if incwind:   myplot.maplatlon(self.xcoord,self.ycoord,field,title=fieldlab,proj=proj,vecx=windx,vecy=windy) #,stride=1)
+      else:         myplot.maplatlon(self.xcoord,self.ycoord,field,title=fieldlab,proj=proj)
       mpl.figtext(0.5, 0.0, "Mars Climate Database (c) LMD/OU/IAA/ESA/CNES", ha='center')
 
-    def map2d(self,tabtodo,incwind=False,fixedlt=False):
+    def map2d(self,tabtodo,incwind=False,fixedlt=False,proj="cyl"):
     ### complete 2D figure with possible multiplots
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       fig = mpl.figure()
       subv,subh = myplot.definesubplot( len(tabtodo) , fig ) 
-      for i in range(len(tabtodo)): mpl.subplot(subv,subh,i+1) ; self.makemap2d(tabtodo[i],incwind=incwind,fixedlt=fixedlt)
+      for i in range(len(tabtodo)): mpl.subplot(subv,subh,i+1) ; self.makemap2d(tabtodo[i],incwind=incwind,fixedlt=fixedlt,proj=proj)
 
-    def htmlmap2d(self,tabtodo,incwind=False,fixedlt=False,figname="temp.png"):
+    def htmlmap2d(self,tabtodo,incwind=False,fixedlt=False,figname="temp.png",title=""):
     ### complete 2D figure with possible multiplots
     ### added in 09/2012 for online MCD
     ### see http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
@@ -391,7 +435,8 @@ class mcd():
       for i in range(len(tabtodo)):
         yeah = fig.add_subplot(subv,subh,i+1)
         choice = tabtodo[i]
-        self.latlon(fixedlt=fixedlt) ## a map is implicitely a lat-lon plot. otherwise it is a plot (cf. makeplot2d)
+        self.latlon(fixedlt=fixedlt) 
+        ## a map is implicitely a lat-lon plot. otherwise it is a plot (cf. makeplot2d)
         (field, fieldlab) = self.definefield(choice)
         if incwind: (windx, fieldlabwx) = self.definefield("u") ; (windy, fieldlabwy) = self.definefield("v")
 
@@ -427,11 +472,12 @@ class mcd():
         c = yeah.contourf( x, y, what_I_plot, zelevels, cmap = palette, alpha = trans )
         Figure.colorbar(fig,c,orientation='vertical',format="%.1e")
         ax = fig.gca() ; ax.set_title(fieldlab) ; ax.set_ylabel("Latitude") ; ax.set_xlabel("Longitude")
-        ax.set_xticks(np.arange(-180,181,45)) ; ax.set_xbound(lower=-180, upper=180)
-        ax.set_yticks(np.arange(-90,91,30)) ; ax.set_ybound(lower=-90, upper=90)
+        ax.set_xticks(np.arange(-180,181,45)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
+        ax.set_yticks(np.arange(-90,91,30)) ; ax.set_ybound(lower=self.lats, upper=self.late)
         if incwind:
           [x2d,y2d] = np.meshgrid(x,y)
           yeah.quiver(x2d,y2d,np.transpose(windx),np.transpose(windy))
+      fig.text(0.5, 0.95, title, ha='center')
       fig.text(0.5, 0.01, "Mars Climate Database (c) LMD/OU/IAA/ESA/CNES", ha='center')
       canvas = FigureCanvasAgg(fig)
       # The size * the dpi gives the final image size

@@ -1,3 +1,4 @@
+###!/usr/bin/env python
 #!/usr/bin/python
 ###!/home/aymeric/Software/epd-7.0-2-rh5-x86/bin/python
 ####!/home/marshttp/EPD/epd-7.0-2-rh5-x86_64/bin/python
@@ -11,6 +12,7 @@
 ### (see mcdtest.py for examples of use)       ###
 ##################################################
 ### ajouts et corrections par Franck Guyon 09/2012
+### ajouts suite a brainstorm equipe AS 10/2012
 
 import cgi, cgitb 
 import numpy as np
@@ -35,24 +37,32 @@ query=mcd.mcd() #FG: import from module mcd
 
 # Get data from user-defined fields and define free dimensions
 # FG: add tests if var==None to have values in local without forms ones
+query.lat = -9999.
 getlat = form.getvalue("latitude")
-if getlat == None: getlat = 1
-if getlat == "all":  islatfree = 1 ; query.lat = -9999.
+if getlat == None: getlat = "1"
+if getlat == "all":  islatfree = 1 ; query.lats = -90. ; query.late = 90.
+elif ";" in getlat:  islatfree = 1 ; ind = getlat.find(";") ; query.lats = float(getlat[:ind]) ; query.late = float(getlat[ind+1:])
 else:                islatfree = 0 ; query.lat = float(getlat)
 
+query.lon = -9999.
 getlon = form.getvalue("longitude")
-if getlon == None: getlon = 1
-if getlon == "all":  islonfree = 1 ; query.lon = -9999.
+if getlon == None: getlon = "1"
+if getlon == "all":  islonfree = 1 ; query.lons = -180. ; query.lone = 180.
+elif ";" in getlon:  islonfree = 1 ; ind = getlon.find(";") ; query.lons = float(getlon[:ind]) ; query.lone = float(getlon[ind+1:])
 else:                islonfree = 0 ; query.lon = float(getlon)
 
+query.loct = -9999.
 getloct = form.getvalue("localtime")
-if getloct == None: getloct = 1
-if getloct == "all": isloctfree = 1 ; query.loct = -9999.
+if getloct == None: getloct = "1"
+if getloct == "all": isloctfree = 1 ; query.locts = 0. ; query.locte = 24.
+elif ";" in getloct: isloctfree = 1 ; ind = getloct.find(";") ; query.locts = float(getloct[:ind]) ; query.locte = float(getloct[ind+1:])
 else:                isloctfree = 0 ; query.loct = float(getloct)
 
+query.xz = -9999.
 getalt = form.getvalue("altitude")
-if getalt == None: getalt = 1
-if getalt == "all":  isaltfree = 1 ; query.xz = -9999.
+if getalt == None: getalt = "1"
+if getalt == "all":  isaltfree = 1 ; query.xzs = 0. ; query.xze = 120000.
+elif ";" in getalt:  isaltfree = 1 ; ind = getalt.find(";") ; query.xzs = float(getalt[:ind]) ; query.xze = float(getalt[ind+1:])
 else:                isaltfree = 0 ; query.xz = float(getalt)
 
 sumfree = islatfree + islonfree + isloctfree + isaltfree 
@@ -95,7 +105,7 @@ if isfixedlt == "on": input_fixedlt=True
 else:                 input_fixedlt=False  
 
 # reference name (to test which figures are already in the database)
-reference = str(islatfree)+str(islonfree)+str(isloctfree)+str(isaltfree)+query.getnameset()+str(var1)+str(var2)+str(var3)+str(var4)+str(iswind)+str(isfixedlt)
+reference = query.getnameset()+str(var1)+str(var2)+str(var3)+str(var4)+str(iswind)+str(isfixedlt)
 figname = '../img/'+reference+'.png'
 
 testexist = daos.path.isfile(figname)
@@ -126,7 +136,8 @@ if not testexist:
     else:					exit()  
 
     ### figure    
-    query.htmlmap2d(vartoplot,incwind=iswindlog,fixedlt=input_fixedlt,figname=figname) 
+    zetitle = "MCD v4.3 - Dust scenario "+str(query.dust)+" - Date is "+str(query.xdate)
+    query.htmlmap2d(vartoplot,incwind=iswindlog,fixedlt=input_fixedlt,figname=figname,title=zetitle) 
     #mpl.savefig("img/temp.png",dpi=110,bbox_inches='tight',pad_inches=0.4)
     #Image.open("img/temp.png").save(figname,'JPEG') ##lighter images   
     ### http://www.pythonware.com/library/pil/handbook/introduction.htm

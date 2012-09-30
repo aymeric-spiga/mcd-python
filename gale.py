@@ -44,4 +44,4 @@ gale.map2d("tsurf")
 
 import matplotlib.pyplot as mpl
 #mpl.show()
-mpl.savefig("img/temp.png",dpi=110,bbox_inches='tight',pad_inches=0.4)
+mpl.savefig("temp.png",dpi=110,bbox_inches='tight',pad_inches=0.4)
