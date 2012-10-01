@@ -95,12 +95,18 @@ Martian sol <input type="text" size="2" name="sol" readonly="readonly"> / 669
 </td>
 <td align="center">
 <b>CUSTOMIZE COORDINATES ON MARS</b><br />
-please give: a value (or) a range val1;val2 (or) 'all'<br />
+write a value (or) a range val1;val2 (or) 'all'<br />
 <ul>
-<li>North Latitude <input type="text" size="7" name="latitude" value="0."> 
-<li>East Longitude <input type="text" size="7" name="longitude" value="0."> 
-<li>Local Time <input type="text" size="7" name="localtime" value="0."> 
-<li>Altitude (m) <input type="text" size="7" name="altitude" value="10."> 
+<li>Latitude <input type="text" size="7" name="latitude" value="0."> degree North 
+<li>Longitude <input type="text" size="7" name="longitude" value="0."> degree East
+<li>Local Time <input type="text" size="7" name="localtime" value="0."> Martian hour
+<li>Altitude <input type="text" size="9" name="altitude" value="10."> <select name="zkey">
+<option value="1"         >m (O: Mars center)</option>
+<option value="2"         >m (O: "sea level")</option>
+<option value="3" selected>m (O: surface)</option>
+<option value="4"         >Pa (pressure)</option>
+<option value="5"         >m (O: 3396 km)</option>
+</select>
 <!--
 <li>Latitude   
 <input type="radio" name="islatfree" value="0" checked> Value: <input type="text" size="2" name="latitude" value="0.">

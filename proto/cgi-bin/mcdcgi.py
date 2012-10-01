@@ -74,7 +74,8 @@ try: query.hrkey = int(form.getvalue("hrkey"))
 except: query.hrkey = int(1)
 try: query.dust = int(form.getvalue("dust"))
 except: query.dust  = int(1)
-#        self.zkey      = 3  # specify that xz is the altitude above surface (m)
+try: query.zkey = int(form.getvalue("zkey"))
+except: query.zkey = int(3)
 #        self.perturkey = 0  #integer perturkey ! perturbation type (0: none)
 #        self.seedin    = 1  #random number generator seed (unused if perturkey=0)
 #        self.gwlength  = 0. #gravity Wave wavelength (unused if perturkey=0)
@@ -153,6 +154,8 @@ print "  "  #Apache needs a space after content-type
 header="""<html><head><title>Mars Climate Database: The Web Interface</title></head><body>"""
 
 print header
+#print query.printset()
+#print "<br />"
 
 ## Now the part which differs
 if sumfree == 0: 	query.update() ; query.htmlprinttabextvar(vartoplot)  #query.printmeanvar()

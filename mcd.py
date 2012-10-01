@@ -40,11 +40,19 @@ class mcd():
         self.locts     = None
         self.locte     = None
         self.xdate     = 0.  # see datekey
+        self.xdates    = None
+        self.xdatee    = None
         self.xz        = 10. # see zkey
         self.xzs       = None
         self.xze       = None
         ## 1bis. related settings
         self.zkey      = 3  # specify that xz is the altitude above surface (m)
+                            # zkey  : <integer>   type of vertical coordinate xz
+                            # 1 = radius from centre of planet (m)
+                            # 2 = height above areoid (m) (MOLA zero datum)
+                            # 3 = height above surface (m)
+                            # 4 = pressure level (Pa)
+                            # 5 = altitude above mean Mars Radius(=3396000m) (m)
         self.datekey   = 1  # 0 = "Earth time": xdate is given in Julian days (localtime must be set to zero)
                             # 1 = "Mars date": xdate is the value of Ls
         ## 2. climatological options
@@ -255,6 +263,25 @@ class mcd():
       field = self.getextvar(choice); fieldlab = self.getextvarlab(choice)
       return field,fieldlab
 
+    def ininterv(self,dstart,dend,nd,start=None,end=None,yaxis=False):
+    ### user-defined start and end are used to create xcoord (or ycoord) vector
+      if start is not None and end is not None:  first, second = self.correctbounds(start,end)
+      else:                                      first, second = self.correctbounds(dstart,dend)  
+      if not yaxis: self.xcoord = np.linspace(first,second,nd)
+      else:         self.ycoord = np.linspace(first,second,nd)
+      ## here we should code the log axis for pressure
+
+    def correctbounds(self,start,end):
+      if self.zkey != 4:
+        # regular altitudes
+        if start > end: first = end ; second = start
+        else:           first = start ; second = end
+      else:
+        # pressure: reversed avis
+        if start < end: first = end ; second = start
+        else:           first = start ; second = end
+      return first, second
+
 ###################
 ### 1D analysis ###
 ###################
@@ -271,54 +298,34 @@ class mcd():
     def diurnal(self,nd=13):
     ### retrieve a local time slice
       self.xlabel = "Local time (Martian hour)"
-      self.prepare(ndx=nd) 
-      if self.locts is not None and self.locte is not None:
-          if self.locts > self.locte: yeah = self.locts ; self.locts = self.locte ; self.locte = yeah
-          self.xcoord = np.linspace(self.locts,self.locte,nd)
-      else:
-          self.xcoord = np.linspace(0.,24.,nd)
+      self.prepare(ndx=nd) ; self.ininterv(0.,24.,nd,start=self.locts,end=self.locte) 
       for i in range(nd): self.loct = self.xcoord[i] ; self.update() ; self.put1d(i)
 
     def zonal(self,nd=37):
     ### retrieve a longitude slice
       self.xlabel = "East longitude (degrees)"
-      self.prepare(ndx=nd) 
-      if self.lons is not None and self.lone is not None:
-          if self.lons > self.lone: yeah = self.lons ; self.lons = self.lone ; self.lone = yeah
-          self.xcoord = np.linspace(self.lons,self.lone,nd)
-      else:
-          self.xcoord = np.linspace(-180.,180.,nd)
+      self.prepare(ndx=nd) ; self.ininterv(-180.,180.,nd,start=self.lons,end=self.lone)
       for i in range(nd): self.lon = self.xcoord[i] ; self.update() ; self.put1d(i)
 
     def meridional(self,nd=19):
     ### retrieve a latitude slice
       self.xlabel = "North latitude (degrees)"
-      self.prepare(ndx=nd)
-      if self.lats is not None and self.late is not None: 
-          if self.lats > self.late: yeah = self.lats ; self.lats = self.late ; self.late = yeah
-          self.xcoord = np.linspace(self.lats,self.late,nd)
-      else:                                               
-          self.xcoord = np.linspace(-90.,90.,nd)
+      self.prepare(ndx=nd) ; self.ininterv(-90.,90.,nd,start=self.lats,end=self.late)
       for i in range(nd): self.lat = self.xcoord[i] ; self.update() ; self.put1d(i)
 
     def profile(self,nd=20,tabperso=None):
     ### retrieve an altitude slice (profile)
       self.xlabel = "Altitude (m)"
       if tabperso is not None: nd = len(tabperso)
-      self.prepare(ndx=nd) 
-      if tabperso is not None:
-          self.xcoord = tabperso
-      elif self.xzs is not None and self.xze is not None:
-          ## here we should code the log axis for pressure
-          self.xcoord = np.linspace(self.xzs,self.xze,nd)
-      else:
-          self.xcoord = np.linspace(0.,120000.,nd)
+      correct = False
+      self.prepare(ndx=nd) ; self.ininterv(0.,120000.,nd,start=self.xzs,end=self.xze)
+      if tabperso is not None: self.xcoord = tabperso
       for i in range(nd): self.xz = self.xcoord[i] ; self.update() ; self.put1d(i)
 
-    def seasonal(self,nd=12,start=0.,end=360.):
+    def seasonal(self,nd=12):
     ### retrieve a seasonal slice
       self.xlabel = "Areocentric longitude (degrees)"
-      self.prepare(ndx=nd) ; self.xcoord = np.linspace(start,end,nd)
+      self.prepare(ndx=nd) ; self.ininterv(0.,360.,nd,start=self.xdates,end=self.xdatee)
       for i in range(nd): self.xdate = self.xcoord[i] ; self.update() ; self.put1d(i)
 
     def makeplot1d(self,choice,vertplot=0):
@@ -368,16 +375,8 @@ class mcd():
     ### default is: local time is not fixed. user-defined local time is at longitude 0.
       self.xlabel = "East longitude (degrees)" ; self.ylabel = "North latitude (degrees)"
       self.prepare(ndx=ndx,ndy=ndy)
-      if self.lons is not None and self.lone is not None:
-          if self.lons > self.lone: yeah = self.lons ; self.lons = self.lone ; self.lone = yeah
-          self.xcoord = np.linspace(self.lons,self.lone,ndx)
-      else:
-          self.xcoord = np.linspace(-180.,180.,ndx)
-      if self.lats is not None and self.late is not None:
-          if self.lats > self.late: yeah = self.lats ; self.lats = self.late ; self.late = yeah
-          self.ycoord = np.linspace(self.lats,self.late,ndy)
-      else:
-          self.ycoord = np.linspace(-90.,90.,ndy)
+      self.ininterv(-180.,180.,ndx,start=self.lons,end=self.lone)
+      self.ininterv(-90.,  90.,ndy,start=self.lats,end=self.late,yaxis=True)
       if not fixedlt: umst = self.loct
       for i in range(ndx):
        for j in range(ndy):
