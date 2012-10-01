@@ -108,7 +108,6 @@ else:                 input_fixedlt=False
 # reference name (to test which figures are already in the database)
 reference = query.getnameset()+str(var1)+str(var2)+str(var3)+str(var4)+str(iswind)+str(isfixedlt)
 figname = '../img/'+reference+'.png'
-
 testexist = daos.path.isfile(figname)
 
 # extract data from MCD if needed
@@ -125,7 +124,7 @@ if not testexist:
     else:			exit()  
 
     ### generic building of figure
-    query.htmlplot1d(vartoplot,vertplot=isaltfree,figname=figname)
+    query.htmlplot1d(vartoplot,figname=figname)
     #mpl.savefig("img/temp.png",dpi=85,bbox_inches='tight',pad_inches=0.25)
     #Image.open("../img/temp.png").save(figname,'JPEG')
 
@@ -137,8 +136,7 @@ if not testexist:
     else:					exit()  
 
     ### figure    
-    zetitle = "MCD v4.3 - Dust scenario "+str(query.dust)+" - Date is "+str(query.xdate)
-    query.htmlmap2d(vartoplot,incwind=iswindlog,fixedlt=input_fixedlt,figname=figname,title=zetitle) 
+    query.htmlmap2d(vartoplot,incwind=iswindlog,fixedlt=input_fixedlt,figname=figname) 
     #mpl.savefig("img/temp.png",dpi=110,bbox_inches='tight',pad_inches=0.4)
     #Image.open("img/temp.png").save(figname,'JPEG') ##lighter images   
     ### http://www.pythonware.com/library/pil/handbook/introduction.htm

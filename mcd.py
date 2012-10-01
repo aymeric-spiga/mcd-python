@@ -26,7 +26,8 @@ class mcd():
     def __init__(self):
     # default settings
         ## 0. general stuff
-        self.name      = "MCD v4.3 output"
+        self.name      = "MCD v4.3"
+        self.ack       = "Mars Climate Database (c) LMD/OU/IAA/ESA/CNES"
         #self.dset      = '/home/aymeric/Science/MCD_v4.3/data/'
         self.dset      = '/home/marshttp/MCD_v4.3/data/'
         ## 1. spatio-temporal coordinates
@@ -71,9 +72,26 @@ class mcd():
         self.xcoord = None ; self.ycoord = None
         self.prestab = None ; self.denstab = None ; self.temptab = None 
         self.zonwindtab = None ; self.merwindtab = None ; self.meanvartab = None ; self.extvartab = None
+        ## plot stuff
+        self.xlabel = None ; self.ylabel = None
+        self.vertplot = False
 
     def viking1(self): self.name = "Viking 1 site. MCD v4.3 output" ; self.lat = 22.48 ; self.lon = -49.97 ; self.xdate = 97.
     def viking2(self): self.name = "Viking 2 site. MCD v4.3 output" ; self.lat = 47.97 ; self.lon = -225.74 ; self.xdate = 117.6
+
+    def getdustlabel(self):
+        if self.dust == 1: self.dustlabel = "MY24 minimum solar scenario"
+        elif self.dust == 2: self.dustlabel = "MY24 average solar scenario"
+        elif self.dust == 3: self.dustlabel = "MY24 maximum solar scenario"
+        elif self.dust == 4: self.dustlabel = "dust storm minimum solar scenario"
+        elif self.dust == 5: self.dustlabel = "dust storm average solar scenario"
+        elif self.dust == 6: self.dustlabel = "dust storm maximum solar scenario"
+        elif self.dust == 7: self.dustlabel = "warm scenario (dusty, maximum solar)"
+        elif self.dust == 8: self.dustlabel = "cold scenario (low dust, minimum solar)"
+
+    def gettitle(self):
+        self.getdustlabel()
+        self.title = self.name + " with " + self.dustlabel + "."
 
     def getextvarlab(self,num):
         whichfield = { \
@@ -184,6 +202,8 @@ class mcd():
         ## we use the end of extvar (unused) to store meanvar. this is convenient for getextvar(lab)
         self.extvar[90] = self.pres ; self.extvar[91] = self.dens
         self.extvar[92] = self.temp ; self.extvar[93] = self.zonwind ; self.extvar[94] = self.merwind
+        ## treat missing values 
+        if self.temp == -999: self.extvar[:] = np.NaN ; self.meanvar[:] = np.NaN
 
     def printset(self):
     # print main settings
@@ -267,9 +287,10 @@ class mcd():
     ### user-defined start and end are used to create xcoord (or ycoord) vector
       if start is not None and end is not None:  first, second = self.correctbounds(start,end)
       else:                                      first, second = self.correctbounds(dstart,dend)  
-      if not yaxis: self.xcoord = np.linspace(first,second,nd)
-      else:         self.ycoord = np.linspace(first,second,nd)
-      ## here we should code the log axis for pressure
+      if self.zkey != 4: tabtab = np.linspace(first,second,nd)
+      else:              tabtab = np.logspace(first,second,nd)
+      if not yaxis:      self.xcoord = tabtab
+      else:              self.ycoord = tabtab
 
     def correctbounds(self,start,end):
       if self.zkey != 4:
@@ -278,9 +299,16 @@ class mcd():
         else:           first = start ; second = end
       else:
         # pressure: reversed avis
-        if start < end: first = end ; second = start
-        else:           first = start ; second = end
+        if start < end: first = np.log10(end) ; second = np.log10(start)
+        else:           first = np.log10(start) ; second = np.log10(end)
       return first, second
+
+    def vertlabel(self):
+      if self.zkey == 1:   self.xlabel = "radius from centre of planet (m)"
+      elif self.zkey == 2: self.xlabel = "height above areoid (m) (MOLA zero datum)"
+      elif self.zkey == 3: self.xlabel = "height above surface (m)"
+      elif self.zkey == 4: self.xlabel = "pressure level (Pa)"
+      elif self.zkey == 5: self.xlabel = "altitude above mean Mars Radius(=3396000m) (m)"
 
 ###################
 ### 1D analysis ###
@@ -315,7 +343,8 @@ class mcd():
 
     def profile(self,nd=20,tabperso=None):
     ### retrieve an altitude slice (profile)
-      self.xlabel = "Altitude (m)"
+      self.vertlabel()
+      self.vertplot = True
       if tabperso is not None: nd = len(tabperso)
       correct = False
       self.prepare(ndx=nd) ; self.ininterv(0.,120000.,nd,start=self.xzs,end=self.xze)
@@ -328,22 +357,23 @@ class mcd():
       self.prepare(ndx=nd) ; self.ininterv(0.,360.,nd,start=self.xdates,end=self.xdatee)
       for i in range(nd): self.xdate = self.xcoord[i] ; self.update() ; self.put1d(i)
 
-    def makeplot1d(self,choice,vertplot=0):
+    def makeplot1d(self,choice):
     ### one 1D plot is created for the user-defined variable in choice. 
       (field, fieldlab) = self.definefield(choice)
-      if vertplot != 1:  absc = self.xcoord ; ordo = field ; ordolab = fieldlab ; absclab = self.xlabel
-      else:              ordo = self.xcoord ; absc = field ; absclab = fieldlab ; ordolab = self.xlabel
+      if not self.vertplot:  absc = self.xcoord ; ordo = field ; ordolab = fieldlab ; absclab = self.xlabel
+      else:                  ordo = self.xcoord ; absc = field ; absclab = fieldlab ; ordolab = self.xlabel
       mpl.plot(absc,ordo,'-bo') ; mpl.ylabel(ordolab) ; mpl.xlabel(absclab) #; mpl.xticks(query.xcoord)
-      mpl.figtext(0.5, 0.01, "Mars Climate Database (c) LMD/OU/IAA/ESA/CNES", ha='center')
+      if self.zkey == 4: mpl.semilogy() ; ax = mpl.gca() ; ax.set_ylim(ax.get_ylim()[::-1])
+      mpl.figtext(0.5, 0.01, self.ack, ha='center')
 
-    def plot1d(self,tabtodo,vertplot=0):
+    def plot1d(self,tabtodo):
     ### complete 1D figure with possible multiplots
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       fig = mpl.figure() ; subv,subh = myplot.definesubplot( len(tabtodo) , fig ) 
-      for i in range(len(tabtodo)): mpl.subplot(subv,subh,i+1).grid(True, linestyle=':', color='grey') ; self.makeplot1d(tabtodo[i],vertplot)
+      for i in range(len(tabtodo)): mpl.subplot(subv,subh,i+1).grid(True, linestyle=':', color='grey') ; self.makeplot1d(tabtodo[i])
 
-    def htmlplot1d(self,tabtodo,vertplot=0,figname="temp.png"):
+    def htmlplot1d(self,tabtodo,figname="temp.png",title=""):
     ### complete 1D figure with possible multiplots
     ### added in 09/2012 for online MCD
     ### see http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
@@ -356,11 +386,14 @@ class mcd():
         yeah = fig.add_subplot(subv,subh,i+1) #.grid(True, linestyle=':', color='grey') 
         choice = tabtodo[i]
         (field, fieldlab) = self.definefield(choice)
-        if vertplot != 1:  absc = self.xcoord ; ordo = field ; ordolab = fieldlab ; absclab = self.xlabel
-        else:              ordo = self.xcoord ; absc = field ; absclab = fieldlab ; ordolab = self.xlabel
+        if not self.vertplot:  absc = self.xcoord ; ordo = field ; ordolab = fieldlab ; absclab = self.xlabel
+        else:                  ordo = self.xcoord ; absc = field ; absclab = fieldlab ; ordolab = self.xlabel
         yeah.plot(absc,ordo,'-bo') #; mpl.xticks(query.xcoord)
         ax = fig.gca() ; ax.set_ylabel(ordolab) ; ax.set_xlabel(absclab)
-      fig.text(0.5, 0.01, "Mars Climate Database (c) LMD/OU/IAA/ESA/CNES", ha='center')
+        if self.zkey == 4: ax.set_yscale('log') ; ax.set_ylim(ax.get_ylim()[::-1])
+      self.gettitle()
+      fig.text(0.5, 0.95, self.title, ha='center')
+      fig.text(0.5, 0.01, self.ack, ha='center')
       canvas = FigureCanvasAgg(fig)
       # The size * the dpi gives the final image size
       #   a4"x4" image * 80 dpi ==> 320x320 pixel image
@@ -407,7 +440,7 @@ class mcd():
           (field, fieldlab) = self.definefield(choice)
       if incwind:   myplot.maplatlon(self.xcoord,self.ycoord,field,title=fieldlab,proj=proj,vecx=windx,vecy=windy) #,stride=1)
       else:         myplot.maplatlon(self.xcoord,self.ycoord,field,title=fieldlab,proj=proj)
-      mpl.figtext(0.5, 0.0, "Mars Climate Database (c) LMD/OU/IAA/ESA/CNES", ha='center')
+      mpl.figtext(0.5, 0.0, self.ack, ha='center')
 
     def map2d(self,tabtodo,incwind=False,fixedlt=False,proj="cyl"):
     ### complete 2D figure with possible multiplots
@@ -476,8 +509,9 @@ class mcd():
         if incwind:
           [x2d,y2d] = np.meshgrid(x,y)
           yeah.quiver(x2d,y2d,np.transpose(windx),np.transpose(windy))
-      fig.text(0.5, 0.95, title, ha='center')
-      fig.text(0.5, 0.01, "Mars Climate Database (c) LMD/OU/IAA/ESA/CNES", ha='center')
+      self.gettitle()
+      fig.text(0.5, 0.95, self.title, ha='center')
+      fig.text(0.5, 0.01, self.ack, ha='center')
       canvas = FigureCanvasAgg(fig)
       # The size * the dpi gives the final image size
       #   a4"x4" image * 80 dpi ==> 320x320 pixel image
