@@ -35,4 +35,4 @@ for iz in range(len(query.prestab)):
 
 ### FINISH
 sounding.close() ; additional.close()
-query.plot1d(["p","t","u","v"],vertplot=1) ; mpl.show()
+query.plot1d(["p","t","u","v"]) ; mpl.show()

@@ -92,6 +92,12 @@ class mcd():
     def gettitle(self):
         self.getdustlabel()
         self.title = self.name + " with " + self.dustlabel + "."
+        if self.lats is None:  self.title = self.title + " Latitude " + str(self.lat) + "E"
+        if self.lons is None:  self.title = self.title + " Longitude " + str(self.lon) + "N"
+        if self.xzs is None:   
+            self.vertunits()
+            self.title = self.title + " Altitude " + str(self.xz) + " " + self.vunits
+        if self.locts is None: self.title = self.title + " Local time " + str(self.loct) + "h"
 
     def getextvarlab(self,num):
         whichfield = { \
@@ -230,6 +236,7 @@ class mcd():
         print "Temperature = %3.0f kelvins (%4.0f degrees celsius)." % (self.temp,self.temp-273.15)
         print "Zonal wind = %5.3f meters per second." % (self.zonwind)
         print "Meridional wind = %5.3f meters per second." % (self.merwind)
+        print "Total horizontal wind = %5.3f meters per second." % ( np.sqrt(self.zonwind**2 + self.merwind**2) )
 
     def printextvar(self,num):
     # print extra MCD variables
@@ -310,6 +317,13 @@ class mcd():
       elif self.zkey == 4: self.xlabel = "pressure level (Pa)"
       elif self.zkey == 5: self.xlabel = "altitude above mean Mars Radius(=3396000m) (m)"
 
+    def vertunits(self):
+      if self.zkey == 1:   self.vunits = "m CP"
+      elif self.zkey == 2: self.vunits = "m AMR"
+      elif self.zkey == 3: self.vunits = "m ALS"
+      elif self.zkey == 4: self.vunits = "Pa"
+      elif self.zkey == 5: self.vunits = "m AMMRad"
+
 ###################
 ### 1D analysis ###
 ###################
@@ -325,24 +339,31 @@ class mcd():
 
     def diurnal(self,nd=13):
     ### retrieve a local time slice
+      save = self.loct
       self.xlabel = "Local time (Martian hour)"
       self.prepare(ndx=nd) ; self.ininterv(0.,24.,nd,start=self.locts,end=self.locte) 
       for i in range(nd): self.loct = self.xcoord[i] ; self.update() ; self.put1d(i)
+      self.loct = save
 
     def zonal(self,nd=37):
     ### retrieve a longitude slice
+      save = self.lon
       self.xlabel = "East longitude (degrees)"
       self.prepare(ndx=nd) ; self.ininterv(-180.,180.,nd,start=self.lons,end=self.lone)
       for i in range(nd): self.lon = self.xcoord[i] ; self.update() ; self.put1d(i)
+      self.lon = save
 
     def meridional(self,nd=19):
     ### retrieve a latitude slice
+      save = self.lat
       self.xlabel = "North latitude (degrees)"
       self.prepare(ndx=nd) ; self.ininterv(-90.,90.,nd,start=self.lats,end=self.late)
       for i in range(nd): self.lat = self.xcoord[i] ; self.update() ; self.put1d(i)
+      self.lat = save
 
     def profile(self,nd=20,tabperso=None):
     ### retrieve an altitude slice (profile)
+      save = self.xz
       self.vertlabel()
       self.vertplot = True
       if tabperso is not None: nd = len(tabperso)
@@ -350,12 +371,15 @@ class mcd():
       self.prepare(ndx=nd) ; self.ininterv(0.,120000.,nd,start=self.xzs,end=self.xze)
       if tabperso is not None: self.xcoord = tabperso
       for i in range(nd): self.xz = self.xcoord[i] ; self.update() ; self.put1d(i)
+      self.xz = save
 
     def seasonal(self,nd=12):
     ### retrieve a seasonal slice
+      save = self.xdate
       self.xlabel = "Areocentric longitude (degrees)"
       self.prepare(ndx=nd) ; self.ininterv(0.,360.,nd,start=self.xdates,end=self.xdatee)
       for i in range(nd): self.xdate = self.xcoord[i] ; self.update() ; self.put1d(i)
+      self.xdate = save
 
     def makeplot1d(self,choice):
     ### one 1D plot is created for the user-defined variable in choice. 
@@ -406,6 +430,7 @@ class mcd():
     def latlon(self,ndx=37,ndy=19,fixedlt=False):
     ### retrieve a latitude/longitude slice
     ### default is: local time is not fixed. user-defined local time is at longitude 0.
+      save1 = self.lon ; save2 = self.lat ; save3 = self.loct
       self.xlabel = "East longitude (degrees)" ; self.ylabel = "North latitude (degrees)"
       self.prepare(ndx=ndx,ndy=ndy)
       self.ininterv(-180.,180.,ndx,start=self.lons,end=self.lone)
@@ -414,9 +439,12 @@ class mcd():
       for i in range(ndx):
        for j in range(ndy):
          self.lon = self.xcoord[i] ; self.lat = self.ycoord[j]
-         if not fixedlt: self.loct = (umst + self.lon/15.) % 24
+         if not fixedlt: 
+           if self.lons is not None and self.lone is not None: self.loct = (umst + (self.lons+self.lone)/30.) % 24
+           else:                                               self.loct = (umst + self.lon/15.) % 24
          self.update() ; self.put2d(i,j)
       if not fixedlt: self.loct = umst
+      self.lon = save1 ; self.lat = save2 ; self.loct = save3
 
     def put2d(self,i,j):
     ## fill in subscript i,j in output arrays
@@ -502,7 +530,8 @@ class mcd():
         yeah.contour( x, y, np.transpose(fieldc), zelevc, colors='black',linewidths = 0.4)
         # contour field
         c = yeah.contourf( x, y, what_I_plot, zelevels, cmap = palette, alpha = trans )
-        Figure.colorbar(fig,c,orientation='vertical',format="%.1e")
+        clb = Figure.colorbar(fig,c,orientation='vertical',format="%.1e")
+        clb.set_label(fieldlab)
         ax = fig.gca() ; ax.set_title(fieldlab) ; ax.set_ylabel("Latitude") ; ax.set_xlabel("Longitude")
         ax.set_xticks(np.arange(-180,181,45)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
         ax.set_yticks(np.arange(-90,91,30)) ; ax.set_ybound(lower=self.lats, upper=self.late)

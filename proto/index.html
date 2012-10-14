@@ -49,17 +49,23 @@
 <input type="radio" name="lander" value="Viking Lander 1" onClick="DateAndTimeValues(1976,7,20,11,53,6);Convert2Ls();PlaceValues(-49.97,22.48)">Viking Lander 1<br />
 </td>
 <td align="center">
-<b>CUSTOMIZE EARTH TIME</b><br />
-Year / Month / Day @ hh:mm:ss [UTC]<br />
+<input type="radio" name="datekeyhtml" value="1" checked>
+<b><font color="red">MARS date</font></b> 
+Solar longitude <input type="text" size="3" name="ls"> degrees<br />
+Local Time <input type="text" size="4" name="localtime" value="0."> Martian hour<br />
+<input type="radio" name="datekeyhtml" value="0">
+<b><font color="blue">EARTH date</font></b> 
+YY / MM / DD @ hh:mm:ss<br />
 <input type="text" size="3" name="year"> / <input type="text" size="1" name="month"> / <input type="text" size="1" name="day"> @
-<input type="text" size="1" name="hours">:<input type="text" size="1" name="minutes">:<input type="text" size="1" name="seconds"><br />
-<input type="button" value="SAVE CHANGES" onClick="Convert2Ls();" style="font-weight:bold"><br />
+<input type="text" size="1" name="hours">:<input type="text" size="1" name="minutes">:<input type="text" size="1" name="seconds">
+UTC<br />
 </td>
 <td align="center">
 Earth Julian Date <input type="text" size="6" name="julian" readonly="readonly"><br />
-Martian year <input type="text" size="1" name="martianyear" readonly="readonly"> <br />
-Martian month <input type="text" size="1" name="martianmonth" readonly="readonly"> / 12<br />
-Martian sol <input type="text" size="2" name="sol" readonly="readonly"> / 669
+Martian year <input type="text" size="1" name="martianyear" readonly="readonly"> 
+month <input type="text" size="1" name="martianmonth" readonly="readonly"> / 12 <br />
+Martian sol <input type="text" size="2" name="sol" readonly="readonly"> / 669<br />
+<input type="button" value="EARTH DATE >>> MARS DATE" onClick="Convert2Ls();"><br />
 </td>
 </tr>
 <tr>
@@ -97,9 +103,8 @@ Martian sol <input type="text" size="2" name="sol" readonly="readonly"> / 669
 <b>CUSTOMIZE COORDINATES ON MARS</b><br />
 write a value (or) a range val1;val2 (or) 'all'<br />
 <ul>
-<li>Latitude <input type="text" size="7" name="latitude" value="0."> degree North 
+<li>Latitude <input type="text" size="7" name="latitude" value="0."> degree North
 <li>Longitude <input type="text" size="7" name="longitude" value="0."> degree East
-<li>Local Time <input type="text" size="7" name="localtime" value="0."> Martian hour
 <li>Altitude <input type="text" size="9" name="altitude" value="10."> <select name="zkey">
 <option value="1"         >m (O: Mars center)</option>
 <option value="2"         >m (O: "sea level")</option>
@@ -130,7 +135,6 @@ write a value (or) a range val1;val2 (or) 'all'<br />
 <td align="center">
 <!--[Advanced settings for well-informed Martians]<br />-->
 <ul>
-<li>Force Mars solar longitude to be <input type="text" size="3" name="ls"> degrees</li> 
 <li>High resolution topography? <input type="radio" name="hrkey" value="1" checked /> Yes <input type="radio" name="hrkey" value="0" /> No </li>
 <li>Dust scenario? <select name="dust">
 <option value="1"         >MY24 min solar</option>

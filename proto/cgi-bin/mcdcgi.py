@@ -68,8 +68,16 @@ else:                isaltfree = 0 ; query.xz = float(getalt)
 sumfree = islatfree + islonfree + isloctfree + isaltfree 
 if sumfree > 2: exit() ## only 1D or 2D plots for the moment
 
-try: query.xdate = float(form.getvalue("ls"))
-except: query.xdate = float(1)
+try: query.datekey = int(form.getvalue("datekeyhtml"))
+except: query.datekey = float(1)
+if query.datekey == 1:
+    try: query.xdate = float(form.getvalue("ls"))
+    except: query.xdate = float(1)
+else:
+    try: query.xdate = float(form.getvalue("julian"))
+    except: query.xdate = float(1)
+    query.loct = 0.
+
 try: query.hrkey = int(form.getvalue("hrkey"))
 except: query.hrkey = int(1)
 try: query.dust = int(form.getvalue("dust"))
@@ -155,9 +163,11 @@ print header
 #print query.printset()
 #print "<br />"
 
+print "<a href='../index.html'>Click here to start a new query</a><br />"
+
 ## Now the part which differs
 if sumfree == 0: 	query.update() ; query.htmlprinttabextvar(vartoplot)  #query.printmeanvar()
-elif sumfree >= 1: 	print "<a href='../index.html'>Click here to start a new query</a><br /><img src='"+figname+"'><br />"
+elif sumfree >= 1: 	print "<img src='"+figname+"'><br />"
 else:			print "<h1>ERROR : sumfree is not or badly defined ...</h1></body></html>"
 
 
