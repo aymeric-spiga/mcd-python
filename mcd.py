@@ -109,7 +109,7 @@ class mcd():
 	1: "Radial distance from planet center (m)",\
 	2: "Altitude above areoid (Mars geoid) (m)",\
 	3: "Altitude above local surface (m)",\
-	4: "orographic height (m) (surface altitude above areoid)",\
+	4: "orographic height (m) (surf alt above areoid)",\
 	5: "Ls, solar longitude of Mars (deg)",\
 	6: "LST local true solar time (hrs)",\
 	7: "Universal solar time (LST at lon=0) (hrs)",\
@@ -121,8 +121,8 @@ class mcd():
 	13: "scale height H(p) (m)",\
 	14: "GCM orography (m)",\
 	15: "surface temperature (K)",\
-	16: "daily maximum mean surface temperature (K)",\
-	17: "daily minimum mean surface temperature (K)",\
+	16: "daily max mean surface temperature (K)",\
+	17: "daily min mean surface temperature (K)",\
 	18: "surf. temperature RMS day to day variations (K)",\
 	19: "surface pressure (high resolution if hireskey=1)",\
 	20: "GCM surface pressure (Pa)",\
@@ -521,19 +521,34 @@ class mcd():
       subv,subh = myplot.definesubplot( len(tabtodo) , fig ) 
       for i in range(len(tabtodo)): mpl.subplot(subv,subh,i+1) ; self.makemap2d(tabtodo[i],incwind=incwind,fixedlt=fixedlt,proj=proj)
 
-    def htmlmap2d(self,tabtodo,incwind=False,fixedlt=False,figname="temp.png",title=""):
+    def htmlmap2d(self,tabtodo,incwind=False,fixedlt=False,figname="temp.png",title="",back="zMOL"):
     ### complete 2D figure with possible multiplots
     ### added in 09/2012 for online MCD
     ### see http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
       from matplotlib.figure import Figure
       from matplotlib.backends.backend_agg import FigureCanvasAgg
       from matplotlib.cm import get_cmap
+
+      #from mpl_toolkits.basemap import Basemap
+
+      from Scientific.IO import NetCDF
+      filename = "/home/marshttp/surface.nc"
+      zefile = NetCDF.NetCDFFile(filename, 'r') 
+      fieldc = zefile.variables[back]
+      yc = zefile.variables['latitude']
+      xc = zefile.variables['longitude']
+      ## plutot que fieldc = self.getextvar(self.convertlab("topo"))
+
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
-      fig = Figure(figsize=(8,8)) ; subv,subh = myplot.definesubplot( len(tabtodo) , fig )
 
-      ### topocontours
-      fieldc = self.getextvar(self.convertlab("topo"))
+      howmanyplots = len(tabtodo)
+      if howmanyplots == 1: fig = Figure(figsize=(16,8)) 
+      elif howmanyplots == 2: fig = Figure(figsize=(8,8)) 
+      elif howmanyplots == 3: fig = Figure(figsize=(8,16)) 
+      elif howmanyplots == 4: fig = Figure(figsize=(16,8)) 
+
+      subv,subh = myplot.definesubplot( len(tabtodo) , fig )
 
       for i in range(len(tabtodo)):
         yeah = fig.add_subplot(subv,subh,i+1)
@@ -543,23 +558,22 @@ class mcd():
         (field, fieldlab) = self.definefield(choice)
         if incwind: (windx, fieldlabwx) = self.definefield("u") ; (windy, fieldlabwy) = self.definefield("v")
 
-        proj="cyl" ; colorb="jet" ; ndiv=20 ; zeback="molabw" ; trans=1.0 #0.6
+        proj="moll" ; colorb="jet" ; ndiv=20 ; zeback="molabw" ; trans=1.0 #0.6
         title="" ; vecx=None ; vecy=None ; stride=2
         lon = self.xcoord
         lat = self.ycoord
+        
+        #[lon2d,lat2d] = np.meshgrid(lon,lat)
+        ##### define projection and background. define x and y given the projection
+        ##[wlon,wlat] = myplot.latinterv()
+        ##yeahm = myplot.define_proj(proj,wlon,wlat,back=zeback,blat=None,blon=None)
+        ##x, y = yeahm(lon2d, lat2d)
+        #map = Basemap(projection='ortho',lat_0=45,lon_0=-100)
+        #x, y = map(lon2d, lat2d)
 
-        ### get lon and lat in 2D version. get lat/lon intervals
-        #numdim = len(np.array(lon).shape)
-        #if numdim == 2:     [lon2d,lat2d] = [lon,lat]
-        #elif numdim == 1:   [lon2d,lat2d] = np.meshgrid(lon,lat)
-        #else:               errormess("lon and lat arrays must be 1D or 2D")
-        #[wlon,wlat] = myplot.latinterv()
-        ### define projection and background. define x and y given the projection
-        #m = basemap.Basemap(projection='moll') marche pas
-        #m = myplot.define_proj(proj,wlon,wlat,back=zeback,blat=None,blon=None)
-        #x, y = m(lon2d, lat2d)
-        ### TEMP
+        #### TEMP
         x = lon ; y = lat
+
         ## define field. bound field.
         what_I_plot = np.transpose(field)
         zevmin, zevmax = myplot.calculate_bounds(what_I_plot)  ## vmin=min(what_I_plot_frame), vmax=max(what_I_plot_frame))
@@ -568,14 +582,15 @@ class mcd():
         ticks = ndiv + 1
         zelevels = np.linspace(zevmin,zevmax,ticks)
         palette = get_cmap(name=colorb)
+
         ## contours topo
-        zelevc = np.linspace(-8000.,20000.,20)
-        yeah.contour( x, y, np.transpose(fieldc), zelevc, colors='black',linewidths = 0.4)
+        zelevc = np.linspace(-9.,20.,11)
+        yeah.contour( xc, yc, fieldc, zelevc, colors='black',linewidths = 0.4)
         # contour field
         c = yeah.contourf( x, y, what_I_plot, zelevels, cmap = palette, alpha = trans )
-        clb = Figure.colorbar(fig,c,orientation='vertical',format="%.1e")
+        clb = Figure.colorbar(fig,c,orientation='vertical',format="%.2e",ticks=np.linspace(zevmin,zevmax,num=min([ticks/2+1,21])))
         clb.set_label(fieldlab)
-        ax = fig.gca() ; ax.set_title(fieldlab) ; ax.set_ylabel("Latitude") ; ax.set_xlabel("Longitude")
+        ax = fig.gca() ; ax.set_ylabel("Latitude") ; ax.set_xlabel("Longitude")
         ax.set_xticks(np.arange(-180,181,45)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
         ax.set_yticks(np.arange(-90,91,30)) ; ax.set_ybound(lower=self.lats, upper=self.late)
         if incwind:
@@ -621,7 +636,7 @@ class mcd():
         palette = get_cmap(name=colorb)
         # contour field
         c = yeah.contourf( self.xcoord, self.ycoord, what_I_plot, zelevels, cmap = palette )
-        clb = Figure.colorbar(fig,c,orientation='vertical',format="%.1e")
+        clb = Figure.colorbar(fig,c,orientation='vertical',format="%.2e",ticks=np.linspace(zevmin,zevmax,num=min([ticks/2+1,21])))
         clb.set_label(fieldlab)
         ax = fig.gca() ; ax.set_ylabel(self.ylabel) ; ax.set_xlabel(self.xlabel)
         if self.zkey == 4: ax.set_yscale('log') ; ax.set_ylim(ax.get_ylim()[::-1])

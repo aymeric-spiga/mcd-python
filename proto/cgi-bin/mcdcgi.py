@@ -1,5 +1,5 @@
-###!/usr/bin/env python
 #!/usr/bin/python
+###!/usr/bin/env python
 ###!/home/aymeric/Software/epd-7.0-2-rh5-x86/bin/python
 ####!/home/marshttp/EPD/epd-7.0-2-rh5-x86_64/bin/python
 ### here the version used to f2py the MCD Fortran routines
