@@ -58,10 +58,19 @@ if getloct == "all": isloctfree = 1 ; query.locts = 0. ; query.locte = 24.
 elif ";" in getloct: isloctfree = 1 ; ind = getloct.find(";") ; query.locts = float(getloct[:ind]) ; query.locte = float(getloct[ind+1:])
 else:                isloctfree = 0 ; query.loct = float(getloct)
 
+try: query.zkey = int(form.getvalue("zkey"))
+except: query.zkey = int(3)
+
 query.xz = -9999.
 getalt = form.getvalue("altitude")
 if getalt == None: getalt = "1"
-if getalt == "all":  isaltfree = 1 ; query.xzs = 0. ; query.xze = 120000.
+if getalt == "all":  
+    isaltfree = 1 
+    if query.zkey == 2:    query.xzs = -5000.   ; query.xze = 100000.
+    elif query.zkey == 3:  query.xzs = 0.       ; query.xze = 120000.
+    elif query.zkey == 5:  query.xzs = -5000.   ; query.xze = 100000.
+    elif query.zkey == 4:  query.xzs = 1000.    ; query.xze = 0.001
+    elif query.zkey == 1:  query.xzs = 3396000. ; query.xze = 3596000.
 elif ";" in getalt:  isaltfree = 1 ; ind = getalt.find(";") ; query.xzs = float(getalt[:ind]) ; query.xze = float(getalt[ind+1:])
 else:                isaltfree = 0 ; query.xz = float(getalt)
 
@@ -82,8 +91,6 @@ try: query.hrkey = int(form.getvalue("hrkey"))
 except: query.hrkey = int(1)
 try: query.dust = int(form.getvalue("dust"))
 except: query.dust  = int(1)
-try: query.zkey = int(form.getvalue("zkey"))
-except: query.zkey = int(3)
 #        self.perturkey = 0  #integer perturkey ! perturbation type (0: none)
 #        self.seedin    = 1  #random number generator seed (unused if perturkey=0)
 #        self.gwlength  = 0. #gravity Wave wavelength (unused if perturkey=0)
@@ -140,14 +147,17 @@ if not testexist:
   elif sumfree == 2:
 
     ### getting data
-    if islatfree == 1 and islonfree == 1:  	query.latlon()   
-    else:					exit()  
-
-    ### figure    
-    query.htmlmap2d(vartoplot,incwind=iswindlog,fixedlt=input_fixedlt,figname=figname) 
-    #mpl.savefig("img/temp.png",dpi=110,bbox_inches='tight',pad_inches=0.4)
-    #Image.open("img/temp.png").save(figname,'JPEG') ##lighter images   
-    ### http://www.pythonware.com/library/pil/handbook/introduction.htm
+    if islatfree == 1 and islonfree == 1:  	
+        query.htmlmap2d(vartoplot,incwind=iswindlog,fixedlt=input_fixedlt,figname=figname) 
+        #mpl.savefig("img/temp.png",dpi=110,bbox_inches='tight',pad_inches=0.4)
+        #Image.open("img/temp.png").save(figname,'JPEG') ##lighter images   
+        ### http://www.pythonware.com/library/pil/handbook/introduction.htm
+    elif isaltfree == 1 and islonfree == 1:  	
+        query.htmlplot2d(vartoplot,fixedlt=input_fixedlt,figname=figname)
+    elif isaltfree == 1 and islatfree == 1:  	
+        query.htmlplot2d(vartoplot,fixedlt=input_fixedlt,figname=figname)
+    else:
+        exit()  
 
 ## This is quite common
 print "Content-type:text/html\n"

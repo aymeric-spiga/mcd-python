@@ -290,17 +290,17 @@ class mcd():
       field = self.getextvar(choice); fieldlab = self.getextvarlab(choice)
       return field,fieldlab
 
-    def ininterv(self,dstart,dend,nd,start=None,end=None,yaxis=False):
+    def ininterv(self,dstart,dend,nd,start=None,end=None,yaxis=False,vertcoord=False):
     ### user-defined start and end are used to create xcoord (or ycoord) vector
-      if start is not None and end is not None:  first, second = self.correctbounds(start,end)
-      else:                                      first, second = self.correctbounds(dstart,dend)  
-      if self.zkey != 4: tabtab = np.linspace(first,second,nd)
-      else:              tabtab = np.logspace(first,second,nd)
+      if start is not None and end is not None:  first, second = self.correctbounds(start,end,vertcoord)
+      else:                                      first, second = self.correctbounds(dstart,dend,vertcoord)  
+      if self.zkey != 4 or not vertcoord:   tabtab = np.linspace(first,second,nd)
+      else:                                 tabtab = np.logspace(first,second,nd)
       if not yaxis:      self.xcoord = tabtab
       else:              self.ycoord = tabtab
 
-    def correctbounds(self,start,end):
-      if self.zkey != 4:
+    def correctbounds(self,start,end,vertcoord):
+      if self.zkey != 4 or not vertcoord:
         # regular altitudes
         if start > end: first = end ; second = start
         else:           first = start ; second = end
@@ -323,6 +323,13 @@ class mcd():
       elif self.zkey == 3: self.vunits = "m ALS"
       elif self.zkey == 4: self.vunits = "Pa"
       elif self.zkey == 5: self.vunits = "m AMMRad"
+
+    def vertaxis(self,number,yaxis=False):
+      if self.zkey == 2:   self.ininterv(-5000.,100000.,number,start=self.xzs,end=self.xze,yaxis=yaxis,vertcoord=True)
+      elif self.zkey == 3: self.ininterv(0.,120000.,number,start=self.xzs,end=self.xze,yaxis=yaxis,vertcoord=True)
+      elif self.zkey == 5: self.ininterv(-5000.,100000.,number,start=self.xzs,end=self.xze,yaxis=yaxis,vertcoord=True)
+      elif self.zkey == 4: self.ininterv(1000.,0.001,number,start=self.xzs,end=self.xze,yaxis=yaxis,vertcoord=True)
+      elif self.zkey == 1: self.ininterv(3396000,3596000,number,start=self.xzs,end=self.xze,yaxis=yaxis,vertcoord=True)
 
 ###################
 ### 1D analysis ###
@@ -368,7 +375,7 @@ class mcd():
       self.vertplot = True
       if tabperso is not None: nd = len(tabperso)
       correct = False
-      self.prepare(ndx=nd) ; self.ininterv(0.,120000.,nd,start=self.xzs,end=self.xze)
+      self.prepare(ndx=nd) ; self.vertaxis(nd)
       if tabperso is not None: self.xcoord = tabperso
       for i in range(nd): self.xz = self.xcoord[i] ; self.update() ; self.put1d(i)
       self.xz = save
@@ -445,6 +452,42 @@ class mcd():
          self.update() ; self.put2d(i,j)
       if not fixedlt: self.loct = umst
       self.lon = save1 ; self.lat = save2 ; self.loct = save3
+
+    def lonalt(self,ndx=37,ndy=20,fixedlt=False):
+    ### retrieve a longitude/altitude slice
+      save1 = self.lon ; save2 = self.xz ; save3 = self.loct
+      self.vertlabel() ; self.ylabel = self.xlabel
+      self.xlabel = "East longitude (degrees)"
+      self.prepare(ndx=ndx,ndy=ndy)
+      self.ininterv(-180.,180.,ndx,start=self.lons,end=self.lone)
+      self.vertaxis(ndy,yaxis=True)
+      if not fixedlt: umst = self.loct
+      for i in range(ndx):
+       for j in range(ndy):
+         self.lon = self.xcoord[i] ; self.xz = self.ycoord[j] 
+         if not fixedlt: 
+           if self.lons is not None and self.lone is not None: self.loct = (umst + (self.lons+self.lone)/30.) % 24
+           else:                                               self.loct = (umst + self.lon/15.) % 24
+         self.update() ; self.put2d(i,j)
+      if not fixedlt: self.loct = umst
+      self.lon = save1 ; self.xz = save2 ; self.loct = save3
+
+    def latalt(self,ndx=19,ndy=20,fixedlt=False):
+    ### retrieve a latitude/altitude slice
+      save1 = self.lat ; save2 = self.xz ; save3 = self.loct
+      self.vertlabel() ; self.ylabel = self.xlabel
+      self.xlabel = "North latitude (degrees)"
+      self.prepare(ndx=ndx,ndy=ndy)
+      self.ininterv(-90.,90.,ndx,start=self.lats,end=self.late)
+      self.vertaxis(ndy,yaxis=True)
+      if not fixedlt: umst = self.loct
+      for i in range(ndx):
+       for j in range(ndy):
+         self.lat = self.xcoord[i] ; self.xz = self.ycoord[j] 
+         if not fixedlt: self.loct = (umst + self.lon/15.) % 24
+         self.update() ; self.put2d(i,j)
+      if not fixedlt: self.loct = umst
+      self.lat = save1 ; self.xz = save2 ; self.loct = save3
 
     def put2d(self,i,j):
     ## fill in subscript i,j in output arrays
@@ -538,6 +581,54 @@ class mcd():
         if incwind:
           [x2d,y2d] = np.meshgrid(x,y)
           yeah.quiver(x2d,y2d,np.transpose(windx),np.transpose(windy))
+      self.gettitle()
+      fig.text(0.5, 0.95, self.title, ha='center')
+      fig.text(0.5, 0.01, self.ack, ha='center')
+      canvas = FigureCanvasAgg(fig)
+      # The size * the dpi gives the final image size
+      #   a4"x4" image * 80 dpi ==> 320x320 pixel image
+      canvas.print_figure(figname, dpi=80)
+
+    def htmlplot2d(self,tabtodo,fixedlt=False,figname="temp.png",title=""):
+    ### complete 2D figure with possible multiplots
+    ### added in 10/2012 for online MCD
+    ### see http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
+      from matplotlib.figure import Figure
+      from matplotlib.backends.backend_agg import FigureCanvasAgg
+      from matplotlib.cm import get_cmap
+      if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
+      if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
+      fig = Figure(figsize=(8,8)) ; subv,subh = myplot.definesubplot( len(tabtodo) , fig )
+
+      for i in range(len(tabtodo)):
+        yeah = fig.add_subplot(subv,subh,i+1)
+        choice = tabtodo[i]
+
+        if self.lons is not None:    self.lonalt(fixedlt=fixedlt)
+        elif self.lats is not None:  self.latalt(fixedlt=fixedlt)
+
+        (field, fieldlab) = self.definefield(choice)
+
+        colorb="jet" ; ndiv=20 ; title=""
+
+        ## define field. bound field.
+        what_I_plot = np.transpose(field)
+        zevmin, zevmax = myplot.calculate_bounds(what_I_plot)  ## vmin=min(what_I_plot_frame), vmax=max(what_I_plot_frame))
+        what_I_plot = myplot.bounds(what_I_plot,zevmin,zevmax)
+        ## define contour field levels. define color palette
+        ticks = ndiv + 1
+        zelevels = np.linspace(zevmin,zevmax,ticks)
+        palette = get_cmap(name=colorb)
+        # contour field
+        c = yeah.contourf( self.xcoord, self.ycoord, what_I_plot, zelevels, cmap = palette )
+        clb = Figure.colorbar(fig,c,orientation='vertical',format="%.1e")
+        clb.set_label(fieldlab)
+        ax = fig.gca() ; ax.set_ylabel(self.ylabel) ; ax.set_xlabel(self.xlabel)
+        if self.zkey == 4: ax.set_yscale('log') ; ax.set_ylim(ax.get_ylim()[::-1])
+
+        #ax.set_xticks(np.arange(-180,181,45)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
+        #ax.set_yticks(np.arange(-90,91,30)) ; ax.set_ybound(lower=self.lats, upper=self.late)
+
       self.gettitle()
       fig.text(0.5, 0.95, self.title, ha='center')
       fig.text(0.5, 0.01, self.ack, ha='center')
