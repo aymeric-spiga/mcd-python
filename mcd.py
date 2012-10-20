@@ -199,6 +199,20 @@ class mcd():
 
     def update(self):
     # retrieve fields from MCD (call_mcd). more info in fmcd.call_mcd.__doc__
+        ## sanity first
+        self.loct = abs(self.loct)%24
+        if self.locts is not None and self.locte is not None: 
+            self.locts = abs(self.locts)%24
+            self.locte = abs(self.locte)%24
+            if self.locts == self.locte: self.locte = self.locts + 24
+        if self.lat > 90.: self.lat = 90.
+        if self.lat < -90.: self.lat = -90.
+        if self.lats is not None and self.late is not None:
+            if abs(self.lats) > 90.: self.lats = 90.
+            if abs(self.late) > 90.: self.late = 90.
+            if abs(self.lats) < -90.: self.lats = -90.
+            if abs(self.late) < -90.: self.late = -90.
+        ## now MCD request
         (self.pres, self.dens, self.temp, self.zonwind, self.merwind, \
          self.meanvar, self.extvar, self.seedout, self.ierr) \
          = \
@@ -388,6 +402,23 @@ class mcd():
       for i in range(nd): self.xdate = self.xcoord[i] ; self.update() ; self.put1d(i)
       self.xdate = save
 
+    def getascii(self,tabtodo,filename="output.txt"):
+    ### print out values in an ascii file
+      if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
+      if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
+      asciifile = open(filename, "w")
+      for i in range(len(tabtodo)):  
+          (field, fieldlab) = self.definefield(tabtodo[i])
+          self.gettitle()
+          asciifile.write("### " + self.title + "\n")
+          asciifile.write("### " + self.ack + "\n")
+          asciifile.write("### Column 1 is " + self.xlabel + "\n")
+          asciifile.write("### Column 2 is " + fieldlab + "\n")
+          for ix in range(len(self.xcoord)):
+              asciifile.write("%15.5e%15.5e\n" % ( self.xcoord[ix], field[ix] ) )
+      asciifile.close()
+      return 
+
     def makeplot1d(self,choice):
     ### one 1D plot is created for the user-defined variable in choice. 
       (field, fieldlab) = self.definefield(choice)
@@ -422,6 +453,11 @@ class mcd():
         yeah.plot(absc,ordo,'-bo') #; mpl.xticks(query.xcoord)
         ax = fig.gca() ; ax.set_ylabel(ordolab) ; ax.set_xlabel(absclab)
         if self.zkey == 4: ax.set_yscale('log') ; ax.set_ylim(ax.get_ylim()[::-1])
+
+        if self.lats is not None:      ax.set_xticks(np.arange(-90,91,15)) ; ax.set_xbound(lower=self.lats, upper=self.late)
+        elif self.lons is not None:    ax.set_xticks(np.arange(-360,361,30)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
+        elif self.locts is not None:   ax.set_xticks(np.arange(0,26,2)) ; ax.set_xbound(lower=self.locts, upper=self.locte)
+
       self.gettitle()
       fig.text(0.5, 0.95, self.title, ha='center')
       fig.text(0.5, 0.01, self.ack, ha='center')
@@ -528,6 +564,7 @@ class mcd():
       from matplotlib.figure import Figure
       from matplotlib.backends.backend_agg import FigureCanvasAgg
       from matplotlib.cm import get_cmap
+      from matplotlib import rcParams 
 
       #from mpl_toolkits.basemap import Basemap
 
@@ -553,7 +590,7 @@ class mcd():
       for i in range(len(tabtodo)):
         yeah = fig.add_subplot(subv,subh,i+1)
         choice = tabtodo[i]
-        self.latlon(fixedlt=fixedlt) 
+        self.latlon(fixedlt=fixedlt,ndx=64,ndy=48) 
         ## a map is implicitely a lat-lon plot. otherwise it is a plot (cf. makeplot2d)
         (field, fieldlab) = self.definefield(choice)
         if incwind: (windx, fieldlabwx) = self.definefield("u") ; (windy, fieldlabwy) = self.definefield("v")
@@ -583,19 +620,23 @@ class mcd():
         zelevels = np.linspace(zevmin,zevmax,ticks)
         palette = get_cmap(name=colorb)
 
+        # You can set negative contours to be solid instead of dashed:
+        rcParams['contour.negative_linestyle'] = 'solid'
         ## contours topo
         zelevc = np.linspace(-9.,20.,11)
         yeah.contour( xc, yc, fieldc, zelevc, colors='black',linewidths = 0.4)
+        yeah.contour( np.array(xc) + 360., yc, fieldc, zelevc, colors='black',linewidths = 0.4)
+        yeah.contour( np.array(xc) - 360., yc, fieldc, zelevc, colors='black',linewidths = 0.4)
         # contour field
         c = yeah.contourf( x, y, what_I_plot, zelevels, cmap = palette, alpha = trans )
         clb = Figure.colorbar(fig,c,orientation='vertical',format="%.2e",ticks=np.linspace(zevmin,zevmax,num=min([ticks/2+1,21])))
         clb.set_label(fieldlab)
-        ax = fig.gca() ; ax.set_ylabel("Latitude") ; ax.set_xlabel("Longitude")
-        ax.set_xticks(np.arange(-180,181,45)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
-        ax.set_yticks(np.arange(-90,91,30)) ; ax.set_ybound(lower=self.lats, upper=self.late)
         if incwind:
           [x2d,y2d] = np.meshgrid(x,y)
           yeah.quiver(x2d,y2d,np.transpose(windx),np.transpose(windy))
+        ax = fig.gca() ; ax.set_ylabel("Latitude") ; ax.set_xlabel("Longitude")
+        ax.set_xticks(np.arange(-360,361,45)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
+        ax.set_yticks(np.arange(-90,91,30)) ; ax.set_ybound(lower=self.lats, upper=self.late)
       self.gettitle()
       fig.text(0.5, 0.95, self.title, ha='center')
       fig.text(0.5, 0.01, self.ack, ha='center')
@@ -639,10 +680,15 @@ class mcd():
         clb = Figure.colorbar(fig,c,orientation='vertical',format="%.2e",ticks=np.linspace(zevmin,zevmax,num=min([ticks/2+1,21])))
         clb.set_label(fieldlab)
         ax = fig.gca() ; ax.set_ylabel(self.ylabel) ; ax.set_xlabel(self.xlabel)
-        if self.zkey == 4: ax.set_yscale('log') ; ax.set_ylim(ax.get_ylim()[::-1])
 
-        #ax.set_xticks(np.arange(-180,181,45)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
-        #ax.set_yticks(np.arange(-90,91,30)) ; ax.set_ybound(lower=self.lats, upper=self.late)
+        if self.zkey == 4: 
+            ax.set_yscale('log') ; ax.set_ylim(ax.get_ylim()[::-1])
+        else:
+            #ax.set_yticks(np.arange(self.xzs,self.xze,10000.)) ; 
+            ax.set_ybound(lower=self.xzs, upper=self.xze)
+
+        if self.lons is not None: ax.set_xticks(np.arange(-360,361,45)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
+        elif self.lats is not None: ax.set_xticks(np.arange(-90,91,30)) ; ax.set_xbound(lower=self.lats, upper=self.late)
 
       self.gettitle()
       fig.text(0.5, 0.95, self.title, ha='center')

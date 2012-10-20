@@ -42,6 +42,8 @@ getlat = form.getvalue("latitude")
 if getlat == None: getlat = "1"
 if getlat == "all":  islatfree = 1 ; query.lats = -90. ; query.late = 90.
 elif ";" in getlat:  islatfree = 1 ; ind = getlat.find(";") ; query.lats = float(getlat[:ind]) ; query.late = float(getlat[ind+1:])
+elif "," in getlat:  islatfree = 1 ; ind = getlat.find(",") ; query.lats = float(getlat[:ind]) ; query.late = float(getlat[ind+1:])
+elif "/" in getlat:  islatfree = 1 ; ind = getlat.find("/") ; query.lats = float(getlat[:ind]) ; query.late = float(getlat[ind+1:])
 else:                islatfree = 0 ; query.lat = float(getlat)
 
 query.lon = -9999.
@@ -49,6 +51,8 @@ getlon = form.getvalue("longitude")
 if getlon == None: getlon = "1"
 if getlon == "all":  islonfree = 1 ; query.lons = -180. ; query.lone = 180.
 elif ";" in getlon:  islonfree = 1 ; ind = getlon.find(";") ; query.lons = float(getlon[:ind]) ; query.lone = float(getlon[ind+1:])
+elif "," in getlon:  islonfree = 1 ; ind = getlon.find(",") ; query.lons = float(getlon[:ind]) ; query.lone = float(getlon[ind+1:])
+elif "/" in getlon:  islonfree = 1 ; ind = getlon.find("/") ; query.lons = float(getlon[:ind]) ; query.lone = float(getlon[ind+1:])
 else:                islonfree = 0 ; query.lon = float(getlon)
 
 query.loct = -9999.
@@ -56,6 +60,8 @@ getloct = form.getvalue("localtime")
 if getloct == None: getloct = "1"
 if getloct == "all": isloctfree = 1 ; query.locts = 0. ; query.locte = 24.
 elif ";" in getloct: isloctfree = 1 ; ind = getloct.find(";") ; query.locts = float(getloct[:ind]) ; query.locte = float(getloct[ind+1:])
+elif "," in getloct: isloctfree = 1 ; ind = getloct.find(",") ; query.locts = float(getloct[:ind]) ; query.locte = float(getloct[ind+1:])
+elif "/" in getloct: isloctfree = 1 ; ind = getloct.find("/") ; query.locts = float(getloct[:ind]) ; query.locte = float(getloct[ind+1:])
 else:                isloctfree = 0 ; query.loct = float(getloct)
 
 try: query.zkey = int(form.getvalue("zkey"))
@@ -72,6 +78,8 @@ if getalt == "all":
     elif query.zkey == 4:  query.xzs = 1000.    ; query.xze = 0.001
     elif query.zkey == 1:  query.xzs = 3396000. ; query.xze = 3596000.
 elif ";" in getalt:  isaltfree = 1 ; ind = getalt.find(";") ; query.xzs = float(getalt[:ind]) ; query.xze = float(getalt[ind+1:])
+elif "," in getalt:  isaltfree = 1 ; ind = getalt.find(",") ; query.xzs = float(getalt[:ind]) ; query.xze = float(getalt[ind+1:])
+elif "/" in getalt:  isaltfree = 1 ; ind = getalt.find("/") ; query.xzs = float(getalt[:ind]) ; query.xze = float(getalt[ind+1:])
 else:                isaltfree = 0 ; query.xz = float(getalt)
 
 sumfree = islatfree + islonfree + isloctfree + isaltfree 
@@ -123,6 +131,7 @@ else:                 input_fixedlt=False
 # reference name (to test which figures are already in the database)
 reference = query.getnameset()+str(var1)+str(var2)+str(var3)+str(var4)+str(iswind)+str(isfixedlt)
 figname = '../img/'+reference+'.png'
+txtname = '../txt/'+reference
 testexist = daos.path.isfile(figname)
 
 # extract data from MCD if needed
@@ -132,13 +141,14 @@ if not testexist:
   if sumfree == 1:
 
     ### getting data
-    if isloctfree == 1:  	query.diurnal(nd=24)
+    if isloctfree == 1:  	query.diurnal(nd=24) 
     elif islonfree == 1: 	query.zonal()
     elif islatfree == 1: 	query.meridional()
     elif isaltfree == 1: 	query.profile()   
     else:			exit()  
 
     ### generic building of figure
+    query.getascii(vartoplot,filename=txtname)
     query.htmlplot1d(vartoplot,figname=figname)
     #mpl.savefig("img/temp.png",dpi=85,bbox_inches='tight',pad_inches=0.25)
     #Image.open("../img/temp.png").save(figname,'JPEG')
@@ -177,7 +187,10 @@ print "<a href='../index.html'>Click here to start a new query</a><br />"
 
 ## Now the part which differs
 if sumfree == 0: 	query.update() ; query.htmlprinttabextvar(vartoplot)  #query.printmeanvar()
-elif sumfree >= 1: 	print "<img src='"+figname+"'><br />"
+elif sumfree == 2: 	print "<img src='"+figname+"'><br />"
+elif sumfree == 1:      
+    print "<a href='"+txtname+"'>Click here to download an ASCII file containing data</a><br />"
+    print "<img src='"+figname+"'><br />"
 else:			print "<h1>ERROR : sumfree is not or badly defined ...</h1></body></html>"
 
 
