@@ -94,7 +94,7 @@ class mcd():
         self.getdustlabel()
         self.title = self.name + " with " + self.dustlabel + "."
         if self.datekey == 1:    self.title = self.title + " Ls " + str(self.xdate) + "deg."
-        elif self.datekey == 0:  self.title = self.title + " JD " + str(self.title) + "."
+        elif self.datekey == 0:  self.title = self.title + " JD " + str(self.xdate) + "."
         if not oneline: self.title = self.title + "\n"
         if self.lats is None:  self.title = self.title + " Latitude " + str(self.lat) + "E"
         if self.lons is None:  self.title = self.title + " Longitude " + str(self.lon) + "N"
@@ -465,7 +465,14 @@ class mcd():
       from matplotlib.backends.backend_agg import FigureCanvasAgg
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
-      fig = Figure(figsize=(8,8)) ; subv,subh = myplot.definesubplot( len(tabtodo) , fig )
+
+      howmanyplots = len(tabtodo)
+      if howmanyplots == 1: fig = Figure(figsize=(16,8))
+      elif howmanyplots == 2: fig = Figure(figsize=(8,8))
+      elif howmanyplots == 3: fig = Figure(figsize=(8,16))
+      elif howmanyplots == 4: fig = Figure(figsize=(16,8))
+
+      subv,subh = myplot.definesubplot( len(tabtodo) , fig )
       for i in range(len(tabtodo)):
         yeah = fig.add_subplot(subv,subh,i+1) #.grid(True, linestyle=':', color='grey') 
         choice = tabtodo[i]
@@ -672,7 +679,14 @@ class mcd():
       from matplotlib.cm import get_cmap
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
-      fig = Figure(figsize=(8,8)) ; subv,subh = myplot.definesubplot( len(tabtodo) , fig )
+
+      howmanyplots = len(tabtodo)
+      if howmanyplots == 1: fig = Figure(figsize=(16,8))
+      elif howmanyplots == 2: fig = Figure(figsize=(8,8))
+      elif howmanyplots == 3: fig = Figure(figsize=(8,16))
+      elif howmanyplots == 4: fig = Figure(figsize=(16,8))
+
+      subv,subh = myplot.definesubplot( len(tabtodo) , fig )
 
       for i in range(len(tabtodo)):
         yeah = fig.add_subplot(subv,subh,i+1)
