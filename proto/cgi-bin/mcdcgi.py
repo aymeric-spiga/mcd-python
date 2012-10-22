@@ -25,6 +25,26 @@ import os as daos
 import matplotlib.pyplot as mpl
 from PIL import Image
 
+
+
+### a function to read HTML arguments for coordinates
+def gethtmlcoord(userinput,defmin,defmax):
+   # accepted separators
+   separators = [":",";",",","/"] 
+   # initial values
+   val = -9999. ; vals = None ; vale = None ; foundinterv = False
+   if userinput == None:   userinput = "1"
+   # the main work. either all -- or an interval -- or a single value.
+   if userinput == "all":  isfree = 1 ; vals = defmin ; vale = defmax ; foundinterv = True
+   else:
+       for sep in separators:
+           isfree = 1 ; ind = userinput.find(sep)
+           if ind != -1: vals = float(userinput[:ind]) ; vale = float(userinput[ind+1:]) ; foundinterv = True
+   if not foundinterv: isfree = 0 ; val = float(userinput)
+   # return values
+   return isfree, val, vals, vale
+
+
 # for debugging in web browser
 cgitb.enable()
 
@@ -35,52 +55,20 @@ form = cgi.FieldStorage()
 #query = mcd()
 query=mcd.mcd() #FG: import from module mcd
 
-# Get data from user-defined fields and define free dimensions
-# FG: add tests if var==None to have values in local without forms ones
-query.lat = -9999.
-getlat = form.getvalue("latitude")
-if getlat == None: getlat = "1"
-if getlat == "all":  islatfree = 1 ; query.lats = -90. ; query.late = 90.
-elif ";" in getlat:  islatfree = 1 ; ind = getlat.find(";") ; query.lats = float(getlat[:ind]) ; query.late = float(getlat[ind+1:])
-elif "," in getlat:  islatfree = 1 ; ind = getlat.find(",") ; query.lats = float(getlat[:ind]) ; query.late = float(getlat[ind+1:])
-elif "/" in getlat:  islatfree = 1 ; ind = getlat.find("/") ; query.lats = float(getlat[:ind]) ; query.late = float(getlat[ind+1:])
-else:                islatfree = 0 ; query.lat = float(getlat)
-
-query.lon = -9999.
-getlon = form.getvalue("longitude")
-if getlon == None: getlon = "1"
-if getlon == "all":  islonfree = 1 ; query.lons = -180. ; query.lone = 180.
-elif ";" in getlon:  islonfree = 1 ; ind = getlon.find(";") ; query.lons = float(getlon[:ind]) ; query.lone = float(getlon[ind+1:])
-elif "," in getlon:  islonfree = 1 ; ind = getlon.find(",") ; query.lons = float(getlon[:ind]) ; query.lone = float(getlon[ind+1:])
-elif "/" in getlon:  islonfree = 1 ; ind = getlon.find("/") ; query.lons = float(getlon[:ind]) ; query.lone = float(getlon[ind+1:])
-else:                islonfree = 0 ; query.lon = float(getlon)
-
-query.loct = -9999.
-getloct = form.getvalue("localtime")
-if getloct == None: getloct = "1"
-if getloct == "all": isloctfree = 1 ; query.locts = 0. ; query.locte = 24.
-elif ";" in getloct: isloctfree = 1 ; ind = getloct.find(";") ; query.locts = float(getloct[:ind]) ; query.locte = float(getloct[ind+1:])
-elif "," in getloct: isloctfree = 1 ; ind = getloct.find(",") ; query.locts = float(getloct[:ind]) ; query.locte = float(getloct[ind+1:])
-elif "/" in getloct: isloctfree = 1 ; ind = getloct.find("/") ; query.locts = float(getloct[:ind]) ; query.locte = float(getloct[ind+1:])
-else:                isloctfree = 0 ; query.loct = float(getloct)
-
+# Get the kind of vertical coordinates and choose default behavior for "all"
 try: query.zkey = int(form.getvalue("zkey"))
 except: query.zkey = int(3)
+if query.zkey == 2:    minxz = -5000.   ; maxxz = 100000.
+elif query.zkey == 3:  minxz = 0.       ; maxxz = 120000.
+elif query.zkey == 5:  minxz = -5000.   ; maxxz = 100000.
+elif query.zkey == 4:  minxz = 1000.    ; maxxz = 0.001
+elif query.zkey == 1:  minxz = 3396000. ; maxxz = 3596000.
 
-query.xz = -9999.
-getalt = form.getvalue("altitude")
-if getalt == None: getalt = "1"
-if getalt == "all":  
-    isaltfree = 1 
-    if query.zkey == 2:    query.xzs = -5000.   ; query.xze = 100000.
-    elif query.zkey == 3:  query.xzs = 0.       ; query.xze = 120000.
-    elif query.zkey == 5:  query.xzs = -5000.   ; query.xze = 100000.
-    elif query.zkey == 4:  query.xzs = 1000.    ; query.xze = 0.001
-    elif query.zkey == 1:  query.xzs = 3396000. ; query.xze = 3596000.
-elif ";" in getalt:  isaltfree = 1 ; ind = getalt.find(";") ; query.xzs = float(getalt[:ind]) ; query.xze = float(getalt[ind+1:])
-elif "," in getalt:  isaltfree = 1 ; ind = getalt.find(",") ; query.xzs = float(getalt[:ind]) ; query.xze = float(getalt[ind+1:])
-elif "/" in getalt:  isaltfree = 1 ; ind = getalt.find("/") ; query.xzs = float(getalt[:ind]) ; query.xze = float(getalt[ind+1:])
-else:                isaltfree = 0 ; query.xz = float(getalt)
+# Get data from user-defined fields and define free dimensions
+islatfree,  query.lat,  query.lats,  query.late  = gethtmlcoord( form.getvalue("latitude"),   -90.,  90. )
+islonfree,  query.lon,  query.lons,  query.lone  = gethtmlcoord( form.getvalue("longitude"), -180., 180. )
+isloctfree, query.loct, query.locts, query.locte = gethtmlcoord( form.getvalue("localtime"),    0.,  24. )
+isaltfree,  query.xz,   query.xzs,   query.xze   = gethtmlcoord( form.getvalue("altitude"),  minxz, maxxz)
 
 sumfree = islatfree + islonfree + isloctfree + isaltfree 
 if sumfree > 2: exit() ## only 1D or 2D plots for the moment
@@ -142,9 +130,9 @@ if not testexist:
 
     ### getting data
     if isloctfree == 1:  	query.diurnal(nd=24) 
-    elif islonfree == 1: 	query.zonal()
-    elif islatfree == 1: 	query.meridional()
-    elif isaltfree == 1: 	query.profile()   
+    elif islonfree == 1: 	query.zonal(nd=64)
+    elif islatfree == 1: 	query.meridional(nd=48)
+    elif isaltfree == 1: 	query.profile(nd=35)   
     else:			exit()  
 
     ### generic building of figure
@@ -183,13 +171,16 @@ print header
 #print query.printset()
 #print "<br />"
 
-print "<a href='../index.html'>Click here to start a new query</a><br />"
+
+#print "<a href='../index.html'>Click here to start a new query</a><br />"
+#print "<hr>"
 
 ## Now the part which differs
 if sumfree == 0: 	query.update() ; query.htmlprinttabextvar(vartoplot)  #query.printmeanvar()
 elif sumfree == 2: 	print "<img src='"+figname+"'><br />"
 elif sumfree == 1:      
     print "<a href='"+txtname+"'>Click here to download an ASCII file containing data</a><br />"
+    print "<hr>"
     print "<img src='"+figname+"'><br />"
 else:			print "<h1>ERROR : sumfree is not or badly defined ...</h1></body></html>"
 
@@ -229,3 +220,4 @@ bottom = "<hr><a href='../index.html'>Click here to start a new query</a>.<hr></
 #print str
 ## Close opend file
 #fo.close()
+

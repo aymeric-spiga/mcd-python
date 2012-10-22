@@ -14,12 +14,13 @@
 
 <!-- aussi possible: get a la place de post. pour avoir un beau lien -->
 
-<!--<form name="calendar" action="/marscgi-bin/mcdcgi.py" method="post"> <!--target="_new">-->
-<form name="calendar" action="./cgi-bin/mcdcgi.py" method="post"> <!--target="_new">-->
+<!--<form name="calendar" action="/marscgi-bin/mcdcgi.py" method="post"-->
+<form name="calendar" action="./cgi-bin/mcdcgi.py" method="post" target="_blank"> <!--target="_new">-->
 
 <center>
 <b style="font-size: 125%;">Mars Climate Database: The Web Interface</b><br>
-<img src="PIA03610_red.jpg" height=80 width=1200><br>
+<!--Welcome! To reset your query, click on the Mars panorama.-->
+<a href="index.html"><img src="PIA03610_red.jpg" height=80 width=1200></a><br>
 </center>
 
 <table align="center" border="1" width="1200" bgcolor="#F5DEB3">
@@ -53,6 +54,7 @@
 <b><font color="red">MARS date</font></b> 
 Solar longitude <input type="text" size="3" name="ls"> degrees<br />
 Local Time <input type="text" size="4" name="localtime" value="0."> Martian hour<br />
+<br />
 <input type="radio" name="datekeyhtml" value="0">
 <b><font color="blue">EARTH date</font></b> 
 YY / MM / DD @ hh:mm:ss<br />
@@ -61,10 +63,14 @@ YY / MM / DD @ hh:mm:ss<br />
 UTC<br />
 </td>
 <td align="center">
+Option for 2D maps: local time value is<br />
+<input type="radio" name="isfixedlt" value="off" checked /> at longitude 0
+<input type="radio" name="isfixedlt" value="on"          /> fixed for the whole planet<br />
+<hr>
 Earth Julian Date <input type="text" size="6" name="julian" readonly="readonly"><br />
-Martian year <input type="text" size="1" name="martianyear" readonly="readonly"> 
-month <input type="text" size="1" name="martianmonth" readonly="readonly"> / 12 <br />
-Martian sol <input type="text" size="2" name="sol" readonly="readonly"> / 669<br />
+Mars year <input type="text" size="1" name="martianyear" readonly="readonly"> 
+ - month <input type="text" size="1" name="martianmonth" readonly="readonly"><span style="font-size: 75%;"> / 12</span>
+ - sol <input type="text" size="2" name="sol" readonly="readonly"><span style="font-size: 75%;"> / 669</span><br />
 <input type="button" value="EARTH DATE >>> MARS DATE" onClick="Convert2Ls();"><br />
 </td>
 </tr>
@@ -106,11 +112,13 @@ write a value (or) a range val1;val2 (or) 'all'<br />
 <li>Latitude <input type="text" size="7" name="latitude" value="0."> degree North
 <li>Longitude <input type="text" size="7" name="longitude" value="0."> degree East
 <li>Altitude <input type="text" size="9" name="altitude" value="10."> <select name="zkey">
-<option value="1"         >m (O: Mars center)</option>
-<option value="2"         >m (O: "sea level")</option>
-<option value="3" selected>m (O: surface)</option>
-<option value="4"         >Pa (pressure)</option>
-<option value="5"         >m (O: 3396 km)</option>
+<option value="3" selected>m above surface</option>
+<option value="2"         >m above "sea level"</option>
+<option value="1"         >m from Mars center</option>
+<option value="4"         >Pa (pressure level)</option>
+<!--
+<option value="5"         >above 3396 km from Mars center</option>
+-->
 </select>
 <!--
 <li>Latitude   
@@ -188,10 +196,10 @@ Variable 1 <select name="var1">
 <option value="icetot"        >Water ice column (kg/m2)</option>
 <option value="h2ovap"        >Water vapor vol. mixing ratio (mol/mol)</option>
 <option value="h2oice"        >Water ice mixing ratio (mol/mol)</option>
-<option value="ps_ddv"        >Surface pressure DTD RMS (Pa)</option>
+<option value="ps_ddv"        >Surf. pres. day to day variability (Pa)</option>
 <option value="co2ice"        >surface CO2 ice layer (kg/m2)</option>
 <option value="cp"            >Air heat capacity Cp (J kg-1 K-1)</option>
-<option value="rho_ddv"       >density DTD RMS (kg/m^3)</option>
+<option value="rho_ddv"       >density day to day variability (kg/m^3)</option>
 <option value="tsurfmx"       >daily max mean surf temperature (K)</option>
 <option value="tsurfmn"       >daily min mean surf temperature (K)</option>
 <option value="lwdown"        >thermal IR flux to surface (W/m2)</option>
@@ -217,10 +225,10 @@ Variable 2 <select name="var2">
 <option value="icetot"        >Water ice column (kg/m2)</option>
 <option value="h2ovap"        >Water vapor vol. mixing ratio (mol/mol)</option>
 <option value="h2oice"        >Water ice mixing ratio (mol/mol)</option>
-<option value="ps_ddv"        >Surface pressure DTD RMS (Pa)</option>
+<option value="ps_ddv"        >Surf. pres. day to day variability (Pa)</option>
 <option value="co2ice"        >surface CO2 ice layer (kg/m2)</option>
 <option value="cp"            >Air heat capacity Cp (J kg-1 K-1)</option>
-<option value="rho_ddv"       >density DTD RMS (kg/m^3)</option>
+<option value="rho_ddv"       >density day to day variability (kg/m^3)</option>
 <option value="tsurfmx"       >daily max mean surf temperature (K)</option>
 <option value="tsurfmn"       >daily min mean surf temperature (K)</option>
 <option value="lwdown"        >thermal IR flux to surface (W/m2)</option>
@@ -246,10 +254,10 @@ Variable 3 <select name="var3">
 <option value="icetot"        >Water ice column (kg/m2)</option>
 <option value="h2ovap"        >Water vapor vol. mixing ratio (mol/mol)</option>
 <option value="h2oice"        >Water ice mixing ratio (mol/mol)</option>
-<option value="ps_ddv"        >Surface pressure DTD RMS (Pa)</option>
+<option value="ps_ddv"        >Surf. pres. day to day variability (Pa)</option>
 <option value="co2ice"        >surface CO2 ice layer (kg/m2)</option>
 <option value="cp"            >Air heat capacity Cp (J kg-1 K-1)</option>
-<option value="rho_ddv"       >density DTD RMS (kg/m^3)</option>
+<option value="rho_ddv"       >density day to day variability (kg/m^3)</option>
 <option value="tsurfmx"       >daily max mean surf temperature (K)</option>
 <option value="tsurfmn"       >daily min mean surf temperature (K)</option>
 <option value="lwdown"        >thermal IR flux to surface (W/m2)</option>
@@ -275,10 +283,10 @@ Variable 4 <select name="var4">
 <option value="icetot"        >Water ice column (kg/m2)</option>
 <option value="h2ovap"        >Water vapor vol. mixing ratio (mol/mol)</option>
 <option value="h2oice"        >Water ice mixing ratio (mol/mol)</option>
-<option value="ps_ddv"        >Surface pressure DTD RMS (Pa)</option>
+<option value="ps_ddv"        >Surf. pres. day to day variability (Pa)</option>
 <option value="co2ice"        >surface CO2 ice layer (kg/m2)</option>
 <option value="cp"            >Air heat capacity Cp (J kg-1 K-1)</option>
-<option value="rho_ddv"       >density DTD RMS (kg/m^3)</option>
+<option value="rho_ddv"       >density day to day variability (kg/m^3)</option>
 <option value="tsurfmx"       >daily max mean surf temperature (K)</option>
 <option value="tsurfmn"       >daily min mean surf temperature (K)</option>
 <option value="lwdown"        >thermal IR flux to surface (W/m2)</option>
@@ -297,9 +305,11 @@ Variable 4 <select name="var4">
 <li> Add wind vectors
 <input type="radio" name="iswind" value="off" checked /> No
 <input type="radio" name="iswind" value="on"          /> Yes</li>  
+<!--
 <li> Set same LT on whole planet
 <input type="radio" name="isfixedlt" value="off" checked /> No
 <input type="radio" name="isfixedlt" value="on"          /> Yes</li>
+-->
 <!--
 <li> Add another variable 
 <input type="radio" name="superimposed" value="0" checked /> side-by-side
@@ -319,14 +329,15 @@ Presets
 </tr>
 <tr>
 <td align="center">
-<input type="submit" value="Values" style="font-weight:bold" />
-<input type="submit" value="Daily cycle" style="font-weight:bold" onClick="PlaceValues2('all')"/><br />
-<input type="submit" value="Vertical profile" style="font-weight:bold" onClick="PlaceValues3('all')"/>
-<input type="submit" value="Global map" style="font-weight:bold" onClick="PlaceValues('all','all')"/><br />
+<input type="button" value="Values" style="font-weight:bold" onClick="submit_form_beginner()"/>
+<input type="button" value="Daily cycle" style="font-weight:bold" onClick="PlaceValues2('all');submit_form_beginner()"/><br />
+<input type="button" value="Vertical profile" style="font-weight:bold" onClick="PlaceValues3('all');submit_form_beginner()"/>
+<input type="button" value="Global map" style="font-weight:bold" onClick="PlaceValues('all','all');submit_form_beginner()"/><br />
 </td>
 <td align="center">
 <input type="submit" value="SUBMIT" style="font-weight:bold"/>
-<input type="button" value="RESET" style="font-weight:bold" onClick="DefaultDateValues();DefaultTimeValues();Convert2Ls();PlaceValues(0.,0.);DefaultSpaceTime()"/><br />
+<!--<input type="button" value="RESET" style="font-weight:bold" onClick="DefaultDateValues();DefaultTimeValues();Convert2Ls();PlaceValues(0.,0.);DefaultSpaceTime()"/><br />-->
+<input type="button" value="RESET" style="font-weight:bold" onClick="window.open('index.html','_self')"/><br />
 </td>
 <td align="center">
 <a href="http://www-mars.lmd.jussieu.fr">Mars Climate Database</a> (c) LMD/OU/IAA/ESA/CNES.<br />

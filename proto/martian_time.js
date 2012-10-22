@@ -449,3 +449,14 @@ if ( document.calendar.altitude.value == "all" ) {
 }
 }
 
+
+function submit_form_beginner() {
+document.calendar.submit();
+document.calendar.reset();
+DefaultDateValues();
+DefaultTimeValues();
+Convert2Ls();
+PlaceValues(0.,0.);
+DefaultSpaceTime()
+}
+

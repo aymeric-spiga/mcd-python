@@ -75,6 +75,7 @@ class mcd():
         ## plot stuff
         self.xlabel = None ; self.ylabel = None
         self.vertplot = False
+        self.fmt = "%.2e"
 
     def viking1(self): self.name = "Viking 1 site. MCD v4.3 output" ; self.lat = 22.48 ; self.lon = -49.97 ; self.xdate = 97.
     def viking2(self): self.name = "Viking 2 site. MCD v4.3 output" ; self.lat = 47.97 ; self.lon = -225.74 ; self.xdate = 117.6
@@ -89,9 +90,12 @@ class mcd():
         elif self.dust == 7: self.dustlabel = "warm scenario (dusty, maximum solar)"
         elif self.dust == 8: self.dustlabel = "cold scenario (low dust, minimum solar)"
 
-    def gettitle(self):
+    def gettitle(self,oneline=False):
         self.getdustlabel()
         self.title = self.name + " with " + self.dustlabel + "."
+        if self.datekey == 1:    self.title = self.title + " Ls " + str(self.xdate) + "deg."
+        elif self.datekey == 0:  self.title = self.title + " JD " + str(self.title) + "."
+        if not oneline: self.title = self.title + "\n"
         if self.lats is None:  self.title = self.title + " Latitude " + str(self.lat) + "E"
         if self.lons is None:  self.title = self.title + " Longitude " + str(self.lon) + "N"
         if self.xzs is None:   
@@ -158,7 +162,16 @@ class mcd():
 	50: "Air viscosity estimation (N s m-2)"
         }
         if num not in whichfield: myplot.errormess("Incorrect subscript in extvar.")
-        return whichfield[num]
+
+        dastuff = whichfield[num]
+  
+        if "(K)" in dastuff:      self.fmt="%.0f"
+        elif "(Pa)" in dastuff:   self.fmt="%.1f"
+        elif "(W/m2)" in dastuff: self.fmt="%.0f"
+        elif "(m/s)" in dastuff:  self.fmt="%.1f"
+        else:                     self.fmt="%.2e"
+
+        return dastuff
 
     def convertlab(self,num):        
         ## a conversion from text inquiries to extvar numbers. to be completed.
@@ -262,14 +275,19 @@ class mcd():
         for i in range(50): self.printextvar(i+1)
 
     def htmlprinttabextvar(self,tabtodo):
-        print "Results from the Mars Climate Database"
+        self.gettitle()
+        print "<hr>"
+        print self.title
+        print "<hr>"
         print "<ul>"
         for i in range(len(tabtodo)): print "<li>" ; self.printextvar(tabtodo[i]) ; print "</li>"
         print "</ul>"
         print "<hr>"
-        print "SETTINGS<br />"
-        self.printcoord()
-        self.printset()
+        print self.ack
+        print "<hr>"
+        #print "SETTINGS<br />"
+        #self.printcoord()
+        #self.printset()
 
     def printmcd(self):
     # 1. call MCD 2. print settings 3. print mean vars
@@ -302,6 +320,10 @@ class mcd():
     ### for analysis or plot purposes, set field and field label from user-defined choice
       choice = self.convertlab(choice)
       field = self.getextvar(choice); fieldlab = self.getextvarlab(choice)
+      ## fix for possibly slightly negative tracers
+      if "(mol/mol)" in fieldlab or "(kg/kg)" in fieldlab or "(kg/m2)" in fieldlab or "(W/m2)" in fieldlab:
+         ind = np.where(field < 1.e-30)
+         if ind != -1: field[ind] = 1.e-30  ## 0 does not work everywhere.
       return field,fieldlab
 
     def ininterv(self,dstart,dend,nd,start=None,end=None,yaxis=False,vertcoord=False):
@@ -409,7 +431,7 @@ class mcd():
       asciifile = open(filename, "w")
       for i in range(len(tabtodo)):  
           (field, fieldlab) = self.definefield(tabtodo[i])
-          self.gettitle()
+          self.gettitle(oneline=True)
           asciifile.write("### " + self.title + "\n")
           asciifile.write("### " + self.ack + "\n")
           asciifile.write("### Column 1 is " + self.xlabel + "\n")
@@ -482,9 +504,7 @@ class mcd():
       for i in range(ndx):
        for j in range(ndy):
          self.lon = self.xcoord[i] ; self.lat = self.ycoord[j]
-         if not fixedlt: 
-           if self.lons is not None and self.lone is not None: self.loct = (umst + (self.lons+self.lone)/30.) % 24
-           else:                                               self.loct = (umst + self.lon/15.) % 24
+         if not fixedlt: self.loct = (umst + self.lon/15.) % 24
          self.update() ; self.put2d(i,j)
       if not fixedlt: self.loct = umst
       self.lon = save1 ; self.lat = save2 ; self.loct = save3
@@ -501,9 +521,7 @@ class mcd():
       for i in range(ndx):
        for j in range(ndy):
          self.lon = self.xcoord[i] ; self.xz = self.ycoord[j] 
-         if not fixedlt: 
-           if self.lons is not None and self.lone is not None: self.loct = (umst + (self.lons+self.lone)/30.) % 24
-           else:                                               self.loct = (umst + self.lon/15.) % 24
+         if not fixedlt: self.loct = (umst + self.lon/15.) % 24
          self.update() ; self.put2d(i,j)
       if not fixedlt: self.loct = umst
       self.lon = save1 ; self.xz = save2 ; self.loct = save3
@@ -629,7 +647,7 @@ class mcd():
         yeah.contour( np.array(xc) - 360., yc, fieldc, zelevc, colors='black',linewidths = 0.4)
         # contour field
         c = yeah.contourf( x, y, what_I_plot, zelevels, cmap = palette, alpha = trans )
-        clb = Figure.colorbar(fig,c,orientation='vertical',format="%.2e",ticks=np.linspace(zevmin,zevmax,num=min([ticks/2+1,21])))
+        clb = Figure.colorbar(fig,c,orientation='vertical',format=self.fmt,ticks=np.linspace(zevmin,zevmax,num=min([ticks/2+1,21])))
         clb.set_label(fieldlab)
         if incwind:
           [x2d,y2d] = np.meshgrid(x,y)
@@ -660,8 +678,8 @@ class mcd():
         yeah = fig.add_subplot(subv,subh,i+1)
         choice = tabtodo[i]
 
-        if self.lons is not None:    self.lonalt(fixedlt=fixedlt)
-        elif self.lats is not None:  self.latalt(fixedlt=fixedlt)
+        if self.lons is not None:    self.lonalt(fixedlt=fixedlt,ndx=64,ndy=35)
+        elif self.lats is not None:  self.latalt(fixedlt=fixedlt,ndx=48,ndy=35)
 
         (field, fieldlab) = self.definefield(choice)
 
@@ -677,7 +695,7 @@ class mcd():
         palette = get_cmap(name=colorb)
         # contour field
         c = yeah.contourf( self.xcoord, self.ycoord, what_I_plot, zelevels, cmap = palette )
-        clb = Figure.colorbar(fig,c,orientation='vertical',format="%.2e",ticks=np.linspace(zevmin,zevmax,num=min([ticks/2+1,21])))
+        clb = Figure.colorbar(fig,c,orientation='vertical',format=self.fmt,ticks=np.linspace(zevmin,zevmax,num=min([ticks/2+1,21])))
         clb.set_label(fieldlab)
         ax = fig.gca() ; ax.set_ylabel(self.ylabel) ; ax.set_xlabel(self.xlabel)
 
