@@ -73,9 +73,12 @@ class mcd():
         self.prestab = None ; self.denstab = None ; self.temptab = None 
         self.zonwindtab = None ; self.merwindtab = None ; self.meanvartab = None ; self.extvartab = None
         ## plot stuff
-        self.xlabel = None ; self.ylabel = None
+        self.xlabel = None ; self.ylabel = None ; self.title = ""
         self.vertplot = False
-        self.fmt = "%.2e"
+        self.fmt = "%.2e" 
+        self.colorm = "jet"
+        self.fixedlt = False
+        self.zonmean = False
 
     def viking1(self): self.name = "Viking 1 site. MCD v4.3 output" ; self.lat = 22.48 ; self.lon = -49.97 ; self.xdate = 97.
     def viking2(self): self.name = "Viking 2 site. MCD v4.3 output" ; self.lat = 47.97 ; self.lon = -225.74 ; self.xdate = 117.6
@@ -96,12 +99,15 @@ class mcd():
         if self.datekey == 1:    self.title = self.title + " Ls " + str(self.xdate) + "deg."
         elif self.datekey == 0:  self.title = self.title + " JD " + str(self.xdate) + "."
         if not oneline: self.title = self.title + "\n"
-        if self.lats is None:  self.title = self.title + " Latitude " + str(self.lat) + "E"
-        if self.lons is None:  self.title = self.title + " Longitude " + str(self.lon) + "N"
+        if self.lats is None:  self.title = self.title + " Latitude " + str(self.lat) + "N"
+        if self.zonmean: self.title = self.title + "Zonal mean over all longitudes."
+        elif self.lons is None: self.title = self.title + " Longitude " + str(self.lon) + "E"
         if self.xzs is None:   
             self.vertunits()
             self.title = self.title + " Altitude " + str(self.xz) + " " + self.vunits
-        if self.locts is None: self.title = self.title + " Local time " + str(self.loct) + "h"
+        if self.locts is None:
+            self.title = self.title + " Local time " + str(self.loct) + "h"
+            if not self.fixedlt:  self.title = self.title + " (at longitude 0) "
 
     def getextvarlab(self,num):
         whichfield = { \
@@ -268,13 +274,16 @@ class mcd():
     def printextvar(self,num):
     # print extra MCD variables
         num = self.convertlab(num)
-        print self.getextvarlab(num) + " ..... " + str(self.extvar[num-1])
+        dastr = str(self.extvar[num-1])
+        if dastr == "nan":   print "!!!! There is a problem, probably a value is requested below the surface !!!!"
+        else:                print self.getextvarlab(num) + " ..... " + dastr
 
     def printallextvar(self):
     # print all extra MCD variables    
         for i in range(50): self.printextvar(i+1)
 
     def htmlprinttabextvar(self,tabtodo):
+        self.fixedlt = True ## local time is real local time
         self.gettitle()
         print "<hr>"
         print self.title
@@ -382,6 +391,7 @@ class mcd():
 
     def diurnal(self,nd=13):
     ### retrieve a local time slice
+      self.fixedlt = True  ## local time is real local time
       save = self.loct
       self.xlabel = "Local time (Martian hour)"
       self.prepare(ndx=nd) ; self.ininterv(0.,24.,nd,start=self.locts,end=self.locte) 
@@ -393,11 +403,16 @@ class mcd():
       save = self.lon
       self.xlabel = "East longitude (degrees)"
       self.prepare(ndx=nd) ; self.ininterv(-180.,180.,nd,start=self.lons,end=self.lone)
-      for i in range(nd): self.lon = self.xcoord[i] ; self.update() ; self.put1d(i)
+      if not self.fixedlt: umst = self.loct
+      for i in range(nd): 
+          self.lon = self.xcoord[i]
+          if not self.fixedlt: self.loct = (umst + self.lon/15.) % 24
+          self.update() ; self.put1d(i)
       self.lon = save
 
     def meridional(self,nd=19):
     ### retrieve a latitude slice
+      self.fixedlt = True  ## local time is real local time
       save = self.lat
       self.xlabel = "North latitude (degrees)"
       self.prepare(ndx=nd) ; self.ininterv(-90.,90.,nd,start=self.lats,end=self.late)
@@ -406,6 +421,7 @@ class mcd():
 
     def profile(self,nd=20,tabperso=None):
     ### retrieve an altitude slice (profile)
+      self.fixedlt = True  ## local time is real local time
       save = self.xz
       self.vertlabel()
       self.vertplot = True
@@ -481,11 +497,14 @@ class mcd():
         else:                  ordo = self.xcoord ; absc = field ; absclab = fieldlab ; ordolab = self.xlabel
         yeah.plot(absc,ordo,'-bo') #; mpl.xticks(query.xcoord)
         ax = fig.gca() ; ax.set_ylabel(ordolab) ; ax.set_xlabel(absclab)
-        if self.zkey == 4: ax.set_yscale('log') ; ax.set_ylim(ax.get_ylim()[::-1])
+
+        if self.xzs is not None and self.zkey == 4: ax.set_yscale('log') ; ax.set_ylim(ax.get_ylim()[::-1])
 
         if self.lats is not None:      ax.set_xticks(np.arange(-90,91,15)) ; ax.set_xbound(lower=self.lats, upper=self.late)
         elif self.lons is not None:    ax.set_xticks(np.arange(-360,361,30)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
         elif self.locts is not None:   ax.set_xticks(np.arange(0,26,2)) ; ax.set_xbound(lower=self.locts, upper=self.locte)
+
+        ax.grid(True, linestyle=':', color='grey')
 
       self.gettitle()
       fig.text(0.5, 0.95, self.title, ha='center')
@@ -499,7 +518,7 @@ class mcd():
 ### 2D analysis ###
 ###################
 
-    def latlon(self,ndx=37,ndy=19,fixedlt=False):
+    def latlon(self,ndx=37,ndy=19):
     ### retrieve a latitude/longitude slice
     ### default is: local time is not fixed. user-defined local time is at longitude 0.
       save1 = self.lon ; save2 = self.lat ; save3 = self.loct
@@ -507,48 +526,96 @@ class mcd():
       self.prepare(ndx=ndx,ndy=ndy)
       self.ininterv(-180.,180.,ndx,start=self.lons,end=self.lone)
       self.ininterv(-90.,  90.,ndy,start=self.lats,end=self.late,yaxis=True)
-      if not fixedlt: umst = self.loct
+      if not self.fixedlt: umst = self.loct
       for i in range(ndx):
        for j in range(ndy):
          self.lon = self.xcoord[i] ; self.lat = self.ycoord[j]
-         if not fixedlt: self.loct = (umst + self.lon/15.) % 24
+         if not self.fixedlt: self.loct = (umst + self.lon/15.) % 24
          self.update() ; self.put2d(i,j)
-      if not fixedlt: self.loct = umst
+      if not self.fixedlt: self.loct = umst
       self.lon = save1 ; self.lat = save2 ; self.loct = save3
 
-    def lonalt(self,ndx=37,ndy=20,fixedlt=False):
-    ### retrieve a longitude/altitude slice
-      save1 = self.lon ; save2 = self.xz ; save3 = self.loct
-      self.vertlabel() ; self.ylabel = self.xlabel
-      self.xlabel = "East longitude (degrees)"
+    def secalt(self,ndx=37,ndy=20,typex="lat"):
+    ### retrieve a coordinate/altitude slice
+      save1 = self.lon ; save2 = self.xz ; save3 = self.loct ; save4 = self.lat
       self.prepare(ndx=ndx,ndy=ndy)
-      self.ininterv(-180.,180.,ndx,start=self.lons,end=self.lone)
+      self.vertlabel() ; self.ylabel = self.xlabel
       self.vertaxis(ndy,yaxis=True)
-      if not fixedlt: umst = self.loct
+      if "lat" in typex:
+          self.xlabel = "North latitude (degrees)"
+          self.ininterv(-90.,90.,ndx,start=self.lats,end=self.late)
+      elif typex == "lon":
+          self.xlabel = "East longitude (degrees)"
+          self.ininterv(-180.,180.,ndx,start=self.lons,end=self.lone)
+      if not self.fixedlt: umst = self.loct
       for i in range(ndx):
        for j in range(ndy):
-         self.lon = self.xcoord[i] ; self.xz = self.ycoord[j] 
-         if not fixedlt: self.loct = (umst + self.lon/15.) % 24
+         if typex == "lat":   self.lat = self.xcoord[i]
+         elif typex == "lon": self.lon = self.xcoord[i]
+         self.xz = self.ycoord[j]
+         if not self.fixedlt: self.loct = (umst + self.lon/15.) % 24
          self.update() ; self.put2d(i,j)
-      if not fixedlt: self.loct = umst
-      self.lon = save1 ; self.xz = save2 ; self.loct = save3
+      if not self.fixedlt: self.loct = umst
+      self.lon = save1 ; self.xz = save2 ; self.loct = save3 ; self.lat = save4
 
-    def latalt(self,ndx=19,ndy=20,fixedlt=False):
-    ### retrieve a latitude/altitude slice
-      save1 = self.lat ; save2 = self.xz ; save3 = self.loct
-      self.vertlabel() ; self.ylabel = self.xlabel
-      self.xlabel = "North latitude (degrees)"
+    def zonalmean(self,ndx=37,ndy=20,ndmean=32):
+    ### retrieve a zonalmean lat/altitude slice
+      self.fixedlt = False
+      save1 = self.lon ; save2 = self.xz ; save3 = self.loct ; save4 = self.lat
       self.prepare(ndx=ndx,ndy=ndy)
-      self.ininterv(-90.,90.,ndx,start=self.lats,end=self.late)
+      self.vertlabel() ; self.ylabel = self.xlabel
       self.vertaxis(ndy,yaxis=True)
-      if not fixedlt: umst = self.loct
+      self.xlabel = "North latitude (degrees)"
+      self.ininterv(-180.,180.,ndmean)
+      coordmean = self.xcoord
+      self.ininterv(-90.,90.,ndx,start=self.lats,end=self.late)
+      umst = self.loct #fixedlt false for this case
+      for i in range(ndx):
+       self.lat = self.xcoord[i]
+       for j in range(ndy):
+        self.xz = self.ycoord[j]
+        meanpres = 0. ; meandens = 0. ; meantemp = 0. ; meanzonwind = 0. ; meanmerwind = 0. ; meanmeanvar = np.zeros(5) ; meanextvar = np.zeros(100)        
+        for m in range(ndmean):
+           self.lon = coordmean[m]
+           self.loct = (umst + self.lon/15.) % 24 #fixedlt false for this case
+           self.update() 
+           meanpres = meanpres + self.pres/float(ndmean) ; meandens = meandens + self.dens/float(ndmean) ; meantemp = meantemp + self.temp/float(ndmean)
+           meanzonwind = meanzonwind + self.zonwind/float(ndmean) ; meanmerwind = meanmerwind + self.merwind/float(ndmean)
+           meanmeanvar = meanmeanvar + self.meanvar/float(ndmean) ; meanextvar = meanextvar + self.extvar/float(ndmean)
+        self.pres=meanpres ; self.dens=meandens ; self.temp=meantemp ; self.zonwind=meanzonwind ; self.merwind=meanmerwind
+        self.meanvar=meanmeanvar ; self.extvar=meanextvar
+        self.put2d(i,j)
+      self.loct = umst #fixedlt false for this case
+      self.lon = save1 ; self.xz = save2 ; self.loct = save3 ; self.lat = save4
+
+    def hovmoller(self,ndtime=25,ndcoord=20,typex="lat"):
+    ### retrieve a time/other coordinate slice
+      save1 = self.lat ; save2 = self.xz ; save3 = self.loct ; save4 = self.lon
+      if typex == "lat": 
+          ndx = ndcoord ; self.xlabel = "North latitude (degrees)" 
+          ndy = ndtime ; self.ylabel = "Local time (Martian hour)"
+          self.prepare(ndx=ndx,ndy=ndy)
+          self.ininterv(-90.,90.,ndx,start=self.lats,end=self.late)
+          self.ininterv(0.,24.,ndy,start=self.locts,end=self.locte,yaxis=True)
+      elif typex == "lon":
+          ndx = ndcoord ; self.xlabel = "East longitude (degrees)"
+          ndy = ndtime ; self.ylabel = "Local time (Martian hour)"
+          self.prepare(ndx=ndx,ndy=ndy)
+          self.ininterv(-180.,180.,ndx,start=self.lons,end=self.lone)
+          self.ininterv(0.,24.,ndy,start=self.locts,end=self.locte,yaxis=True)
+      elif typex == "alt":
+          ndy = ndcoord ; self.vertlabel() ; self.ylabel = self.xlabel
+          ndx = ndtime ; self.xlabel = "Local time (Martian hour)"
+          self.prepare(ndx=ndx,ndy=ndy)
+          self.vertaxis(ndy,yaxis=True)
+          self.ininterv(0.,24.,ndx,start=self.locts,end=self.locte)
       for i in range(ndx):
        for j in range(ndy):
-         self.lat = self.xcoord[i] ; self.xz = self.ycoord[j] 
-         if not fixedlt: self.loct = (umst + self.lon/15.) % 24
+         if typex == "lat":   self.lat = self.xcoord[i] ; self.loct = self.ycoord[j]
+         elif typex == "lon": self.lon = self.xcoord[i] ; self.loct = self.ycoord[j]
+         elif typex == "alt": self.xz = self.ycoord[j] ; self.loct = self.xcoord[i]
          self.update() ; self.put2d(i,j)
-      if not fixedlt: self.loct = umst
-      self.lat = save1 ; self.xz = save2 ; self.loct = save3
+      self.lat = save1 ; self.xz = save2 ; self.loct = save3 ; self.lon = save4
 
     def put2d(self,i,j):
     ## fill in subscript i,j in output arrays
@@ -559,9 +626,9 @@ class mcd():
       self.meanvartab[i,j,1:5] = self.meanvar[0:4]  ## note: var numbering according to MCD manual is kept
       self.extvartab[i,j,1:100] = self.extvar[0:99] ## note: var numbering according to MCD manual is kept
 
-    def makemap2d(self,choice,incwind=False,fixedlt=False,proj="cyl"):
+    def makemap2d(self,choice,incwind=False,proj="cyl"):
     ### one 2D map is created for the user-defined variable in choice.
-      self.latlon(fixedlt=fixedlt) ## a map is implicitely a lat-lon plot. otherwise it is a plot (cf. makeplot2d)
+      self.latlon() ## a map is implicitely a lat-lon plot. otherwise it is a plot (cf. makeplot2d)
       if choice == "wind" or incwind:
           (windx, fieldlabwx) = self.definefield("u")
           (windy, fieldlabwy) = self.definefield("v")
@@ -574,15 +641,15 @@ class mcd():
       else:         myplot.maplatlon(self.xcoord,self.ycoord,field,title=fieldlab,proj=proj)
       mpl.figtext(0.5, 0.0, self.ack, ha='center')
 
-    def map2d(self,tabtodo,incwind=False,fixedlt=False,proj="cyl"):
+    def map2d(self,tabtodo,incwind=False,proj="cyl"):
     ### complete 2D figure with possible multiplots
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       fig = mpl.figure()
       subv,subh = myplot.definesubplot( len(tabtodo) , fig ) 
-      for i in range(len(tabtodo)): mpl.subplot(subv,subh,i+1) ; self.makemap2d(tabtodo[i],incwind=incwind,fixedlt=fixedlt,proj=proj)
+      for i in range(len(tabtodo)): mpl.subplot(subv,subh,i+1) ; self.makemap2d(tabtodo[i],incwind=incwind,proj=proj)
 
-    def htmlmap2d(self,tabtodo,incwind=False,fixedlt=False,figname="temp.png",title="",back="zMOL"):
+    def htmlmap2d(self,tabtodo,incwind=False,figname="temp.png",back="zMOL"):
     ### complete 2D figure with possible multiplots
     ### added in 09/2012 for online MCD
     ### see http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
@@ -590,16 +657,14 @@ class mcd():
       from matplotlib.backends.backend_agg import FigureCanvasAgg
       from matplotlib.cm import get_cmap
       from matplotlib import rcParams 
-
-      #from mpl_toolkits.basemap import Basemap
-
+      #from mpl_toolkits.basemap import Basemap # does not work
       from Scientific.IO import NetCDF
+
       filename = "/home/marshttp/surface.nc"
       zefile = NetCDF.NetCDFFile(filename, 'r') 
       fieldc = zefile.variables[back]
       yc = zefile.variables['latitude']
       xc = zefile.variables['longitude']
-      ## plutot que fieldc = self.getextvar(self.convertlab("topo"))
 
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
@@ -615,13 +680,13 @@ class mcd():
       for i in range(len(tabtodo)):
         yeah = fig.add_subplot(subv,subh,i+1)
         choice = tabtodo[i]
-        self.latlon(fixedlt=fixedlt,ndx=64,ndy=48) 
+        self.latlon(ndx=64,ndy=48) 
         ## a map is implicitely a lat-lon plot. otherwise it is a plot (cf. makeplot2d)
         (field, fieldlab) = self.definefield(choice)
         if incwind: (windx, fieldlabwx) = self.definefield("u") ; (windy, fieldlabwy) = self.definefield("v")
 
-        proj="moll" ; colorb="jet" ; ndiv=20 ; zeback="molabw" ; trans=1.0 #0.6
-        title="" ; vecx=None ; vecy=None ; stride=2
+        proj="moll" ; colorb= self.colorm ; ndiv=20 ; zeback="molabw" ; trans=1.0 #0.6
+        vecx=None ; vecy=None ; stride=2
         lon = self.xcoord
         lat = self.ycoord
         
@@ -670,7 +735,7 @@ class mcd():
       #   a4"x4" image * 80 dpi ==> 320x320 pixel image
       canvas.print_figure(figname, dpi=80)
 
-    def htmlplot2d(self,tabtodo,fixedlt=False,figname="temp.png",title=""):
+    def htmlplot2d(self,tabtodo,figname="temp.png"):
     ### complete 2D figure with possible multiplots
     ### added in 10/2012 for online MCD
     ### see http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
@@ -692,12 +757,20 @@ class mcd():
         yeah = fig.add_subplot(subv,subh,i+1)
         choice = tabtodo[i]
 
-        if self.lons is not None:    self.lonalt(fixedlt=fixedlt,ndx=64,ndy=35)
-        elif self.lats is not None:  self.latalt(fixedlt=fixedlt,ndx=48,ndy=35)
+        if self.lons is not None:    
+           if self.locts is None:  self.secalt(ndx=64,ndy=35,typex="lon")
+           else:                   self.hovmoller(ndcoord=64,typex="lon")
+        elif self.lats is not None:  
+           if self.locts is None:  
+               if self.zonmean:   self.zonalmean()
+               else:         self.secalt(ndx=48,ndy=35,typex="lat")
+           else:                   self.hovmoller(ndcoord=48,typex="lat")
+        else:
+           self.hovmoller(ndcoord=35,typex="alt")
 
         (field, fieldlab) = self.definefield(choice)
 
-        colorb="jet" ; ndiv=20 ; title=""
+        colorb=self.colorm ; ndiv=20 
 
         ## define field. bound field.
         what_I_plot = np.transpose(field)
@@ -713,14 +786,18 @@ class mcd():
         clb.set_label(fieldlab)
         ax = fig.gca() ; ax.set_ylabel(self.ylabel) ; ax.set_xlabel(self.xlabel)
 
-        if self.zkey == 4: 
+        if self.lons is not None:   ax.set_xticks(np.arange(-360,361,45)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
+        elif self.lats is not None: ax.set_xticks(np.arange(-90,91,30)) ; ax.set_xbound(lower=self.lats, upper=self.late)
+
+        if self.locts is not None: 
+            if self.xzs is not None: ax.set_xticks(np.arange(0,26,2)) ; ax.set_xbound(lower=self.locts, upper=self.locte)
+            else:                    ax.set_yticks(np.arange(0,26,2)) ; ax.set_ybound(lower=self.locts, upper=self.locte)
+
+        if self.zkey == 4 and self.xzs is not None: 
             ax.set_yscale('log') ; ax.set_ylim(ax.get_ylim()[::-1])
         else:
             #ax.set_yticks(np.arange(self.xzs,self.xze,10000.)) ; 
             ax.set_ybound(lower=self.xzs, upper=self.xze)
-
-        if self.lons is not None: ax.set_xticks(np.arange(-360,361,45)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
-        elif self.lats is not None: ax.set_xticks(np.arange(-90,91,30)) ; ax.set_xbound(lower=self.lats, upper=self.late)
 
       self.gettitle()
       fig.text(0.5, 0.95, self.title, ha='center')

@@ -449,9 +449,13 @@ if ( document.calendar.altitude.value == "all" ) {
 }
 }
 
+function ChooseColor(colorm){
+var colorm;
+document.calendar.colorm.value=colorm;
+}
 
 function submit_form_beginner() {
-document.calendar.submit();
+submit_form()
 document.calendar.reset();
 DefaultDateValues();
 DefaultTimeValues();
@@ -460,3 +464,7 @@ PlaceValues(0.,0.);
 DefaultSpaceTime()
 }
 
+function submit_form() {
+Convert2Julian();
+document.calendar.submit();
+}

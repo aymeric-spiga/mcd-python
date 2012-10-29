@@ -1,6 +1,4 @@
-
 <!-- Author Aymeric Spiga LMD -->
-
 <!DOCTYPE html>
 <html>
 
@@ -12,14 +10,11 @@
 
 <body onload="DefaultDateValues();DefaultTimeValues();Convert2Ls();PlaceValues(0.,0.);DefaultSpaceTime()">
 
+<form name="calendar" action="./cgi-bin/mcdcgi.py" method="post" target="_blank"> 
 <!-- aussi possible: get a la place de post. pour avoir un beau lien -->
-
-<!--<form name="calendar" action="/marscgi-bin/mcdcgi.py" method="post"-->
-<form name="calendar" action="./cgi-bin/mcdcgi.py" method="post" target="_blank"> <!--target="_new">-->
 
 <center>
 <b style="font-size: 125%;">Mars Climate Database: The Web Interface</b><br>
-<!--Welcome! To reset your query, click on the Mars panorama.-->
 <a href="index.html"><img src="PIA03610_red.jpg" height=80 width=1200></a><br>
 </center>
 
@@ -53,7 +48,8 @@
 <input type="radio" name="datekeyhtml" value="1" checked>
 <b><font color="red">MARS date</font></b> 
 Solar longitude <input type="text" size="3" name="ls"> degrees<br />
-Local Time <input type="text" size="4" name="localtime" value="0."> Martian hour<br />
+Local Time <input type="text" size="3" name="localtime" value="0."> Martian hour<br />
+<span style="font-size: 80%;">write a value (or) a range val1;val2 (or) 'all'</span><br />
 <br />
 <input type="radio" name="datekeyhtml" value="0">
 <b><font color="blue">EARTH date</font></b> 
@@ -63,7 +59,7 @@ YY / MM / DD @ hh:mm:ss<br />
 UTC<br />
 </td>
 <td align="center">
-Option for 2D maps: local time value is<br />
+If longitude is a free dimension, local time value is<br />
 <input type="radio" name="isfixedlt" value="off" checked /> at longitude 0
 <input type="radio" name="isfixedlt" value="on"          /> fixed for the whole planet<br />
 <hr>
@@ -82,32 +78,18 @@ Mars year <input type="text" size="1" name="martianyear" readonly="readonly">
 <input type="radio" name="tata" value="Afternoon" onClick="PlaceValues2(15.)">Afternoon<br />
 <input type="radio" name="tata" value="Evening" onClick="PlaceValues2(21.)">Evening
 <input type="radio" name="tata" value="Night" onClick="PlaceValues2(3.)">Night<br />
-<!--<input type="radio" name="tata" value="Whole day!" onClick="PlaceValues2('all')"><i>Whole day!</i><br />-->
 <hr>
 <b>3) ALTITUDE</b>
 <input type="radio" name="toto" value="Near surface" onClick="PlaceValues3(2.)" checked>Near-surface<br />
 <input type="radio" name="toto" value="Boundary layer" onClick="PlaceValues3(1000.)">Boundary layer
 <input type="radio" name="toto" value="Troposphere" onClick="PlaceValues3(10000.)">Troposphere<br/>
-<input type="radio" name="toto" value="Mesophere" onClick="PlaceValues3(80000.)">Mesosphere<br />
-<!--<input type="radio" name="toto" value="Whole profile!" onClick="PlaceValues3('all')"><i>Whole profile!</i><br />-->
+<input type="radio" name="toto" value="Mesophere" onClick="PlaceValues3(80000.)">Mesosphere
+<input type="radio" name="toto" value="Thermosphere" onClick="PlaceValues3(180000.)">Thermosphere<br />
 <hr>
-<!--
-<b>4) COORDINATES</b> Automatic! <br />
-<input type="button" value="... or click here for global map!" onClick="PlaceValues('all','all')"><br />
--->
-<!--
-<b>4)</b>
-<input type="button" value="Click here for a global map!" onClick="PlaceValues('all','all')"><br />
--->
-<!--
-<input type="radio" name="titi" value="Global map" onClick="PlaceValues('all','all')">Global map<br />
-<input type="radio" name="toto" value="Vertical profile" onClick="PlaceValues3('all')">Vertical profile
-<input type="radio" name="tata" value="Diurnal cycle" onClick="PlaceValues2('all')">Diurnal cycle<br />
--->
 </td>
 <td align="center">
 <b>CUSTOMIZE COORDINATES ON MARS</b><br />
-write a value (or) a range val1;val2 (or) 'all'<br />
+<span style="font-size: 80%;">write a value (or) a range val1;val2 (or) 'all'</span><br />
 <ul>
 <li>Latitude <input type="text" size="7" name="latitude" value="0."> degree North
 <li>Longitude <input type="text" size="7" name="longitude" value="0."> degree East
@@ -120,30 +102,11 @@ write a value (or) a range val1;val2 (or) 'all'<br />
 <option value="5"         >above 3396 km from Mars center</option>
 -->
 </select>
-<!--
-<li>Latitude   
-<input type="radio" name="islatfree" value="0" checked> Value: <input type="text" size="2" name="latitude" value="0.">
-<input type="radio" name="islatfree" value="1"> All [-90 ; 90]
-</li>
-<li>Longitude 
-<input type="radio" name="islonfree" value="0" checked> Value: <input type="text" size="2" name="longitude" value="0.">
-<input type="radio" name="islonfree" value="1"> All [-180 ; 180]
-</li>
-<li>Local Time  
-<input type="radio" name="isloctfree" value="0" checked> Value: <input type="text" size="2" name="localtime" value="0.">
-<input type="radio" name="isloctfree" value="1"> All [0 ; 24]
-</li>
-<li>Altitude   
-<input type="radio" name="isaltfree" value="0" checked> Value: <input type="text" size="2" name="altitude" value="10.">
-<input type="radio" name="isaltfree" value="1"> All [0 ; 100000] m
-</li>
--->
 </ul>
 </td>
 <td align="center">
-<!--[Advanced settings for well-informed Martians]<br />-->
 <ul>
-<li>High resolution topography? <input type="radio" name="hrkey" value="1" checked /> Yes <input type="radio" name="hrkey" value="0" /> No </li>
+<li>High resolution mode? <input type="radio" name="hrkey" value="1" checked /> Yes <input type="radio" name="hrkey" value="0" /> No </li>
 <li>Dust scenario? <select name="dust">
 <option value="1"         >MY24 min solar</option>
 <option value="2" selected>MY24 ave solar</option>
@@ -154,32 +117,21 @@ write a value (or) a range val1;val2 (or) 'all'<br />
 <option value="7"         >warm scenario (dusty, max solar)</option>
 <option value="8"         >cold scenario (low dust, min solar)</option>
 </select></li>
-<!--<li>Presets
-<input type="button" value="Now!" onClick="DefaultDateValues();DefaultTimeValues();Convert2Ls();">
-<input type="button" value="Curiosity" onClick="DateAndTimeValues(2012,8,6,05,30,00);Convert2Ls();PlaceValues(137.4,-4.6)">
-<input type="button" value="Phoenix" onClick="DateAndTimeValues(2008,5,25,23,38,23);Convert2Ls();PlaceValues(234.25,68.22)">
-<input type="button" value="Opportunity" onClick="DateAndTimeValues(2004,1,25,4,55,0);Convert2Ls();PlaceValues(354.47,-1.95)">
-<input type="button" value="Spirit" onClick="DateAndTimeValues(2004,1,4,4,26,0);Convert2Ls();PlaceValues(175.48,-14.57)">
-<input type="button" value="Pathfinder" onClick="DateAndTimeValues(1997,7,4,16,56,55);Convert2Ls();PlaceValues(-33.22,19.13)">
-<input type="button" value="Viking Lander 2" onClick="DateAndTimeValues(1976,9,3,22,58,20);Convert2Ls();PlaceValues(-225.74,47.97)">
-<input type="button" value="Viking Lander 1" onClick="DateAndTimeValues(1976,7,20,11,53,6);Convert2Ls();PlaceValues(-49.97,22.48)">
-</li>-->
 </ul>
 </td>
 </tr>
 <tr>
 <td align="center">
 <b>4) INTEREST</b>
-<input type="radio" name="yeah" value="Atmosphere" onClick="PlaceVar('t','p','none','none')" checked>Atmosphere<br />
-<input type="radio" name="yeah" value="Winds" onClick="PlaceVar('u','v','none','none')">Winds
-<input type="radio" name="yeah" value="Weather" onClick="PlaceVar('ps_ddv','t','none','none')">Weather<br />
-<input type="radio" name="yeah" value="Water clouds" onClick="PlaceVar('h2ovap','mtot','h2oice','icetot')">Water clouds
-<input type="radio" name="yeah" value="Chemistry" onClick="PlaceVar('o3','h2ovap','o','co')">Chemistry<br />
-<input type="radio" name="yeah" value="Landing engineering" onClick="PlaceVar('rho','rho_ddv','cp','visc')">Landing engineering<br />
-<input type="radio" name="yeah" value="Glaciology" onClick="PlaceVar('tsurfmn','tsurfmx','co2ice','icetot')">Glaciology
-<input type="radio" name="yeah" value="Surface meteorology" onClick="PlaceVar('ps','tsurf','none','none')">Surface meteorology<br />
-<input type="radio" name="yeah" value="Radiative balance" onClick="PlaceVar('lwdown','swdown','lwup','swup')">Radiative balance<br />
-<!--<input type="button" value="Surface data" onClick="PlaceVar('ps','tsurf','none','none')">-->
+<input type="radio" name="yeah" value="Atmosphere" onClick="PlaceVar('t','p','none','none');ChooseColor('jet')" checked>Atmosphere<br />
+<input type="radio" name="yeah" value="Winds" onClick="PlaceVar('u','v','none','none');ChooseColor('RdBu_r')">Winds
+<input type="radio" name="yeah" value="Weather" onClick="PlaceVar('ps_ddv','rho_ddv','none','none');ChooseColor('RdBu_r')">Weather<br />
+<input type="radio" name="yeah" value="Water cycle" onClick="PlaceVar('h2ovap','mtot','h2oice','icetot');ChooseColor('Blues')">Water cycle
+<input type="radio" name="yeah" value="Chemistry" onClick="PlaceVar('o3','h2ovap','none','none');ChooseColor('jet')">Chemistry<br />
+<input type="radio" name="yeah" value="Landing engineering" onClick="PlaceVar('rho','visc','none','none');ChooseColor('YlOrRd')">Landing engineering<br />
+<input type="radio" name="yeah" value="Glaciology" onClick="PlaceVar('tsurfmn','tsurfmx','co2ice','icetot');ChooseColor('spectral')">Glaciology
+<input type="radio" name="yeah" value="Surface meteorology" onClick="PlaceVar('ps','tsurf','none','none');ChooseColor('jet')">Surface meteorology<br />
+<input type="radio" name="yeah" value="Radiative balance" onClick="PlaceVar('lwdown','swdown','lwup','swup');ChooseColor('hot')">Radiative balance<br />
 </td>
 <td align="center">
 <b>CUSTOMIZE VARIABLE(S) TO BE DISPLAYED</b><br />
@@ -300,29 +252,25 @@ Variable 4 <select name="var4">
 </select>
 </td>
 <td align="center">
-<!--[Additional settings]<br />-->
 <ul>
 <li> Add wind vectors
 <input type="radio" name="iswind" value="off" checked /> No
 <input type="radio" name="iswind" value="on"          /> Yes</li>  
-<!--
-<li> Set same LT on whole planet
-<input type="radio" name="isfixedlt" value="off" checked /> No
-<input type="radio" name="isfixedlt" value="on"          /> Yes</li>
--->
-<!--
-<li> Add another variable 
-<input type="radio" name="superimposed" value="0" checked /> side-by-side
-<input type="radio" name="superimposed" value="1"         /> superimposed</li> 
--->
-<!--
-<li>
-Presets
-<input type="button" value="Usual meteorology" onClick="PlaceVar('p','t','u','v')">
-<input type="button" value="Surface data" onClick="PlaceVar('ps','tsurf','none','none')">
-<input type="button" value="Water cycle" onClick="PlaceVar('mtot','icetot','none','none')">
+</li>
+<li> Set colormap
+<select name="colorm">
+<option value="jet"       selected>blue green yellow red</option>
+<option value="Greys"             >grey</option>
+<option value="Blues"             >blue</option>
+<option value="YlOrRd"            >yellow orange red</option>
+<option value="spectral"          >rainbow</option>
+<option value="hot"               >black red yellow</option>
+<option value="RdBu_r"            >blue white red</option>
 </select>
--->
+</li>
+<li> Ask for zonal mean in lat/alt plot<br />
+<input type="radio" name="zonmean" value="off" checked /> No
+<input type="radio" name="zonmean" value="on"          /> Yes (please be patient)
 </li>
 </ul>
 </td>
@@ -335,28 +283,18 @@ Presets
 <input type="button" value="Global map" style="font-weight:bold" onClick="PlaceValues('all','all');submit_form_beginner()"/><br />
 </td>
 <td align="center">
-<input type="submit" value="SUBMIT" style="font-weight:bold"/>
-<!--<input type="button" value="RESET" style="font-weight:bold" onClick="DefaultDateValues();DefaultTimeValues();Convert2Ls();PlaceValues(0.,0.);DefaultSpaceTime()"/><br />-->
+<input type="button" value="SUBMIT" style="font-weight:bold" onClick="submit_form()"/>
 <input type="button" value="RESET" style="font-weight:bold" onClick="window.open('index.html','_self')"/><br />
 </td>
 <td align="center">
 <a href="http://www-mars.lmd.jussieu.fr">Mars Climate Database</a> (c) LMD/OU/IAA/ESA/CNES.<br />
-Python-based interface by <a href="http://www.lmd.jussieu.fr/~aslmd/">Aymeric Spiga</a> (LMD).<br />
+Interface written by <a href="http://www.lmd.jussieu.fr/~aslmd/">A. Spiga</a> (LMD) using <a href="http://www.python.org">Python</a>.<br />
 </td>
 </tr>
-
-
 </table>
-
-
-
 </body>
 </html>
 
 <!--
-<form action="/cgi-bin/checkbox.cgi" method="POST" target="_blank">
 <input type="checkbox" name="maths" value="on" /> Maths
-<input type="checkbox" name="physics" value="on" /> Physics
-<input type="submit" value="Select Subject" />
-</form>
 -->

@@ -16,34 +16,52 @@
 
 import cgi, cgitb 
 import numpy as np
-#from mcd import mcd
 from modules import *
 from modules import mcd
 
 import cStringIO
 import os as daos
 import matplotlib.pyplot as mpl
-from PIL import Image
-
-
 
 ### a function to read HTML arguments for coordinates
 def gethtmlcoord(userinput,defmin,defmax):
-   # accepted separators
-   separators = [":",";",",","/"] 
+   import string
+   # accepted separators. the symbol - should always be last.
+   separators = [":",";",",","/","_"] 
    # initial values
    val = -9999. ; vals = None ; vale = None ; foundinterv = False
    if userinput == None:   userinput = "1"
-   # the main work. either all -- or an interval -- or a single value.
+   # the main work. either all, or an interval, or a single value.
+   # ... all
    if userinput == "all":  isfree = 1 ; vals = defmin ; vale = defmax ; foundinterv = True
+   # ... an interval
    else:
        for sep in separators:
+         if not foundinterv:
            isfree = 1 ; ind = userinput.find(sep)
            if ind != -1: vals = float(userinput[:ind]) ; vale = float(userinput[ind+1:]) ; foundinterv = True
-   if not foundinterv: isfree = 0 ; val = float(userinput)
+   # ... a single value (or an error)
+   if not foundinterv: 
+       # treat the difficult case of possible - separator
+       test = userinput[1:].find("-") # at this stage:
+                                      # * if - is found in the first position, it could not be a separator 
+                                      # * if - found at positions > 0, it must be considered as a separator
+       if test != -1: 
+         isfree = 1 ; ind=test+1 
+         vals = float(userinput[:ind]) ; vale = float(userinput[ind+1:]) ; foundinterv = True
+       else:
+         # check if input is valid (each character is numeric or -)
+         for char in userinput: 
+            if char not in string.digits: 
+               if char not in ["-","."]: userinput="yorgl"
+         # either we are OK. if we are not we set isfree to -1.
+         if userinput != "yorgl":  isfree = 0 ; val = float(userinput)
+         else:                     isfree = -1
    # return values
    return isfree, val, vals, vale
 
+# set an errormess variable which must stay to None for interface to proceed
+errormess = ""
 
 # for debugging in web browser
 cgitb.enable()
@@ -52,16 +70,15 @@ cgitb.enable()
 form = cgi.FieldStorage() 
 
 # create a MCD object
-#query = mcd()
-query=mcd.mcd() #FG: import from module mcd
+query=mcd.mcd() 
 
 # Get the kind of vertical coordinates and choose default behavior for "all"
 try: query.zkey = int(form.getvalue("zkey"))
 except: query.zkey = int(3)
-if query.zkey == 2:    minxz = -5000.   ; maxxz = 100000.
-elif query.zkey == 3:  minxz = 0.       ; maxxz = 120000.
-elif query.zkey == 5:  minxz = -5000.   ; maxxz = 100000.
-elif query.zkey == 4:  minxz = 1000.    ; maxxz = 0.001
+if query.zkey == 2:    minxz = -5000.   ; maxxz = 150000.
+elif query.zkey == 3:  minxz = 0.       ; maxxz = 250000.
+elif query.zkey == 5:  minxz = -5000.   ; maxxz = 150000.
+elif query.zkey == 4:  minxz = 1.e3     ; maxxz = 1.e-6
 elif query.zkey == 1:  minxz = 3396000. ; maxxz = 3596000.
 
 # Get data from user-defined fields and define free dimensions
@@ -69,9 +86,6 @@ islatfree,  query.lat,  query.lats,  query.late  = gethtmlcoord( form.getvalue("
 islonfree,  query.lon,  query.lons,  query.lone  = gethtmlcoord( form.getvalue("longitude"), -180., 180. )
 isloctfree, query.loct, query.locts, query.locte = gethtmlcoord( form.getvalue("localtime"),    0.,  24. )
 isaltfree,  query.xz,   query.xzs,   query.xze   = gethtmlcoord( form.getvalue("altitude"),  minxz, maxxz)
-
-sumfree = islatfree + islonfree + isloctfree + isaltfree 
-if sumfree > 2: exit() ## only 1D or 2D plots for the moment
 
 try: query.datekey = int(form.getvalue("datekeyhtml"))
 except: query.datekey = float(1)
@@ -83,6 +97,51 @@ else:
     except: query.xdate = float(1)
     query.loct = 0.
 
+# Prevent the user from doing bad
+badinterv = (islatfree == -1) or (islonfree == -1) or (isloctfree == -1) or (isaltfree == -1)
+if badinterv: 
+    errormess = errormess+"<li>Bad syntax. Write a value (or) a range val1;val2 (or) 'all'. Separator shall be either ; : , / _ "
+badls = (query.datekey == 1 and (query.xdate < 0. or query.xdate > 360.))
+if badls: 
+    errormess = errormess+"<li>Solar longitude must be between 0 and 360."
+badloct = (isloctfree == 0 and query.loct > 24.) \
+       or (isloctfree == 1 and (query.locts > 24. or query.locte > 24.)) \
+       or (isloctfree == 0 and query.loct < 0.) \
+       or (isloctfree == 1 and (query.locts < 0. or query.locte < 0.))
+if badloct: 
+    errormess = errormess+"<li>Local time must be less than 24 martian hours (and not a negative number)."
+badlat = (islatfree == 0 and abs(query.lat) > 90.) \
+      or (islatfree == 1 and (abs(query.lats) > 90. or abs(query.late) > 90.))
+if badlat: 
+    errormess = errormess+"<li>Latitude coordinates must be between -90 and 90."
+badlon = (islonfree == 0 and abs(query.lon) > 360.) \
+      or (islonfree == 1 and (abs(query.lons) > 360. or abs(query.lone) > 360.))
+if badlon: 
+    errormess = errormess+"<li>Longitude coordinates must be between -360 and 360."
+badalt = (isaltfree == 0 and (query.zkey in [3]) and query.xz < 0.) \
+      or (isaltfree == 1 and (query.zkey in [3]) and (query.xzs < 0. or query.xze < 0.))
+if badalt: 
+    errormess = errormess+"<li>Vertical coordinates must be positive when requesting altitude above surface."
+badalt2 = (isaltfree == 0 and (query.zkey in [1,4]) and query.xz <= 0.) \
+      or (isaltfree == 1 and (query.zkey in [1,4]) and (query.xzs <= 0. or query.xze <= 0.))
+if badalt2: 
+    errormess = errormess+"<li>Vertical coordinates must be <b>strictly</b> positive when requesting pressure levels or altitude above Mars center."
+badalt3 = (isaltfree == 0 and query.zkey == 4 and query.xz > 1500.) \
+       or (isaltfree == 1 and query.zkey == 4 and min(query.xzs,query.xze) > 1500.)
+if badalt3: 
+    errormess = errormess+"<li>Pressure values larger than 1500 Pa are unlikely to be encountered in the Martian atmosphere."
+badrange = (isloctfree == 1 and query.locts == query.locte) \
+        or (islatfree == 1 and query.lats == query.late) \
+        or (islonfree == 1 and query.lons == query.lone) \
+        or (isaltfree == 1 and query.xzs == query.xze)
+if badrange: 
+    errormess = errormess+"<li>One or several coordinate intervals are not... intervals. Set either a real range or an unique value."
+
+# Get how many free dimensions we have
+sumfree = islatfree + islonfree + isloctfree + isaltfree 
+if sumfree >= 3: errormess = errormess + "<li>3 or more free dimensions are set... but only 1D and 2D plots are supported!"
+
+# Get additional parameters
 try: query.hrkey = int(form.getvalue("hrkey"))
 except: query.hrkey = int(1)
 try: query.dust = int(form.getvalue("dust"))
@@ -90,6 +149,8 @@ except: query.dust  = int(1)
 #        self.perturkey = 0  #integer perturkey ! perturbation type (0: none)
 #        self.seedin    = 1  #random number generator seed (unused if perturkey=0)
 #        self.gwlength  = 0. #gravity Wave wavelength (unused if perturkey=0)
+try: query.colorm = form.getvalue("colorm")
+except: query.colorm = "jet"
 
 # Get variables to plot
 var1 = form.getvalue("var1")
@@ -97,11 +158,8 @@ var2 = form.getvalue("var2")
 var3 = form.getvalue("var3")
 var4 = form.getvalue("var4")
 
-# fg: vartoplot is not None without form values
-# vartoplot = [var1]
 # fg: init var as with form values
 if var1 == None: var1="t"
-#if var2 == None: var2="p"
 
 vartoplot = []
 if var1 != "none": vartoplot = np.append(vartoplot,var1)
@@ -113,23 +171,29 @@ iswind = form.getvalue("iswind")
 if iswind == "on": iswindlog = True
 else:              iswindlog = False
 isfixedlt = form.getvalue("isfixedlt")
-if isfixedlt == "on": input_fixedlt=True
-else:                 input_fixedlt=False  
+if isfixedlt == "on": query.fixedlt=True
+else:                 query.fixedlt=False  
+iszonmean = form.getvalue("zonmean")
+if iszonmean  == "on": query.zonmean=True
+else:                  query.zonmean=False
 
-# reference name (to test which figures are already in the database)
-reference = query.getnameset()+str(var1)+str(var2)+str(var3)+str(var4)+str(iswind)+str(isfixedlt)
-figname = '../img/'+reference+'.png'
-txtname = '../txt/'+reference
-testexist = daos.path.isfile(figname)
+### now, proceed...
+if errormess == "":
 
-# extract data from MCD if needed
-if not testexist:
+ # reference name (to test which figures are already in the database)
+ reference = query.getnameset()+str(var1)+str(var2)+str(var3)+str(var4)+str(iswind)+str(isfixedlt)+str(iszonmean)+query.colorm
+ figname = '../img/'+reference+'.png'
+ txtname = '../txt/'+reference+'.txt'
+ testexist = daos.path.isfile(figname)
+
+ # extract data from MCD if needed
+ if not testexist:
 
   ### 1D plots
   if sumfree == 1:
 
     ### getting data
-    if isloctfree == 1:  	query.diurnal(nd=24) 
+    if isloctfree == 1:  	query.diurnal(nd=25) 
     elif islonfree == 1: 	query.zonal(nd=64)
     elif islatfree == 1: 	query.meridional(nd=48)
     elif isaltfree == 1: 	query.profile(nd=35)   
@@ -138,24 +202,15 @@ if not testexist:
     ### generic building of figure
     query.getascii(vartoplot,filename=txtname)
     query.htmlplot1d(vartoplot,figname=figname)
-    #mpl.savefig("img/temp.png",dpi=85,bbox_inches='tight',pad_inches=0.25)
-    #Image.open("../img/temp.png").save(figname,'JPEG')
 
   ### 2D plots
   elif sumfree == 2:
 
     ### getting data
-    if islatfree == 1 and islonfree == 1:  	
-        query.htmlmap2d(vartoplot,incwind=iswindlog,fixedlt=input_fixedlt,figname=figname) 
-        #mpl.savefig("img/temp.png",dpi=110,bbox_inches='tight',pad_inches=0.4)
-        #Image.open("img/temp.png").save(figname,'JPEG') ##lighter images   
-        ### http://www.pythonware.com/library/pil/handbook/introduction.htm
-    elif isaltfree == 1 and islonfree == 1:  	
-        query.htmlplot2d(vartoplot,fixedlt=input_fixedlt,figname=figname)
-    elif isaltfree == 1 and islatfree == 1:  	
-        query.htmlplot2d(vartoplot,fixedlt=input_fixedlt,figname=figname)
-    else:
-        exit()  
+    if islatfree == 1 and islonfree == 1:     query.htmlmap2d(vartoplot,incwind=iswindlog,figname=figname) 
+    else:                                     query.htmlplot2d(vartoplot,figname=figname)
+
+#### NOW WRITE THE HTML PAGE TO USER
 
 ## This is quite common
 print "Content-type:text/html\n"
@@ -171,53 +226,21 @@ print header
 #print query.printset()
 #print "<br />"
 
-
-#print "<a href='../index.html'>Click here to start a new query</a><br />"
-#print "<hr>"
-
 ## Now the part which differs
-if sumfree == 0: 	query.update() ; query.htmlprinttabextvar(vartoplot)  #query.printmeanvar()
-elif sumfree == 2: 	print "<img src='"+figname+"'><br />"
-elif sumfree == 1:      
-    print "<a href='"+txtname+"'>Click here to download an ASCII file containing data</a><br />"
-    print "<hr>"
-    print "<img src='"+figname+"'><br />"
-else:			print "<h1>ERROR : sumfree is not or badly defined ...</h1></body></html>"
-
+if errormess != "":
+                       print "<h1>Ooops!</h1>"
+                       print "Please correct the following problems before submitting again."
+                       print "<ul>"
+                       print errormess
+                       print "</ul>"
+else:
+  if sumfree == 0: 	query.update() ; query.htmlprinttabextvar(vartoplot)
+  elif sumfree == 2: 	print "<img src='"+figname+"'><br />"
+  elif sumfree == 1:      
+                        print "<a href='"+txtname+"'>Click here to download an ASCII file containing data</a><br />"
+                        print "<hr>"
+                        print "<img src='"+figname+"'><br />"
 
 ## This is quite common
-bottom = "<hr><a href='../index.html'>Click here to start a new query</a>.<hr></body></html>"
-#print bottom
-
-##write to file object
-#f = cStringIO.StringIO()
-#mpl.savefig(f)
-#f.seek(0)
-
-##output to browser
-#print "Content-type: image/png\n"
-#print f.read()
-#exit()
-
-#print "Content-type:text/html\r\n\r\n"
-#print "<html>"
-#print "<head>"
-#print "<title>MCD. Simple Python interface</title>"
-#print "</head>"
-#print "<body>"
-
-
-
-
-
-
-## HTTP Header
-#print "Content-Type:application/octet-stream; name=\"FileName\"\r\n";
-#print "Content-Disposition: attachment; filename=\"FileName\"\r\n\n";
-## Actual File Content will go hear.
-#fo = open("foo.txt", "rb")
-#str = fo.read();
-#print str
-## Close opend file
-#fo.close()
-
+bottom = "</body></html>"
+print bottom
