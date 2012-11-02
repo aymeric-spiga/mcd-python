@@ -89,9 +89,10 @@ isaltfree,  query.xz,   query.xzs,   query.xze   = gethtmlcoord( form.getvalue("
 
 try: query.datekey = int(form.getvalue("datekeyhtml"))
 except: query.datekey = float(1)
+badlschar = False
 if query.datekey == 1:
     try: query.xdate = float(form.getvalue("ls"))
-    except: query.xdate = float(1)
+    except: query.xdate = float(1) ; badlschar = True
 else:
     try: query.xdate = float(form.getvalue("julian"))
     except: query.xdate = float(1)
@@ -104,6 +105,8 @@ if badinterv:
 badls = (query.datekey == 1 and (query.xdate < 0. or query.xdate > 360.))
 if badls: 
     errormess = errormess+"<li>Solar longitude must be between 0 and 360."
+if badlschar:
+    errormess = errormess+"<li>Solar longitude is in the wrong format. It should be a positive number between 0 and 360. Intervals of solar longitude are not allowed."
 badloct = (isloctfree == 0 and query.loct > 24.) \
        or (isloctfree == 1 and (query.locts > 24. or query.locte > 24.)) \
        or (isloctfree == 0 and query.loct < 0.) \
@@ -152,6 +155,15 @@ except: query.dust  = int(1)
 try: query.colorm = form.getvalue("colorm")
 except: query.colorm = "jet"
 
+try: query.min2d = float(form.getvalue("minval"))
+except: query.min2d = None
+try: query.max2d = float(form.getvalue("maxval"))
+except: query.max2d = None
+
+try: query.dpi = float(form.getvalue("dpi"))
+except: query.dpi = 80.
+
+
 # Get variables to plot
 var1 = form.getvalue("var1")
 var2 = form.getvalue("var2")
@@ -181,7 +193,7 @@ else:                  query.zonmean=False
 if errormess == "":
 
  # reference name (to test which figures are already in the database)
- reference = query.getnameset()+str(var1)+str(var2)+str(var3)+str(var4)+str(iswind)+str(isfixedlt)+str(iszonmean)+query.colorm
+ reference = query.getnameset()+str(var1)+str(var2)+str(var3)+str(var4)+str(iswind)+str(isfixedlt)+str(iszonmean)+query.colorm+str(query.min2d)+str(query.max2d)+str(query.dpi)
  figname = '../img/'+reference+'.png'
  txtname = '../txt/'+reference+'.txt'
  testexist = daos.path.isfile(figname)

@@ -79,6 +79,9 @@ class mcd():
         self.colorm = "jet"
         self.fixedlt = False
         self.zonmean = False
+        self.min2d = None
+        self.max2d = None
+        self.dpi = 80.
 
     def viking1(self): self.name = "Viking 1 site. MCD v4.3 output" ; self.lat = 22.48 ; self.lon = -49.97 ; self.xdate = 97.
     def viking2(self): self.name = "Viking 2 site. MCD v4.3 output" ; self.lat = 47.97 ; self.lon = -225.74 ; self.xdate = 117.6
@@ -100,8 +103,10 @@ class mcd():
         elif self.datekey == 0:  self.title = self.title + " JD " + str(self.xdate) + "."
         if not oneline: self.title = self.title + "\n"
         if self.lats is None:  self.title = self.title + " Latitude " + str(self.lat) + "N"
-        if self.zonmean: self.title = self.title + "Zonal mean over all longitudes."
-        elif self.lons is None: self.title = self.title + " Longitude " + str(self.lon) + "E"
+        if self.zonmean and self.lats is not None and self.xzs is not None: 
+            self.title = self.title + "Zonal mean over all longitudes."
+        elif self.lons is None: 
+            self.title = self.title + " Longitude " + str(self.lon) + "E"
         if self.xzs is None:   
             self.vertunits()
             self.title = self.title + " Altitude " + str(self.xz) + " " + self.vunits
@@ -512,7 +517,7 @@ class mcd():
       canvas = FigureCanvasAgg(fig)
       # The size * the dpi gives the final image size
       #   a4"x4" image * 80 dpi ==> 320x320 pixel image
-      canvas.print_figure(figname, dpi=80)
+      canvas.print_figure(figname, dpi=self.dpi)
 
 ###################
 ### 2D analysis ###
@@ -703,7 +708,7 @@ class mcd():
 
         ## define field. bound field.
         what_I_plot = np.transpose(field)
-        zevmin, zevmax = myplot.calculate_bounds(what_I_plot)  ## vmin=min(what_I_plot_frame), vmax=max(what_I_plot_frame))
+        zevmin, zevmax = myplot.calculate_bounds(what_I_plot,vmin=self.min2d,vmax=self.max2d)  
         what_I_plot = myplot.bounds(what_I_plot,zevmin,zevmax)
         ## define contour field levels. define color palette
         ticks = ndiv + 1
@@ -733,7 +738,7 @@ class mcd():
       canvas = FigureCanvasAgg(fig)
       # The size * the dpi gives the final image size
       #   a4"x4" image * 80 dpi ==> 320x320 pixel image
-      canvas.print_figure(figname, dpi=80)
+      canvas.print_figure(figname, dpi=self.dpi)
 
     def htmlplot2d(self,tabtodo,figname="temp.png"):
     ### complete 2D figure with possible multiplots
@@ -774,7 +779,7 @@ class mcd():
 
         ## define field. bound field.
         what_I_plot = np.transpose(field)
-        zevmin, zevmax = myplot.calculate_bounds(what_I_plot)  ## vmin=min(what_I_plot_frame), vmax=max(what_I_plot_frame))
+        zevmin, zevmax = myplot.calculate_bounds(what_I_plot,vmin=self.min2d,vmax=self.max2d)  
         what_I_plot = myplot.bounds(what_I_plot,zevmin,zevmax)
         ## define contour field levels. define color palette
         ticks = ndiv + 1
@@ -805,7 +810,7 @@ class mcd():
       canvas = FigureCanvasAgg(fig)
       # The size * the dpi gives the final image size
       #   a4"x4" image * 80 dpi ==> 320x320 pixel image
-      canvas.print_figure(figname, dpi=80)
+      canvas.print_figure(figname, dpi=self.dpi)
 
 
     ### TODO: makeplot2d, plot2d, passer plot settings

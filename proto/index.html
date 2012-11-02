@@ -106,8 +106,7 @@ Mars year <input type="text" size="1" name="martianyear" readonly="readonly">
 </td>
 <td align="center">
 <ul>
-<li>High resolution mode? <input type="radio" name="hrkey" value="1" checked /> Yes <input type="radio" name="hrkey" value="0" /> No </li>
-<li>Dust scenario? <select name="dust">
+<li>Dust scenario <select name="dust">
 <option value="1"         >MY24 min solar</option>
 <option value="2" selected>MY24 ave solar</option>
 <option value="3"         >MY24 max solar</option>
@@ -117,6 +116,7 @@ Mars year <input type="text" size="1" name="martianyear" readonly="readonly">
 <option value="7"         >warm scenario (dusty, max solar)</option>
 <option value="8"         >cold scenario (low dust, min solar)</option>
 </select></li>
+<li>Interpolate using MOLA topography <input type="radio" name="hrkey" value="1" checked /> on <input type="radio" name="hrkey" value="0" /> off </li>
 </ul>
 </td>
 </tr>
@@ -253,9 +253,9 @@ Variable 4 <select name="var4">
 </td>
 <td align="center">
 <ul>
-<li> Add wind vectors
-<input type="radio" name="iswind" value="off" checked /> No
-<input type="radio" name="iswind" value="on"          /> Yes</li>  
+<li> Set picture resolution
+<input type="radio" name="dpi" value="80" checked> medium
+<input type="radio" name="dpi" value="160"> high
 </li>
 <li> Set colormap
 <select name="colorm">
@@ -268,9 +268,17 @@ Variable 4 <select name="var4">
 <option value="RdBu_r"            >blue white red</option>
 </select>
 </li>
-<li> Ask for zonal mean in lat/alt plot<br />
-<input type="radio" name="zonmean" value="off" checked /> No
-<input type="radio" name="zonmean" value="on"          /> Yes (please be patient)
+<li> Set bounds in 2D plots
+<input type="text" size="2" name="minval"> min
+<input type="text" size="2" name="maxval"> max
+</li>
+<li> Wind vectors in lat/lon plot
+<input type="radio" name="iswind" value="off" checked /> off
+<input type="radio" name="iswind" value="on"          /> on</li>  
+</li>
+<li> Zonal average in lat/alt plot
+<input type="radio" name="zonmean" value="off" checked /> off
+<input type="radio" name="zonmean" value="on"          /> on
 </li>
 </ul>
 </td>
