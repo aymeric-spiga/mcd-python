@@ -7,7 +7,6 @@
 ####################################################
 
 import numpy as np
-import fmcd
 import matplotlib.pyplot as mpl
 import myplot
 
@@ -83,13 +82,18 @@ class mcd():
         self.max2d = None
         self.dpi = 80.
 
+    def toversion5(self):
+        self.name      = "MCD v5.0"
+        self.dset      = '/home/marshttp/MCD_v5.0/data/'
+        self.extvarkey = np.ones(100)
+
     def viking1(self): self.name = "Viking 1 site. MCD v4.3 output" ; self.lat = 22.48 ; self.lon = -49.97 ; self.xdate = 97.
     def viking2(self): self.name = "Viking 2 site. MCD v4.3 output" ; self.lat = 47.97 ; self.lon = -225.74 ; self.xdate = 117.6
 
     def getdustlabel(self):
-        if self.dust == 1: self.dustlabel = "MY24 minimum solar scenario"
-        elif self.dust == 2: self.dustlabel = "MY24 average solar scenario"
-        elif self.dust == 3: self.dustlabel = "MY24 maximum solar scenario"
+        if self.dust == 1: self.dustlabel = "climatology minimum solar scenario"
+        elif self.dust == 2: self.dustlabel = "climatology average solar scenario"
+        elif self.dust == 3: self.dustlabel = "climatology maximum solar scenario"
         elif self.dust == 4: self.dustlabel = "dust storm minimum solar scenario"
         elif self.dust == 5: self.dustlabel = "dust storm average solar scenario"
         elif self.dust == 6: self.dustlabel = "dust storm maximum solar scenario"
@@ -139,7 +143,7 @@ class mcd():
 	16: "daily max mean surface temperature (K)",\
 	17: "daily min mean surface temperature (K)",\
 	18: "surf. temperature RMS day to day variations (K)",\
-	19: "surface pressure (high resolution if hireskey=1)",\
+	19: "surface pressure (Pa)",\
 	20: "GCM surface pressure (Pa)",\
 	21: "atmospheric pressure RMS day to day variations (Pa)",\
 	22: "surface pressure RMS day to day variations (Pa)",\
@@ -172,16 +176,58 @@ class mcd():
 	49: "R: Molecular gas constant (J K-1 kg-1)",\
 	50: "Air viscosity estimation (N s m-2)"
         }
+        ### MCD version 5 new variables. AS 12/2012.
+        if "v5" in self.name:
+          whichfield[29] = "not used (set to zero)"
+          whichfield[30] = "Surface roughness length z0 (m)"
+          whichfield[37] = "DOD RMS day to day variations"
+          whichfield[38] = "Dust mass mixing ratio (kg/kg)"
+          whichfield[39] = "Dust effective radius (m)"
+          whichfield[44] =  whichfield[43]
+          whichfield[43] =  whichfield[42]
+          whichfield[42] =  whichfield[41]
+          whichfield[41] =  whichfield[40]
+          whichfield[40] = "Dust deposition on flat surface (kg m-2 s-1)"
+          whichfield[45] = "Water ice effective radius (m)"
+          whichfield[46] = "Convective PBL height (m)"
+          whichfield[47] = "Max. upward convective wind within the PBL (m/s)"
+          whichfield[48] = "Max. downward convective wind within the PBL (m/s)"
+          whichfield[49] = "Convective vertical wind variance at level z (m2/s2)"
+          whichfield[50] = "Convective eddy vertical heat flux at level z (m/s/K)"
+          whichfield[51] = "Surface wind stress (Kg/m/s2)"
+          whichfield[52] = "Surface sensible heat flux (W/m2) (<0 when flux from surf to atm.)"
+          whichfield[53] = "R: Molecular gas constant (J K-1 kg-1)"
+          whichfield[54] = "Air viscosity estimation (N s m-2)"
+          whichfield[55] = "not used (set to zero)"
+          whichfield[56] = "not used (set to zero)"
+          whichfield[57] = "[CO2] vol. mixing ratio (mol/mol)"
+          whichfield[58] = "[N2] vol. mixing ratio (mol/mol)"
+          whichfield[59] = "[Ar] vol. mixing ratio (mol/mol)"
+          whichfield[60] = "[CO] vol. mixing ratio (mol/mol)"
+          whichfield[61] = "[O] vol. mixing ratio (mol/mol)"
+          whichfield[62] = "[O2] vol. mixing ratio (mol/mol)"
+          whichfield[63] = "[O3] vol. mixing ratio (mol/mol)"
+          whichfield[64] = "[H] vol. mixing ratio (mol/mol)"
+          whichfield[65] = "[H2] vol. mixing ratio (mol/mol)"
+          whichfield[66] = "[electron] vol. mixing ratio (mol/mol)"
+          whichfield[67] = "CO2 column (kg/m2)"
+          whichfield[68] = "N2 column (kg/m2)"
+          whichfield[69] = "Ar column (kg/m2)"
+          whichfield[70] = "CO column (kg/m2)"
+          whichfield[71] = "O column (kg/m2)"
+          whichfield[72] = "O2 column (kg/m2)"
+          whichfield[73] = "O3 column (kg/m2)"
+          whichfield[74] = "H column (kg/m2)"
+          whichfield[75] = "H2 column (kg/m2)"
+          whichfield[76] = "electron column (kg/m2)"
         if num not in whichfield: myplot.errormess("Incorrect subscript in extvar.")
-
         dastuff = whichfield[num]
-  
         if "(K)" in dastuff:      self.fmt="%.0f"
         elif "(Pa)" in dastuff:   self.fmt="%.1f"
         elif "(W/m2)" in dastuff: self.fmt="%.0f"
         elif "(m/s)" in dastuff:  self.fmt="%.1f"
+        elif "(m)" in dastuff:    self.fmt="%.0f"
         else:                     self.fmt="%.2e"
-
         return dastuff
 
     def convertlab(self,num):        
@@ -196,11 +242,19 @@ class mcd():
         elif num == "h": num = 13
         elif num == "ps": num = 19
         elif num == "tau": num = 36
-        elif num == "mtot": num = 40
-        elif num == "icetot": num = 42
+        elif num == "mtot": 
+            if "v5" in self.name:  num = 41 
+            else:                  num = 40
+        elif num == "icetot": 
+            if "v5" in self.name:  num = 43
+            else:                  num = 42
         elif num == "ps_ddv": num = 22
-        elif num == "h2ovap": num = 41
-        elif num == "h2oice": num = 43
+        elif num == "h2ovap": 
+            if "v5" in self.name:  num = 42
+            else:                  num = 41
+        elif num == "h2oice": 
+            if "v5" in self.name:  num = 44
+            else:                  num = 43
         elif num == "cp": num = 8
         elif num == "rho_ddv": num = 10
         elif num == "tsurfmx": num = 16
@@ -209,11 +263,40 @@ class mcd():
         elif num == "swdown": num = 32
         elif num == "lwup": num = 33
         elif num == "swup": num = 34
-        elif num == "o3": num = 44
-        elif num == "o": num = 46
-        elif num == "co": num = 48
-        elif num == "visc": num = 50
+        elif num == "o3": 
+            if "v5" in self.name:  num = 63
+            else:                  num = 44
+        elif num == "o": 
+            if "v5" in self.name:  num = 61
+            else:                  num = 46
+        elif num == "co": 
+            if "v5" in self.name:  num = 60
+            else:                  num = 48
+        elif num == "visc": 
+            if "v5" in self.name:  num = 54
+            else:                  num = 50
         elif num == "co2ice": num = 35
+        elif num == "pbl":
+            if "v5" in self.name:  num = 46
+            else:                  num = 30 # an undefined variable to avoid misleading output
+        elif num == "updraft":
+            if "v5" in self.name:  num = 47
+            else:                  num = 30 # an undefined variable to avoid misleading output
+        elif num == "downdraft":
+            if "v5" in self.name:  num = 48
+            else:                  num = 30 # an undefined variable to avoid misleading output
+        elif num == "pblwvar":
+            if "v5" in self.name:  num = 49
+            else:                  num = 30 # an undefined variable to avoid misleading output
+        elif num == "pblhvar":
+            if "v5" in self.name:  num = 50
+            else:                  num = 30 # an undefined variable to avoid misleading output
+        elif num == "stress":
+            if "v5" in self.name:  num = 51
+            else:                  num = 30 # an undefined variable to avoid misleading output
+        elif num == "ar":
+            if "v5" in self.name:  num = 59
+            else:                  num = 30 # an undefined variable to avoid misleading output
         elif not isinstance(num, np.int): myplot.errormess("field reference not found.")
         return num
 
@@ -229,18 +312,13 @@ class mcd():
             self.locts = abs(self.locts)%24
             self.locte = abs(self.locte)%24
             if self.locts == self.locte: self.locte = self.locts + 24
-        if self.lat > 90.: self.lat = 90.
-        if self.lat < -90.: self.lat = -90.
-        if self.lats is not None and self.late is not None:
-            if abs(self.lats) > 90.: self.lats = 90.
-            if abs(self.late) > 90.: self.late = 90.
-            if abs(self.lats) < -90.: self.lats = -90.
-            if abs(self.late) < -90.: self.late = -90.
         ## now MCD request
+        if "v5" in self.name: from fmcd5 import call_mcd
+        else:                 from fmcd import call_mcd
         (self.pres, self.dens, self.temp, self.zonwind, self.merwind, \
          self.meanvar, self.extvar, self.seedout, self.ierr) \
          = \
-         fmcd.call_mcd(self.zkey,self.xz,self.lon,self.lat,self.hrkey, \
+         call_mcd(self.zkey,self.xz,self.lon,self.lat,self.hrkey, \
              self.datekey,self.xdate,self.loct,self.dset,self.dust, \
              self.perturkey,self.seedin,self.gwlength,self.extvarkey )
         ## we use the end of extvar (unused) to store meanvar. this is convenient for getextvar(lab)
@@ -261,6 +339,7 @@ class mcd():
         strxz = str(self.xz)+str(self.xzs)+str(self.xze)
         strloct = str(self.loct)+str(self.locts)+str(self.locte)
         name = str(self.zkey)+strxz+strlon+strlat+str(self.hrkey)+str(self.datekey)+str(self.xdate)+strloct+str(self.dust)
+        if "v5" in self.name: name = "v5beta_" + name
         return name
 
     def printcoord(self):
@@ -285,7 +364,9 @@ class mcd():
 
     def printallextvar(self):
     # print all extra MCD variables    
-        for i in range(50): self.printextvar(i+1)
+        if "v5" in self.name:  limit=76
+        else:                  limit=50
+        for i in range(limit): self.printextvar(i+1)
 
     def htmlprinttabextvar(self,tabtodo):
         self.fixedlt = True ## local time is real local time
@@ -811,7 +892,6 @@ class mcd():
       # The size * the dpi gives the final image size
       #   a4"x4" image * 80 dpi ==> 320x320 pixel image
       canvas.print_figure(figname, dpi=self.dpi)
-
 
     ### TODO: makeplot2d, plot2d, passer plot settings
 

@@ -72,6 +72,10 @@ form = cgi.FieldStorage()
 # create a MCD object
 query=mcd.mcd() 
 
+# set MCD version changes if needed
+betatest = form.getvalue("betatest")
+if betatest == "on": query.toversion5()
+
 # Get the kind of vertical coordinates and choose default behavior for "all"
 try: query.zkey = int(form.getvalue("zkey"))
 except: query.zkey = int(3)
@@ -92,7 +96,7 @@ except: query.datekey = float(1)
 badlschar = False
 if query.datekey == 1:
     try: query.xdate = float(form.getvalue("ls"))
-    except: query.xdate = float(1) ; badlschar = True
+    except: query.xdate = float(1) ; badlschar = True # comment the second part if in debug command line mode
 else:
     try: query.xdate = float(form.getvalue("julian"))
     except: query.xdate = float(1)
@@ -160,9 +164,10 @@ except: query.min2d = None
 try: query.max2d = float(form.getvalue("maxval"))
 except: query.max2d = None
 
-try: query.dpi = float(form.getvalue("dpi"))
+try: query.dpi = form.getvalue("dpi")
 except: query.dpi = 80.
-
+if query.dpi == "eps":  yeaheps = True  ; query.dpi = 300.
+else:                   yeaheps = False ; query.dpi = float(query.dpi)
 
 # Get variables to plot
 var1 = form.getvalue("var1")
@@ -193,8 +198,10 @@ else:                  query.zonmean=False
 if errormess == "":
 
  # reference name (to test which figures are already in the database)
- reference = query.getnameset()+str(var1)+str(var2)+str(var3)+str(var4)+str(iswind)+str(isfixedlt)+str(iszonmean)+query.colorm+str(query.min2d)+str(query.max2d)+str(query.dpi)
- figname = '../img/'+reference+'.png'
+ try: reference = query.getnameset()+str(var1)+str(var2)+str(var3)+str(var4)+str(iswind)+str(isfixedlt)+str(iszonmean)+query.colorm+str(query.min2d)+str(query.max2d)+str(query.dpi)
+ except: reference = "test"
+ if yeaheps:  figname = '../img/'+reference+'.eps'
+ else:        figname = '../img/'+reference+'.png'
  txtname = '../txt/'+reference+'.txt'
  testexist = daos.path.isfile(figname)
 
@@ -233,6 +240,9 @@ print "  "  #Apache needs a space after content-type
 #<html xmlns="http://www.w3.org/1999/xhtml"> """
 
 header="""<html><head><title>Mars Climate Database: The Web Interface</title></head><body>"""
+if betatest == "on": 
+    print "<b>!!! THIS IS A BETA VERSION. RESULTS ARE NOT VALIDATED !!!</b>"
+    if sumfree == 2:     print "<br>"
 
 print header
 #print query.printset()
@@ -247,11 +257,14 @@ if errormess != "":
                        print "</ul>"
 else:
   if sumfree == 0: 	query.update() ; query.htmlprinttabextvar(vartoplot)
-  elif sumfree == 2: 	print "<img src='"+figname+"'><br />"
+  elif sumfree == 2: 	
+                        if yeaheps:  print "<hr><a href='"+figname+"'>!!!! Click here to download the EPS figure file !!!!</a><br /><hr>"
+                        else:        print "<img src='"+figname+"'><br />"
   elif sumfree == 1:      
                         print "<a href='"+txtname+"'>Click here to download an ASCII file containing data</a><br />"
                         print "<hr>"
-                        print "<img src='"+figname+"'><br />"
+                        if yeaheps:  print "<hr><a href='"+figname+"'>!!!! Click here to download the EPS figure file !!!!</a><br /><hr>"
+                        else:        print "<img src='"+figname+"'><br />"
 
 ## This is quite common
 bottom = "</body></html>"

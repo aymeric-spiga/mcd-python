@@ -107,16 +107,21 @@ Mars year <input type="text" size="1" name="martianyear" readonly="readonly">
 <td align="center">
 <ul>
 <li>Dust scenario <select name="dust">
-<option value="1"         >MY24 min solar</option>
-<option value="2" selected>MY24 ave solar</option>
-<option value="3"         >MY24 max solar</option>
-<option value="4"         >dust storm tau=4 min solar</option>
-<option value="5"         >dust storm tau=4 ave solar</option>
-<option value="6"         >dust storm tau=4 max solar</option>
-<option value="7"         >warm scenario (dusty, max solar)</option>
-<option value="8"         >cold scenario (low dust, min solar)</option>
+<option value="1"         >climatology min solar</option>
+<option value="2" selected>climatology ave solar</option>
+<option value="3"         >climatology max solar</option>
+<option value="4"         >dust storm min solar</option>
+<option value="5"         >dust storm ave solar</option>
+<option value="6"         >dust storm max solar</option>
+<option value="7"         >warm (dusty, max solar)</option>
+<option value="8"         >cold (low dust, min solar)</option>
 </select></li>
 <li>Interpolate using MOLA topography <input type="radio" name="hrkey" value="1" checked /> on <input type="radio" name="hrkey" value="0" /> off </li>
+<li> <span style="font-size: 80%;"> Beta-testing (only for developers)
+<input type="radio" name="betatest" value="off" checked /> off
+<input type="radio" name="betatest" value="on"          /> on
+</span>
+</li>
 </ul>
 </td>
 </tr>
@@ -162,6 +167,13 @@ Variable 1 <select name="var1">
 <option value="o"             >[O] vol. mixing ratio (mol/mol)</option>
 <option value="co"            >[CO] vol. mixing ratio (mol/mol)</option>
 <option value="visc"          >Air viscosity estimation (N s m-2)</option>
+<option value="pbl"           >(beta) Convective PBL height (m)</option>
+<option value="stress"        >(beta) Surf. wind stress (Kg/m/s2)</option>
+<option value="ar"            >(beta) Ar vol.mix.rat. (mol/mol)</option>
+<option value="updraft"       >(beta) Max PBL updraft wind (m/s)</option>
+<option value="downdraft"     >(beta) Max PBL downdraft wind (m/s)</option>
+<option value="pblwvar"       >(beta) PBL vert wind variance (m2/s2)</option>
+<option value="pblhvar"       >(beta) PBL eddy vert heat flux (m/s/K)</option>
 </select>
 <br />
 Variable 2 <select name="var2">
@@ -191,6 +203,13 @@ Variable 2 <select name="var2">
 <option value="o"             >[O] vol. mixing ratio (mol/mol)</option>
 <option value="co"            >[CO] vol. mixing ratio (mol/mol)</option>
 <option value="visc"          >Air viscosity estimation (N s m-2)</option>
+<option value="pbl"           >(beta) Convective PBL height (m)</option>
+<option value="stress"        >(beta) Surf. wind stress (Kg/m/s2)</option>
+<option value="ar"            >(beta) Ar vol.mix.rat. (mol/mol)</option>
+<option value="updraft"       >(beta) Max PBL updraft wind (m/s)</option>
+<option value="downdraft"     >(beta) Max PBL downdraft wind (m/s)</option>
+<option value="pblwvar"       >(beta) PBL vert wind variance (m2/s2)</option>
+<option value="pblhvar"       >(beta) PBL eddy vert heat flux (m/s/K)</option>
 </select>
 <br />
 Variable 3 <select name="var3">
@@ -220,6 +239,13 @@ Variable 3 <select name="var3">
 <option value="o"             >[O] vol. mixing ratio (mol/mol)</option>
 <option value="co"            >[CO] vol. mixing ratio (mol/mol)</option>
 <option value="visc"          >Air viscosity estimation (N s m-2)</option>
+<option value="pbl"           >(beta) Convective PBL height (m)</option>
+<option value="stress"        >(beta) Surf. wind stress (Kg/m/s2)</option>
+<option value="ar"            >(beta) Ar vol.mix.rat. (mol/mol)</option>
+<option value="updraft"       >(beta) Max PBL updraft wind (m/s)</option>
+<option value="downdraft"     >(beta) Max PBL downdraft wind (m/s)</option>
+<option value="pblwvar"       >(beta) PBL vert wind variance (m2/s2)</option>
+<option value="pblhvar"       >(beta) PBL eddy vert heat flux (m/s/K)</option>
 </select>
 <br />
 Variable 4 <select name="var4">
@@ -249,6 +275,13 @@ Variable 4 <select name="var4">
 <option value="o"             >[O] vol. mixing ratio (mol/mol)</option>
 <option value="co"            >[CO] vol. mixing ratio (mol/mol)</option>
 <option value="visc"          >Air viscosity estimation (N s m-2)</option>
+<option value="pbl"           >(beta) Convective PBL height (m)</option>
+<option value="stress"        >(beta) Surf. wind stress (Kg/m/s2)</option>
+<option value="ar"            >(beta) Ar vol.mix.rat. (mol/mol)</option>
+<option value="updraft"       >(beta) Max PBL updraft wind (m/s)</option>
+<option value="downdraft"     >(beta) Max PBL downdraft wind (m/s)</option>
+<option value="pblwvar"       >(beta) PBL vert wind variance (m2/s2)</option>
+<option value="pblhvar"       >(beta) PBL eddy vert heat flux (m/s/K)</option>
 </select>
 </td>
 <td align="center">
@@ -256,6 +289,7 @@ Variable 4 <select name="var4">
 <li> Set picture resolution
 <input type="radio" name="dpi" value="80" checked> medium
 <input type="radio" name="dpi" value="160"> high
+<input type="radio" name="dpi" value="eps"> eps
 </li>
 <li> Set colormap
 <select name="colorm">

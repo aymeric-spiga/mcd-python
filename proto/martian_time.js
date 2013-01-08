@@ -461,10 +461,11 @@ DefaultDateValues();
 DefaultTimeValues();
 Convert2Ls();
 PlaceValues(0.,0.);
-DefaultSpaceTime()
+DefaultSpaceTime();
 }
 
 function submit_form() {
 Convert2Julian();
 document.calendar.submit();
 }
+

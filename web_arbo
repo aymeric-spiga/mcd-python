@@ -1,0 +1,27 @@
+cgi-bin
+diapo.html
+img
+index.html
+martian_time.js
+PIA03610_red.jpg
+txt
+
+INSIDE cgi-bin
+total 28
+-rwxr-xr-x 1 marshttp marshttp  1612 2012-11-04 20:18 diapo.py
+-rw-r--r-- 1 marshttp marshttp   683 2012-09-24 18:13 error
+-rwxr-xr-x 1 marshttp marshttp 11010 2012-11-02 16:42 mcdcgi.py
+lrwxrwxrwx 1 marshttp marshttp    60 2012-09-20 19:06 mcdcgi.py.link -> /home/marshttp/trunk/UTIL/PYTHON/mcd/proto/cgi-bin/mcdcgi.py
+drwxr-xr-x 2 marshttp marshttp  4096 2012-12-27 17:36 modules
+
+INSIDE modules
+total 1464
+lrwxrwxrwx 1 marshttp marshttp      49 2012-12-27 17:36 fmcd_gfortran.sh -> /home/marshttp/trunk/UTIL/PYTHON/fmcd_gfortran.sh
+-rwxr-xr-x 1 marshttp marshttp 1304477 2012-12-27 17:36 fmcd.so
+lrwxrwxrwx 1 marshttp marshttp      50 2012-12-27 18:03 fmcd5_gfortran.sh -> /home/marshttp/trunk/UTIL/PYTHON/fmcd5_gfortran.sh*
+-rwxr-xr-x 1 marshttp marshttp 1416317 2013-01-05 16:41 fmcd5.so*
+-rw-r--r-- 1 marshttp marshttp       0 2012-09-21 09:07 __init__.py
+-rw-r--r-- 1 marshttp marshttp     139 2012-09-21 09:07 __init__.pyc
+lrwxrwxrwx 1 marshttp marshttp      43 2012-09-21 09:14 mcd.py -> /home/marshttp/trunk/UTIL/PYTHON/mcd/mcd.py
+lrwxrwxrwx 1 marshttp marshttp      42 2012-10-20 10:34 mymath.py -> /home/marshttp/trunk/UTIL/PYTHON/mymath.py
+lrwxrwxrwx 1 marshttp marshttp      42 2012-09-21 09:15 myplot.py -> /home/marshttp/trunk/UTIL/PYTHON/myplot.py.onlinemcd

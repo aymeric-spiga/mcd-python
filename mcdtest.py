@@ -2,7 +2,12 @@
 
 from mcd import mcd
 
+
 query = mcd()
+
+query.toversion5()
+query.loct = 12.
+
 query.update()
 query.printcoord()
 query.printmeanvar()
@@ -11,6 +16,10 @@ query.printallextvar()
 
 query.xz = 30000.
 query.printmcd()
+query.printextvar(94)
+query.printextvar(95)
+
+end
 
 query.viking1()
 query.xz = 1.
