@@ -73,7 +73,8 @@ form = cgi.FieldStorage()
 query=mcd.mcd() 
 
 # set MCD version changes if needed
-betatest = form.getvalue("betatest")
+try:     betatest = form.getvalue("betatest")
+except:  betatest = "off"
 if betatest == "on": query.toversion5()
 
 # Get the kind of vertical coordinates and choose default behavior for "all"
