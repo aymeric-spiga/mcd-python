@@ -251,7 +251,7 @@ def reducefield (input,d4=None,d3=None,d2=None,d1=None,yint=False,alt=None,anoma
     ### it would be actually better to name d4 d3 d2 d1 as t z y x
     ### ... note, anomaly is only computed over d1 and d2 for the moment
     import numpy as np
-    from mymath import max,mean,min,sum,getmask
+    from frozen_mymath import max,mean,min,sum,getmask
     csmooth = 12 ## a fair amount of grid points (too high results in high computation time)
     if redope is not None:
        if   redope == "mint":     input = min(input,axis=0) ; d1 = None
@@ -436,7 +436,7 @@ def reducefield (input,d4=None,d3=None,d2=None,d1=None,yint=False,alt=None,anoma
 
 ## Author: AC + AS
 def reduce_zaxis (input,ax=None,yint=False,vert=None,indice=None):
-    from mymath import max,mean
+    from frozen_mymath import max,mean
     from scipy import integrate
     import numpy as np
     if yint and vert is not None and indice is not None:
@@ -868,7 +868,7 @@ def define_proj (char,wlon,wlat,back=None,blat=None,blon=None):
     from    mpl_toolkits.basemap            import Basemap
     import  numpy                           as np
     import  matplotlib                      as mpl
-    from mymath import max
+    from frozen_mymath import max
     meanlon = 0.5*(wlon[0]+wlon[1])
     meanlat = 0.5*(wlat[0]+wlat[1])
     zewidth = np.abs(wlon[0]-wlon[1])*60000.*np.cos(3.14*meanlat/180.)
@@ -971,7 +971,7 @@ def putpoints (map,plot):
 ## Author: AS
 def calculate_bounds(field,vmin=None,vmax=None):
     import numpy as np
-    from mymath import max,min,mean
+    from frozen_mymath import max,min,mean
     ind = np.where(field < 9e+35)
     fieldcalc = field[ ind ] # la syntaxe compacte ne marche si field est un tuple
     ###
@@ -992,7 +992,7 @@ def calculate_bounds(field,vmin=None,vmax=None):
 
 ## Author: AS
 def bounds(what_I_plot,zevmin,zevmax):
-    from mymath import max,min,mean
+    from frozen_mymath import max,min,mean
     ### might be convenient to add the missing value in arguments
     #what_I_plot[ what_I_plot < zevmin ] = zevmin#*(1. + 1.e-7)
     if zevmin < 0: what_I_plot[ what_I_plot < zevmin*(1. - 1.e-7) ] = zevmin*(1. - 1.e-7)
@@ -1005,7 +1005,7 @@ def bounds(what_I_plot,zevmin,zevmax):
 
 ## Author: AS
 def nolow(what_I_plot):
-    from mymath import max,min
+    from frozen_mymath import max,min
     lim = 0.15*0.5*(abs(max(what_I_plot))+abs(min(what_I_plot)))
     print "NO PLOT BELOW VALUE ", lim
     what_I_plot [ abs(what_I_plot) < lim ] = 1.e40 
@@ -1475,7 +1475,7 @@ def maplatlon( lon,lat,field,\
 ## Author : AC
 ## Handles calls to specific computations (e.g. wind norm, enrichment factor...)
 def select_getfield(zvarname=None,znc=None,ztypefile=None,mode=None,ztsat=None,ylon=None,ylat=None,yalt=None,ytime=None,analysis=None):
-      from mymath import get_tsat
+      from frozen_mymath import get_tsat
  
       ## Specific variables are described here:
       # for the mesoscale:
@@ -1577,7 +1577,7 @@ def teta_to_tk(nc):
 def find_devil(nc,indextime):
     import numpy as np
     from scipy import ndimage
-    from mymath import array2image,image2array
+    from frozen_mymath import array2image,image2array
 
     varinfile = nc.variables.keys()
     if "PSFC" not in varinfile: errormess("You need PSFC in your file to find dust devils")

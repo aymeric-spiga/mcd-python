@@ -8,7 +8,7 @@
 
 import numpy as np
 import matplotlib.pyplot as mpl
-import myplot
+import frozen_myplot as myplot
 
 
 class mcd():
