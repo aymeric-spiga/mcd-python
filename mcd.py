@@ -27,8 +27,8 @@ class mcd():
         ## 0. general stuff
         self.name      = "MCD v4.3"
         self.ack       = "Mars Climate Database (c) LMD/OU/IAA/ESA/CNES"
-        #self.dset      = '/home/aymeric/Science/MCD_v4.3/data/'
-        self.dset      = '/home/marshttp/MCD_v4.3/data/'
+        self.dset      = '/home/aymeric/Science/MCD_v4.3/data/'
+        #self.dset      = '/home/marshttp/MCD_v4.3/data/'
         ## 1. spatio-temporal coordinates
         self.lat       = 0.
         self.lats      = None
