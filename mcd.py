@@ -91,9 +91,15 @@ class mcd():
     def viking2(self): self.name = "Viking 2 site. MCD v4.3 output" ; self.lat = 47.97 ; self.lon = -225.74 ; self.xdate = 117.6
 
     def getdustlabel(self):
-        if self.dust == 1: self.dustlabel = "climatology minimum solar scenario"
-        elif self.dust == 2: self.dustlabel = "climatology average solar scenario"
-        elif self.dust == 3: self.dustlabel = "climatology maximum solar scenario"
+        if self.dust == 1: 
+            self.dustlabel = "MY24 minimum solar scenario"
+            if "v5" in self.name: self.dustlabel = "climatology average solar scenario"
+        elif self.dust == 2: 
+            self.dustlabel = "MY24 average solar scenario"
+            if "v5" in self.name: self.dustlabel = "climatology minimum solar scenario"
+        elif self.dust == 3: 
+            self.dustlabel = "MY24 maximum solar scenario"
+            if "v5" in self.name: self.dustlabel = "climatology maximum solar scenario"
         elif self.dust == 4: self.dustlabel = "dust storm minimum solar scenario"
         elif self.dust == 5: self.dustlabel = "dust storm average solar scenario"
         elif self.dust == 6: self.dustlabel = "dust storm maximum solar scenario"
@@ -223,6 +229,7 @@ class mcd():
         if num not in whichfield: myplot.errormess("Incorrect subscript in extvar.")
         dastuff = whichfield[num]
         if "(K)" in dastuff:      self.fmt="%.0f"
+        elif "effective radius" in dastuff: self.fmt="%.2e"
         elif "(Pa)" in dastuff:   self.fmt="%.1f"
         elif "(W/m2)" in dastuff: self.fmt="%.0f"
         elif "(m/s)" in dastuff:  self.fmt="%.1f"
@@ -248,7 +255,6 @@ class mcd():
         elif num == "icetot": 
             if "v5" in self.name:  num = 43
             else:                  num = 42
-        elif num == "ps_ddv": num = 22
         elif num == "h2ovap": 
             if "v5" in self.name:  num = 42
             else:                  num = 41
@@ -257,12 +263,26 @@ class mcd():
             else:                  num = 43
         elif num == "cp": num = 8
         elif num == "rho_ddv": num = 10
+        elif num == "ps_ddv": num = 22
+        elif num == "p_ddv": num = 21
+        elif num == "t_ddv": num = 23
+        elif num == "w": num = 26
         elif num == "tsurfmx": num = 16
         elif num == "tsurfmn": num = 17
         elif num == "lwdown": num = 31
         elif num == "swdown": num = 32
         elif num == "lwup": num = 33
         elif num == "swup": num = 34
+        elif num == "tau": num = 36
+        elif num == "tau_ddv":
+            if "v5" in self.name:  num = 37
+            else:                  num = 38
+        elif num == "qdust":
+            if "v5" in self.name:  num = 38
+            else:                  num = 37
+        elif num == "co2":
+            if "v5" in self.name:  num = 57
+            else:                  num = 45
         elif num == "o3": 
             if "v5" in self.name:  num = 63
             else:                  num = 44
@@ -276,6 +296,12 @@ class mcd():
             if "v5" in self.name:  num = 54
             else:                  num = 50
         elif num == "co2ice": num = 35
+        elif num == "rdust":
+            if "v5" in self.name:  num = 39
+            else:                  num = 30 # an undefined variable to avoid misleading output
+        elif num == "sdust":
+            if "v5" in self.name:  num = 40
+            else:                  num = 30 # an undefined variable to avoid misleading output
         elif num == "pbl":
             if "v5" in self.name:  num = 46
             else:                  num = 30 # an undefined variable to avoid misleading output
@@ -296,6 +322,33 @@ class mcd():
             else:                  num = 30 # an undefined variable to avoid misleading output
         elif num == "ar":
             if "v5" in self.name:  num = 59
+            else:                  num = 30 # an undefined variable to avoid misleading output
+        elif num == "o2":
+            if "v5" in self.name:  num = 62
+            else:                  num = 30 # an undefined variable to avoid misleading output
+        elif num == "co2col":
+            if "v5" in self.name:  num = 67
+            else:                  num = 30 # an undefined variable to avoid misleading output
+        elif num == "arcol":
+            if "v5" in self.name:  num = 69
+            else:                  num = 30 # an undefined variable to avoid misleading output
+        elif num == "cocol":
+            if "v5" in self.name:  num = 70
+            else:                  num = 30 # an undefined variable to avoid misleading output
+        elif num == "o3col":
+            if "v5" in self.name:  num = 73
+            else:                  num = 30 # an undefined variable to avoid misleading output
+        elif num == "hydro":
+            if "v5" in self.name:  num = 64
+            else:                  num = 30 # an undefined variable to avoid misleading output
+        elif num == "hydro2":
+            if "v5" in self.name:  num = 65
+            else:                  num = 30 # an undefined variable to avoid misleading output
+        elif num == "e":
+            if "v5" in self.name:  num = 66
+            else:                  num = 30 # an undefined variable to avoid misleading output
+        elif num == "ecol":
+            if "v5" in self.name:  num = 76
             else:                  num = 30 # an undefined variable to avoid misleading output
         elif not isinstance(num, np.int): myplot.errormess("field reference not found.")
         return num
@@ -339,7 +392,7 @@ class mcd():
         strxz = str(self.xz)+str(self.xzs)+str(self.xze)
         strloct = str(self.loct)+str(self.locts)+str(self.locte)
         name = str(self.zkey)+strxz+strlon+strlat+str(self.hrkey)+str(self.datekey)+str(self.xdate)+strloct+str(self.dust)
-        if "v5" in self.name: name = "v5beta_" + name
+        if "v5" in self.name: name = "v5_" + name
         return name
 
     def printcoord(self):

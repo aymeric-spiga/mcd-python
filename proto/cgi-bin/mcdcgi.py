@@ -241,9 +241,9 @@ print "  "  #Apache needs a space after content-type
 #<html xmlns="http://www.w3.org/1999/xhtml"> """
 
 header="""<html><head><title>Mars Climate Database: The Web Interface</title></head><body>"""
-if betatest == "on": 
-    print "<b>!!! THIS IS A BETA VERSION. RESULTS ARE NOT VALIDATED !!!</b>"
-    if sumfree == 2:     print "<br>"
+#if betatest == "on": 
+#    print "<b>!!! THIS IS A BETA VERSION. RESULTS ARE NOT VALIDATED !!!</b>"
+#    if sumfree == 2:     print "<br>"
 
 print header
 #print query.printset()
