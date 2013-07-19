@@ -36,3 +36,8 @@ for iz in range(len(query.prestab)):
 ### FINISH
 sounding.close() ; additional.close()
 query.plot1d(["p","t","u","v"]) ; mpl.show()
+
+### Add information about dust opacity
+dod = open("dustopacity.def", "w")
+dod.write( "%4.2f"  %(query.extvartab[iz,36]) )
+dod.close()

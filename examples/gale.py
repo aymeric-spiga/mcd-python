@@ -34,6 +34,10 @@ gale.plot1d(["tsurf","u","v"])
 import matplotlib.pyplot as mpl
 mpl.savefig("temp.png",dpi=85,bbox_inches='tight',pad_inches=0.25)
 
+exit()
+
+
+
 
 #gale.xdate = 270.
 #gale.diurnal()
