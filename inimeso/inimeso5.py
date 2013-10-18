@@ -21,12 +21,12 @@ query.printcoord()
 sounding = open("input_sounding", "w") ; additional = open("input_therm", "w") ; more = open("input_more", "w")
 
 ### GET and WRITE SURFACE VALUES
-query.xz = 0. ; query.update() ; query.printmeanvar()
+query.xz = 0.1 ; query.update() ; query.printmeanvar()
 sounding.write( "%10.2f%12.2f%12.2f\n" % (query.pres/100.,query.temp*(610./query.pres)**(1.0/3.9),0.) )
 more.write( "%10.2f%10.2f" % (query.extvar[1],query.extvar[14]) ) ; more.close()
 
 ### GET and WRITE VERTICAL PROFILE
-query.profile( tabperso = np.append([0,5,10,20,50,100],np.linspace(200.,float(split(lines[4])[0])*1000.,float(split(lines[5])[0]))) )
+query.profile( tabperso = np.append([0.1,5,10,20,50,100],np.linspace(200.,float(split(lines[4])[0])*1000.,float(split(lines[5])[0]))) )
 for iz in range(len(query.prestab)):
     sounding.write(   "%10.2f%12.2f%12.2f%12.2f%12.2f\n" % ( \
                       query.extvartab[iz,2],query.temptab[iz]*(610./query.prestab[iz])**(1.0/3.9),\

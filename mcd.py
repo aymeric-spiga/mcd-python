@@ -27,8 +27,8 @@ class mcd():
         ## 0. general stuff
         self.name      = "MCD v4.3"
         self.ack       = "Mars Climate Database (c) LMD/OU/IAA/ESA/CNES"
-        self.dset      = '/home/aymeric/Science/MCD_v4.3/data/'
-        #self.dset      = '/home/marshttp/MCD_v4.3/data/'
+        #self.dset      = '/home/aymeric/Science/MCD_v4.3/data/'
+        self.dset      = '/home/marshttp/MCD_v4.3/data/'
         ## 1. spatio-temporal coordinates
         self.lat       = 0.
         self.lats      = None
@@ -81,6 +81,7 @@ class mcd():
         self.min2d = None
         self.max2d = None
         self.dpi = 80.
+        self.islog = False
 
     def toversion5(self):
         self.name      = "MCD v5.0"
@@ -230,7 +231,7 @@ class mcd():
         dastuff = whichfield[num]
         if "(K)" in dastuff:      self.fmt="%.0f"
         elif "effective radius" in dastuff: self.fmt="%.2e"
-        elif "(Pa)" in dastuff:   self.fmt="%.1f"
+        elif "(Pa)" in dastuff:   self.fmt="%.2e"
         elif "(W/m2)" in dastuff: self.fmt="%.0f"
         elif "(m/s)" in dastuff:  self.fmt="%.1f"
         elif "(m)" in dastuff:    self.fmt="%.0f"
@@ -471,7 +472,7 @@ class mcd():
       ## fix for possibly slightly negative tracers
       if "(mol/mol)" in fieldlab or "(kg/kg)" in fieldlab or "(kg/m2)" in fieldlab or "(W/m2)" in fieldlab:
          ind = np.where(field < 1.e-30)
-         if ind != -1: field[ind] = 1.e-30  ## 0 does not work everywhere.
+         if ind != -1: field[ind] = 0.e0 #1.e-30  ## 0 does not work everywhere.
       return field,fieldlab
 
     def ininterv(self,dstart,dend,nd,start=None,end=None,yaxis=False,vertcoord=False):
@@ -602,7 +603,10 @@ class mcd():
       if not self.vertplot:  absc = self.xcoord ; ordo = field ; ordolab = fieldlab ; absclab = self.xlabel
       else:                  ordo = self.xcoord ; absc = field ; absclab = fieldlab ; ordolab = self.xlabel
       mpl.plot(absc,ordo,'-bo') ; mpl.ylabel(ordolab) ; mpl.xlabel(absclab) #; mpl.xticks(query.xcoord)
+      # cases with log axis
       if self.zkey == 4: mpl.semilogy() ; ax = mpl.gca() ; ax.set_ylim(ax.get_ylim()[::-1])
+      if not self.vertplot and self.islog: mpl.semilogy()
+      if self.vertplot and self.islog: mpl.semilogx()
       mpl.figtext(0.5, 0.01, self.ack, ha='center')
 
     def plot1d(self,tabtodo):
@@ -632,12 +636,19 @@ class mcd():
         yeah = fig.add_subplot(subv,subh,i+1) #.grid(True, linestyle=':', color='grey') 
         choice = tabtodo[i]
         (field, fieldlab) = self.definefield(choice)
+
+        # in log plots we do not show the negative values
+        if self.islog: field[np.where(field <= 0.e0)] = np.nan
+
         if not self.vertplot:  absc = self.xcoord ; ordo = field ; ordolab = fieldlab ; absclab = self.xlabel
         else:                  ordo = self.xcoord ; absc = field ; absclab = fieldlab ; ordolab = self.xlabel
+
         yeah.plot(absc,ordo,'-bo') #; mpl.xticks(query.xcoord)
         ax = fig.gca() ; ax.set_ylabel(ordolab) ; ax.set_xlabel(absclab)
 
         if self.xzs is not None and self.zkey == 4: ax.set_yscale('log') ; ax.set_ylim(ax.get_ylim()[::-1])
+        if not self.vertplot and self.islog: ax.set_yscale('log')
+        if self.vertplot and self.islog: ax.set_xscale('log')
 
         if self.lats is not None:      ax.set_xticks(np.arange(-90,91,15)) ; ax.set_xbound(lower=self.lats, upper=self.late)
         elif self.lons is not None:    ax.set_xticks(np.arange(-360,361,30)) ; ax.set_xbound(lower=self.lons, upper=self.lone)

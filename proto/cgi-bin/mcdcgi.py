@@ -144,6 +144,8 @@ badrange = (isloctfree == 1 and query.locts == query.locte) \
         or (isaltfree == 1 and query.xzs == query.xze)
 if badrange: 
     errormess = errormess+"<li>One or several coordinate intervals are not... intervals. Set either a real range or an unique value."
+if query.xdate == 666.:
+    errormess = "<li>CONGRATULATIONS! <br><img src='../surprise.jpg'><br> You reached secret mode.<br> You can <a href='http://www.youtube.com/watch?v=fTpQOZcNASw'>watch a nice video</a>."
 
 # Get how many free dimensions we have
 sumfree = islatfree + islonfree + isloctfree + isaltfree 
@@ -195,11 +197,15 @@ iszonmean = form.getvalue("zonmean")
 if iszonmean  == "on": query.zonmean=True
 else:                  query.zonmean=False
 
+islog = form.getvalue("islog")
+if islog  == "on": query.islog=True
+else:              query.islog=False
+
 ### now, proceed...
 if errormess == "":
 
  # reference name (to test which figures are already in the database)
- try: reference = query.getnameset()+str(var1)+str(var2)+str(var3)+str(var4)+str(iswind)+str(isfixedlt)+str(iszonmean)+query.colorm+str(query.min2d)+str(query.max2d)+str(query.dpi)
+ try: reference = query.getnameset()+str(var1)+str(var2)+str(var3)+str(var4)+str(iswind)+str(isfixedlt)+str(iszonmean)+query.colorm+str(query.min2d)+str(query.max2d)+str(query.dpi)+str(islog)
  except: reference = "test"
  if yeaheps:  figname = '../img/'+reference+'.eps'
  else:        figname = '../img/'+reference+'.png'
