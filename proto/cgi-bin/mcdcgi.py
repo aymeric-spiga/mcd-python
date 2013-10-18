@@ -93,8 +93,6 @@ isloctfree, query.loct, query.locts, query.locte = gethtmlcoord( form.getvalue("
 isaltfree,  query.xz,   query.xzs,   query.xze   = gethtmlcoord( form.getvalue("altitude"),  minxz, maxxz)
 if minxz < 0.1: minxz=0.1 # otherwise bug with values smaller than 0.1m
 
-
-
 try: query.datekey = int(form.getvalue("datekeyhtml"))
 except: query.datekey = float(1)
 badlschar = False
@@ -105,6 +103,8 @@ else:
     try: query.xdate = float(form.getvalue("julian"))
     except: query.xdate = float(1)
     query.loct = 0.
+try: query.dust = int(form.getvalue("dust"))
+except: query.dust  = int(1)
 
 # Prevent the user from doing bad
 badinterv = (islatfree == -1) or (islonfree == -1) or (isloctfree == -1) or (isaltfree == -1)
@@ -147,6 +147,9 @@ badrange = (isloctfree == 1 and query.locts == query.locte) \
         or (isaltfree == 1 and query.xzs == query.xze)
 if badrange: 
     errormess = errormess+"<li>One or several coordinate intervals are not... intervals. Set either a real range or an unique value."
+stormls = ( (query.dust in [4,5,6]) and (query.datekey == 1 and query.xdate < 180.))
+if stormls:
+    errormess = errormess+"<li>When a dust storm scenario is selected, available dates must be within the dust storm season (180 < Ls < 360)."
 if query.xdate == 666.:
     errormess = "<li>CONGRATULATIONS! <br><img src='../surprise.jpg'><br> You reached secret mode.<br> You can <a href='http://www.youtube.com/watch?v=fTpQOZcNASw'>watch a nice video</a>."
 
@@ -157,8 +160,6 @@ if sumfree >= 3: errormess = errormess + "<li>3 or more free dimensions are set.
 # Get additional parameters
 try: query.hrkey = int(form.getvalue("hrkey"))
 except: query.hrkey = int(1)
-try: query.dust = int(form.getvalue("dust"))
-except: query.dust  = int(1)
 #        self.perturkey = 0  #integer perturkey ! perturbation type (0: none)
 #        self.seedin    = 1  #random number generator seed (unused if perturkey=0)
 #        self.gwlength  = 0. #gravity Wave wavelength (unused if perturkey=0)
