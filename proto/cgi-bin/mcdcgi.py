@@ -91,6 +91,9 @@ islatfree,  query.lat,  query.lats,  query.late  = gethtmlcoord( form.getvalue("
 islonfree,  query.lon,  query.lons,  query.lone  = gethtmlcoord( form.getvalue("longitude"), -180., 180. )
 isloctfree, query.loct, query.locts, query.locte = gethtmlcoord( form.getvalue("localtime"),    0.,  24. )
 isaltfree,  query.xz,   query.xzs,   query.xze   = gethtmlcoord( form.getvalue("altitude"),  minxz, maxxz)
+if minxz < 0.1: minxz=0.1 # otherwise bug with values smaller than 0.1m
+
+
 
 try: query.datekey = int(form.getvalue("datekeyhtml"))
 except: query.datekey = float(1)
@@ -167,10 +170,13 @@ except: query.min2d = None
 try: query.max2d = float(form.getvalue("maxval"))
 except: query.max2d = None
 
-try: query.dpi = form.getvalue("dpi")
-except: query.dpi = 80.
-if query.dpi == "eps":  yeaheps = True  ; query.dpi = 300.
-else:                   yeaheps = False ; query.dpi = float(query.dpi)
+try: 
+  query.dpi = form.getvalue("dpi")
+  if query.dpi == "eps":  yeaheps = True  ; query.dpi = 300.
+  else:                   yeaheps = False ; query.dpi = float(query.dpi)
+except: 
+  query.dpi = 80
+  yeaheps = False
 
 # Get variables to plot
 var1 = form.getvalue("var1")

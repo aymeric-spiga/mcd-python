@@ -132,6 +132,7 @@ class mcd():
         93: "Temperature (K)", \
         94: "W-E wind component (m/s)", \
         95: "S-N wind component (m/s)", \
+        96: "Horizontal wind speed (m/s)", \
 	1: "Radial distance from planet center (m)",\
 	2: "Altitude above areoid (Mars geoid) (m)",\
 	3: "Altitude above local surface (m)",\
@@ -245,6 +246,7 @@ class mcd():
         elif num == "t": num = 93
         elif num == "u": num = 94
         elif num == "v": num = 95
+        elif num == "wind": num = 96
         elif num == "tsurf": num = 15
         elif num == "topo": num = 4
         elif num == "h": num = 13
@@ -378,6 +380,7 @@ class mcd():
         ## we use the end of extvar (unused) to store meanvar. this is convenient for getextvar(lab)
         self.extvar[90] = self.pres ; self.extvar[91] = self.dens
         self.extvar[92] = self.temp ; self.extvar[93] = self.zonwind ; self.extvar[94] = self.merwind
+        self.extvar[95] = np.sqrt(self.extvar[93]**2 + self.extvar[94]**2) # calculate wind modulus
         ## treat missing values 
         if self.temp == -999: self.extvar[:] = np.NaN ; self.meanvar[:] = np.NaN
 
