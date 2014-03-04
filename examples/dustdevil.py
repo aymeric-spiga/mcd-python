@@ -10,6 +10,9 @@ from math import isnan
 from ppplot import writeascii
 
 
+from scipy import stats
+
+
 dafile = "/home/aymeric/Work/submitted/coauthorship/2012reiss/reiss_data.txt"
 
 yorgl = np.loadtxt(dafile)
@@ -52,10 +55,11 @@ print "4. doubtful", yorgl[0][ind]
 
 ## constant_heights
 #for heights in [20.,100.,500.,1000.,2000.,5000.,7000.,10000.,20000.]:
-for heights in [10.]:
+#for heights in [10.]:
 
 ## multiple_obsheight
 #for heights in [0.1,0.2,0.5,0.75,1.0,1.5,2.0,10.]:
+for heights in [1.0]:
 
  query = mcd()
  mcdwind = [] ; mcdwindle = [] ; mcdwindhe = [] ; mcdangle = [] ; mcdanglele = [] ; mcdanglehe = [] 
@@ -71,10 +75,9 @@ for heights in [10.]:
     query.xz = ddheight[i-1] #ddheight is really the one that works best
 
     ## constant_heights
-    query.xz = heights
-
+    #query.xz = heights
     ## multiple_obsheight
-    #query.xz = ddheight[i-1]*heights
+    query.xz = ddheight[i-1]*heights
 
     query.update() ; uu = query.zonwind ; vv = query.merwind
     if uu == -999. or vv == -999.: 
@@ -86,10 +89,12 @@ for heights in [10.]:
        angle = 90. - np.arctan2(vv,uu) * 180. / np.pi
        if angle < 0.: angle = angle + 360.
 
-       #query.xzs = max(ddheight[i-1] - 2.*ddheighterror[i-1],10.)
-       #query.xze = ddheight[i-1] + 2.*ddheighterror[i-1]
-       query.xzs = max(query.xz - 0.1*query.xz,10.)
-       query.xze = query.xz + 0.1*query.xz
+       ## multiple_obsheight
+       query.xzs = max(ddheight[i-1] - 2.*ddheighterror[i-1],10.)
+       query.xze = ddheight[i-1] + 2.*ddheighterror[i-1]
+       ## constant_heights
+       #query.xzs = max(query.xz - 0.1*query.xz,10.)
+       #query.xze = query.xz + 0.1*query.xz
 
        query.profile()
        tab = np.sqrt(query.zonwindtab*query.zonwindtab + query.merwindtab*query.merwindtab)
@@ -129,6 +134,16 @@ for heights in [10.]:
 
  writeascii(field=mcdwind,absc=ddwind,name=str(heights)+'.txt')
 
+ #ind = np.isnan(ddwind)
+ #y = ddwind
+ #y[ind] = -9999.
+ #xi = mcdwind[y > -9999.]
+ #y = ddwind[y > -9999.]
+ #slope, intercept, r_value, p_value, std_err = stats.linregress(xi,y)
+ #linear = slope*xi+intercept
+ #mpl.plot(xi,linear)
+ #ecart = y - linear
+ #print np.std(ecart)
 
  mpl.errorbar(mcdwind, ddwind, yerr=[ddwinderror,ddwinderror], xerr=[mcdwindle,mcdwindhe], fmt='bo')
 # mpl.xlim(xmin=0.,xmax=17.)
