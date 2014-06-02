@@ -363,6 +363,15 @@ return ls;
 }
 
 
+function CorrectValue(){
+if ( document.calendar.longitude.value == "all") {
+  document.calendar.longitude.value = 0.
+}
+if ( document.calendar.latitude.value == "all") {
+  document.calendar.latitude.value = 0.
+}
+}
+
 function PlaceValues(lon,lat){
 var lon;
 var lat;

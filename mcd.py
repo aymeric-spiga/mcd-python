@@ -84,8 +84,8 @@ class mcd():
         self.islog = False
 
     def toversion5(self):
-        self.name      = "MCD v5.0"
-        self.dset      = '/home/marshttp/MCD_v5.0/data/'
+        self.name      = "MCD v5.1"
+        self.dset      = '/home/marshttp/MCD_v5.1/data/'
         self.extvarkey = np.ones(100)
 
     def viking1(self): self.name = "Viking 1 site. MCD v4.3 output" ; self.lat = 22.48 ; self.lon = -49.97 ; self.xdate = 97.
@@ -186,8 +186,9 @@ class mcd():
         }
         ### MCD version 5 new variables. AS 12/2012.
         if "v5" in self.name:
-          whichfield[29] = "not used (set to zero)"
-          whichfield[30] = "Surface roughness length z0 (m)"
+          whichfield[30] = whichfield[34]
+          whichfield[34] = "surface H2O ice layer (kg/m2, 0.5: perennial)"
+          whichfield[29] = "Surface roughness length z0 (m)"
           whichfield[37] = "DOD RMS day to day variations"
           whichfield[38] = "Dust mass mixing ratio (kg/kg)"
           whichfield[39] = "Dust effective radius (m)"
@@ -217,7 +218,7 @@ class mcd():
           whichfield[63] = "[O3] vol. mixing ratio (mol/mol)"
           whichfield[64] = "[H] vol. mixing ratio (mol/mol)"
           whichfield[65] = "[H2] vol. mixing ratio (mol/mol)"
-          whichfield[66] = "[electron] vol. mixing ratio (mol/mol)"
+          whichfield[66] = "electron number density (cm-3)"
           whichfield[67] = "CO2 column (kg/m2)"
           whichfield[68] = "N2 column (kg/m2)"
           whichfield[69] = "Ar column (kg/m2)"
@@ -227,7 +228,7 @@ class mcd():
           whichfield[73] = "O3 column (kg/m2)"
           whichfield[74] = "H column (kg/m2)"
           whichfield[75] = "H2 column (kg/m2)"
-          whichfield[76] = "electron column (kg/m2)"
+          whichfield[76] = "Total Electronic Content (TEC) (m-2)"
         if num not in whichfield: myplot.errormess("Incorrect subscript in extvar.")
         dastuff = whichfield[num]
         if "(K)" in dastuff:      self.fmt="%.0f"
@@ -275,7 +276,9 @@ class mcd():
         elif num == "lwdown": num = 31
         elif num == "swdown": num = 32
         elif num == "lwup": num = 33
-        elif num == "swup": num = 34
+        elif num == "swup":
+            if "v5" in self.name:  num = 30
+            else:                  num = 34
         elif num == "tau": num = 36
         elif num == "tau_ddv":
             if "v5" in self.name:  num = 37
@@ -299,60 +302,69 @@ class mcd():
             if "v5" in self.name:  num = 54
             else:                  num = 50
         elif num == "co2ice": num = 35
+        elif num == "n2":
+            if "v5" in self.name:  num = 58
+            else:                  num = 47
+        elif num == "n2col":
+            if "v5" in self.name:  num = 68
+            else:                  num = 11 # an undefined variable to avoid misleading output
         elif num == "rdust":
             if "v5" in self.name:  num = 39
-            else:                  num = 30 # an undefined variable to avoid misleading output
+            else:                  num = 11 # an undefined variable to avoid misleading output
         elif num == "sdust":
             if "v5" in self.name:  num = 40
-            else:                  num = 30 # an undefined variable to avoid misleading output
+            else:                  num = 11 # an undefined variable to avoid misleading output
         elif num == "pbl":
             if "v5" in self.name:  num = 46
-            else:                  num = 30 # an undefined variable to avoid misleading output
+            else:                  num = 11 # an undefined variable to avoid misleading output
         elif num == "updraft":
             if "v5" in self.name:  num = 47
-            else:                  num = 30 # an undefined variable to avoid misleading output
+            else:                  num = 11 # an undefined variable to avoid misleading output
         elif num == "downdraft":
             if "v5" in self.name:  num = 48
-            else:                  num = 30 # an undefined variable to avoid misleading output
+            else:                  num = 11 # an undefined variable to avoid misleading output
         elif num == "pblwvar":
             if "v5" in self.name:  num = 49
-            else:                  num = 30 # an undefined variable to avoid misleading output
+            else:                  num = 11 # an undefined variable to avoid misleading output
         elif num == "pblhvar":
             if "v5" in self.name:  num = 50
-            else:                  num = 30 # an undefined variable to avoid misleading output
+            else:                  num = 11 # an undefined variable to avoid misleading output
         elif num == "stress":
             if "v5" in self.name:  num = 51
-            else:                  num = 30 # an undefined variable to avoid misleading output
+            else:                  num = 11 # an undefined variable to avoid misleading output
         elif num == "ar":
             if "v5" in self.name:  num = 59
-            else:                  num = 30 # an undefined variable to avoid misleading output
+            else:                  num = 11 # an undefined variable to avoid misleading output
         elif num == "o2":
             if "v5" in self.name:  num = 62
-            else:                  num = 30 # an undefined variable to avoid misleading output
+            else:                  num = 11 # an undefined variable to avoid misleading output
         elif num == "co2col":
             if "v5" in self.name:  num = 67
-            else:                  num = 30 # an undefined variable to avoid misleading output
+            else:                  num = 11 # an undefined variable to avoid misleading output
         elif num == "arcol":
             if "v5" in self.name:  num = 69
-            else:                  num = 30 # an undefined variable to avoid misleading output
+            else:                  num = 11 # an undefined variable to avoid misleading output
         elif num == "cocol":
             if "v5" in self.name:  num = 70
-            else:                  num = 30 # an undefined variable to avoid misleading output
+            else:                  num = 11 # an undefined variable to avoid misleading output
         elif num == "o3col":
             if "v5" in self.name:  num = 73
-            else:                  num = 30 # an undefined variable to avoid misleading output
+            else:                  num = 11 # an undefined variable to avoid misleading output
         elif num == "hydro":
             if "v5" in self.name:  num = 64
-            else:                  num = 30 # an undefined variable to avoid misleading output
+            else:                  num = 11 # an undefined variable to avoid misleading output
         elif num == "hydro2":
             if "v5" in self.name:  num = 65
-            else:                  num = 30 # an undefined variable to avoid misleading output
+            else:                  num = 11 # an undefined variable to avoid misleading output
         elif num == "e":
             if "v5" in self.name:  num = 66
-            else:                  num = 30 # an undefined variable to avoid misleading output
+            else:                  num = 11 # an undefined variable to avoid misleading output
         elif num == "ecol":
             if "v5" in self.name:  num = 76
-            else:                  num = 30 # an undefined variable to avoid misleading output
+            else:                  num = 11 # an undefined variable to avoid misleading output
+        elif num == "groundice":
+            if "v5" in self.name:  num = 34
+            else:                  num = 11 # an undefined variable to avoid misleading output
         elif not isinstance(num, np.int): myplot.errormess("field reference not found.")
         return num
 
