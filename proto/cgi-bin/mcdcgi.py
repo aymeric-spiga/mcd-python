@@ -17,7 +17,6 @@
 import cgi, cgitb 
 import numpy as np
 from modules import *
-from modules import mcd
 
 import cStringIO
 import os as daos
@@ -26,8 +25,10 @@ import matplotlib.pyplot as mpl
 ### a function to read HTML arguments for coordinates
 def gethtmlcoord(userinput,defmin,defmax):
    import string
+   # remove leading and trailing space in order to use space as separator
+   userinput = userinput.strip()
    # accepted separators. the symbol - should always be last.
-   separators = [":",";",",","/","_"] 
+   separators = [":",";",",","/","_"," "] 
    # initial values
    val = -9999. ; vals = None ; vale = None ; foundinterv = False
    if userinput == None:   userinput = "1"
@@ -70,7 +71,16 @@ cgitb.enable()
 form = cgi.FieldStorage() 
 
 # create a MCD object
-query=mcd.mcd() 
+# -- use in-code import to choose 
+# --  between official and dev versions 
+try:    dev = form.getvalue("dev")
+except: dev = "off"
+if dev == "on":
+  from modules import mcd_dev
+  query=mcd_dev.mcd()
+else:
+  from modules import mcd
+  query=mcd.mcd()
 
 # set MCD version changes if needed
 try:     betatest = form.getvalue("betatest")
@@ -109,7 +119,7 @@ except: query.dust  = int(1)
 # Prevent the user from doing bad
 badinterv = (islatfree == -1) or (islonfree == -1) or (isloctfree == -1) or (isaltfree == -1)
 if badinterv: 
-    errormess = errormess+"<li>Bad syntax. Write a value (or) a range val1;val2 (or) 'all'. Separator shall be either ; : , / _ "
+    errormess = errormess+"<li>Bad syntax. Write a value (or) a range val1 val2 (or) 'all'. Separator shall be either ; : , / _ space"
 badls = (query.datekey == 1 and (query.xdate < 0. or query.xdate > 360.))
 if badls: 
     errormess = errormess+"<li>Solar longitude must be between 0 and 360."
@@ -214,6 +224,7 @@ if errormess == "":
  # reference name (to test which figures are already in the database)
  try: reference = query.getnameset()+str(var1)+str(var2)+str(var3)+str(var4)+str(iswind)+str(isfixedlt)+str(iszonmean)+query.colorm+str(query.min2d)+str(query.max2d)+str(query.dpi)+str(islog)
  except: reference = "test"
+ if dev == "on": reference = 'dev_'+reference
  if yeaheps:  figname = '../img/'+reference+'.eps'
  else:        figname = '../img/'+reference+'.png'
  txtname = '../txt/'+reference+'.txt'
