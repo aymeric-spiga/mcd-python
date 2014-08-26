@@ -97,7 +97,12 @@ elif query.zkey == 4:  minxz = 1.e3     ; maxxz = 1.e-6
 elif query.zkey == 1:  minxz = 3396000. ; maxxz = 3596000.
 
 # Get data from user-defined fields and define free dimensions
-islatfree,  query.lat,  query.lats,  query.late  = gethtmlcoord( form.getvalue("latitude"),   -90.,  90. )
+getlat = form.getvalue("latitude")
+if getlat is None: 
+  errormess = errormess+"<li>A value or interval for latitude is missing. Please correct."
+  islatfree = False ; query.lat = 0. ; query.lats = 0. ; query.late = 0.
+else:
+  islatfree,  query.lat,  query.lats,  query.late  = gethtmlcoord( getlat,   -90.,  90. )
 islonfree,  query.lon,  query.lons,  query.lone  = gethtmlcoord( form.getvalue("longitude"), -180., 180. )
 isloctfree, query.loct, query.locts, query.locte = gethtmlcoord( form.getvalue("localtime"),    0.,  24. )
 isaltfree,  query.xz,   query.xzs,   query.xze   = gethtmlcoord( form.getvalue("altitude"),  minxz, maxxz)

@@ -511,11 +511,16 @@ class mcd():
       return first, second
 
     def vertlabel(self):
+#      if self.zkey == 1:   self.xlabel = "radius from centre of planet (m)"
+#      elif self.zkey == 2: self.xlabel = "height above areoid (m) (MOLA zero datum)"
+#      elif self.zkey == 3: self.xlabel = "height above surface (m)"
+#      elif self.zkey == 4: self.xlabel = "pressure level (Pa)"
+#      elif self.zkey == 5: self.xlabel = "altitude above mean Mars Radius(=3396000m) (m)"
       if self.zkey == 1:   self.xlabel = "radius from centre of planet (m)"
-      elif self.zkey == 2: self.xlabel = "height above areoid (m) (MOLA zero datum)"
+      elif self.zkey == 2: self.xlabel = "altitude above MOLA$_0$ (m)"
       elif self.zkey == 3: self.xlabel = "height above surface (m)"
-      elif self.zkey == 4: self.xlabel = "pressure level (Pa)"
-      elif self.zkey == 5: self.xlabel = "altitude above mean Mars Radius(=3396000m) (m)"
+      elif self.zkey == 4: self.xlabel = "pressure (Pa)"
+      elif self.zkey == 5: self.xlabel = "altitude above mean Mars radius (m)"
 
     def vertunits(self):
       if self.zkey == 1:   self.vunits = "m CP"
@@ -664,6 +669,9 @@ class mcd():
         if self.xzs is not None and self.zkey == 4: ax.set_yscale('log') ; ax.set_ylim(ax.get_ylim()[::-1])
         if not self.vertplot and self.islog: ax.set_yscale('log')
         if self.vertplot and self.islog: ax.set_xscale('log')
+
+        #ax.ticklabel_format(useOffset=False,axis='x')
+        #ax.ticklabel_format(useOffset=False,axis='y')
 
         if self.lats is not None:      ax.set_xticks(np.arange(-90,91,15)) ; ax.set_xbound(lower=self.lats, upper=self.late)
         elif self.lons is not None:    ax.set_xticks(np.arange(-360,361,30)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
@@ -814,6 +822,16 @@ class mcd():
       subv,subh = myplot.definesubplot( len(tabtodo) , fig ) 
       for i in range(len(tabtodo)): mpl.subplot(subv,subh,i+1) ; self.makemap2d(tabtodo[i],incwind=incwind,proj=proj)
 
+    def makeinterv(self):
+      self.latinterv = 30.
+      self.loninterv = 45.
+      if self.lats is not None:
+        if (abs(self.late-self.lats) < 90.): self.latinterv = 10.
+        if (abs(self.late-self.lats) < 10.): self.latinterv = 1.
+      if self.lons is not None:
+        if (abs(self.lone-self.lons) < 135.): self.loninterv = 15.
+        if (abs(self.lone-self.lons) < 15.): self.loninterv = 1.
+
     def htmlmap2d(self,tabtodo,incwind=False,figname="temp.png",back="zMOL"):
     ### complete 2D figure with possible multiplots
     ### added in 09/2012 for online MCD
@@ -889,9 +907,13 @@ class mcd():
         if incwind:
           [x2d,y2d] = np.meshgrid(x,y)
           yeah.quiver(x2d,y2d,np.transpose(windx),np.transpose(windy))
+
         ax = fig.gca() ; ax.set_ylabel("Latitude") ; ax.set_xlabel("Longitude")
-        ax.set_xticks(np.arange(-360,361,45)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
-        ax.set_yticks(np.arange(-90,91,30)) ; ax.set_ybound(lower=self.lats, upper=self.late)
+
+        # make intervals 
+        self.makeinterv()
+        ax.set_xticks(np.arange(-360,361,self.loninterv)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
+        ax.set_yticks(np.arange(-90,91,self.latinterv)) ; ax.set_ybound(lower=self.lats, upper=self.late)
       self.gettitle()
       fig.text(0.5, 0.95, self.title, ha='center')
       fig.text(0.5, 0.01, self.ack, ha='center')
@@ -951,8 +973,9 @@ class mcd():
         clb.set_label(fieldlab)
         ax = fig.gca() ; ax.set_ylabel(self.ylabel) ; ax.set_xlabel(self.xlabel)
 
-        if self.lons is not None:   ax.set_xticks(np.arange(-360,361,45)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
-        elif self.lats is not None: ax.set_xticks(np.arange(-90,91,30)) ; ax.set_xbound(lower=self.lats, upper=self.late)
+        self.makeinterv()
+        if self.lons is not None:   ax.set_xticks(np.arange(-360,361,self.loninterv)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
+        elif self.lats is not None: ax.set_xticks(np.arange(-90,91,self.latinterv)) ; ax.set_xbound(lower=self.lats, upper=self.late)
 
         if self.locts is not None: 
             if self.xzs is not None: ax.set_xticks(np.arange(0,26,2)) ; ax.set_xbound(lower=self.locts, upper=self.locte)
