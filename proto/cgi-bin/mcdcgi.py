@@ -25,13 +25,13 @@ import matplotlib.pyplot as mpl
 ### a function to read HTML arguments for coordinates
 def gethtmlcoord(userinput,defmin,defmax):
    import string
-   # remove leading and trailing space in order to use space as separator
-   userinput = userinput.strip()
    # accepted separators. the symbol - should always be last.
    separators = [":",";",",","/","_"," "] 
    # initial values
    val = -9999. ; vals = None ; vale = None ; foundinterv = False
    if userinput == None:   userinput = "1"
+   # remove leading and trailing space in order to use space as separator
+   userinput = userinput.strip()
    # the main work. either all, or an interval, or a single value.
    # ... all
    if userinput == "all":  isfree = 1 ; vals = defmin ; vale = defmax ; foundinterv = True
