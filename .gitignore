@@ -2,3 +2,7 @@
 *.pyf
 *.pyc
 *.so
+input_more
+input_sounding
+input_therm
+dustopacity.def
