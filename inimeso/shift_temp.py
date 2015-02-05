@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 import numpy as np
 
-shift = -5.
+shift = -10.
 
 # load data
 # http://docs.scipy.org/doc/numpy/reference/generated/numpy.loadtxt.html
