@@ -1,8 +1,6 @@
 **MCD-PYTHON: python-based interface to the Mars Climate Database**
 
-Open source code and contact information on github [no registration needed]
-
-[click here](https://github.com/aymeric-spiga)
+Open source code and contact information [available on github](https://github.com/aymeric-spiga) [no registration needed]
 
 * To get sources through git 
 ~~~
