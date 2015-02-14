@@ -1,3 +1,7 @@
+### TEST_MCD: a simple example of requesting fields from the MCD
+
+CONTENTS:
+=========
 test_mcd.py        Example of a python script calling the mcd
 test_mcd.def       Example of user inputs to test_mcd.py
 
