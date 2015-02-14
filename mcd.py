@@ -635,17 +635,17 @@ class mcd():
 
     def plot1d(self,tabtodo):
     ### complete 1D figure with possible multiplots
-      import frozen_myplot as myplot
+      import mcdcomp as mcdcomp
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
-      fig = mpl.figure() ; subv,subh = myplot.definesubplot( len(tabtodo) , fig ) 
+      fig = mpl.figure() ; subv,subh = mcdcomp.definesubplot( len(tabtodo) , fig ) 
       for i in range(len(tabtodo)): mpl.subplot(subv,subh,i+1).grid(True, linestyle=':', color='grey') ; self.makeplot1d(tabtodo[i])
 
     def htmlplot1d(self,tabtodo,figname="temp.png",title=""):
     ### complete 1D figure with possible multiplots
     ### added in 09/2012 for online MCD
     ### see http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
-      import frozen_myplot as myplot
+      import mcdcomp as mcdcomp
       from matplotlib.figure import Figure
       from matplotlib.backends.backend_agg import FigureCanvasAgg
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
@@ -657,7 +657,7 @@ class mcd():
       elif howmanyplots == 3: fig = Figure(figsize=(8,16))
       elif howmanyplots == 4: fig = Figure(figsize=(16,8))
 
-      subv,subh = myplot.definesubplot( len(tabtodo) , fig )
+      subv,subh = mcdcomp.definesubplot( len(tabtodo) , fig )
       for i in range(len(tabtodo)):
         yeah = fig.add_subplot(subv,subh,i+1) #.grid(True, linestyle=':', color='grey') 
         choice = tabtodo[i]
@@ -807,7 +807,7 @@ class mcd():
 
     def makemap2d(self,choice,incwind=False,proj="cyl"):
     ### one 2D map is created for the user-defined variable in choice.
-      import frozen_myplot as myplot
+      import mcdcomp as mcdcomp
       self.latlon() ## a map is implicitely a lat-lon plot. otherwise it is a plot (cf. makeplot2d)
       if choice == "wind" or incwind:
           (windx, fieldlabwx) = self.definefield("u")
@@ -817,17 +817,17 @@ class mcd():
           fieldlab = "Horizontal wind speed (m/s)"
       else:    
           (field, fieldlab) = self.definefield(choice)
-      if incwind:   myplot.maplatlon(self.xcoord,self.ycoord,field,title=fieldlab,proj=proj,vecx=windx,vecy=windy) #,stride=1)
-      else:         myplot.maplatlon(self.xcoord,self.ycoord,field,title=fieldlab,proj=proj)
+      if incwind:   mcdcomp.maplatlon(self.xcoord,self.ycoord,field,title=fieldlab,proj=proj,vecx=windx,vecy=windy) #,stride=1)
+      else:         mcdcomp.maplatlon(self.xcoord,self.ycoord,field,title=fieldlab,proj=proj)
       mpl.figtext(0.5, 0.0, self.ack, ha='center')
 
     def map2d(self,tabtodo,incwind=False,proj="cyl"):
     ### complete 2D figure with possible multiplots
-      import frozen_myplot as myplot
+      import mcdcomp as mcdcomp
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       fig = mpl.figure()
-      subv,subh = myplot.definesubplot( len(tabtodo) , fig ) 
+      subv,subh = mcdcomp.definesubplot( len(tabtodo) , fig ) 
       for i in range(len(tabtodo)): mpl.subplot(subv,subh,i+1) ; self.makemap2d(tabtodo[i],incwind=incwind,proj=proj)
 
     def makeinterv(self):
@@ -844,7 +844,7 @@ class mcd():
     ### complete 2D figure with possible multiplots
     ### added in 09/2012 for online MCD
     ### see http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
-      import frozen_myplot as myplot
+      import mcdcomp as mcdcomp
       from matplotlib.figure import Figure
       from matplotlib.backends.backend_agg import FigureCanvasAgg
       from matplotlib.cm import get_cmap
@@ -867,7 +867,7 @@ class mcd():
       elif howmanyplots == 3: fig = Figure(figsize=(8,16)) 
       elif howmanyplots == 4: fig = Figure(figsize=(16,8)) 
 
-      subv,subh = myplot.definesubplot( len(tabtodo) , fig )
+      subv,subh = mcdcomp.definesubplot( len(tabtodo) , fig )
 
       for i in range(len(tabtodo)):
         yeah = fig.add_subplot(subv,subh,i+1)
@@ -884,8 +884,8 @@ class mcd():
         
         #[lon2d,lat2d] = np.meshgrid(lon,lat)
         ##### define projection and background. define x and y given the projection
-        ##[wlon,wlat] = myplot.latinterv()
-        ##yeahm = myplot.define_proj(proj,wlon,wlat,back=zeback,blat=None,blon=None)
+        ##[wlon,wlat] = mcdcomp.latinterv()
+        ##yeahm = mcdcomp.define_proj(proj,wlon,wlat,back=zeback,blat=None,blon=None)
         ##x, y = yeahm(lon2d, lat2d)
         #map = Basemap(projection='ortho',lat_0=45,lon_0=-100)
         #x, y = map(lon2d, lat2d)
@@ -895,8 +895,8 @@ class mcd():
 
         ## define field. bound field.
         what_I_plot = np.transpose(field)
-        zevmin, zevmax = myplot.calculate_bounds(what_I_plot,vmin=self.min2d,vmax=self.max2d)  
-        what_I_plot = myplot.bounds(what_I_plot,zevmin,zevmax)
+        zevmin, zevmax = mcdcomp.calculate_bounds(what_I_plot,vmin=self.min2d,vmax=self.max2d)  
+        what_I_plot = mcdcomp.bounds(what_I_plot,zevmin,zevmax)
         ## define contour field levels. define color palette
         ticks = ndiv + 1
         zelevels = np.linspace(zevmin,zevmax,ticks)
@@ -935,7 +935,7 @@ class mcd():
     ### complete 2D figure with possible multiplots
     ### added in 10/2012 for online MCD
     ### see http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
-      import frozen_myplot as myplot
+      import mcdcomp as mcdcomp
       from matplotlib.figure import Figure
       from matplotlib.backends.backend_agg import FigureCanvasAgg
       from matplotlib.cm import get_cmap
@@ -948,7 +948,7 @@ class mcd():
       elif howmanyplots == 3: fig = Figure(figsize=(8,16))
       elif howmanyplots == 4: fig = Figure(figsize=(16,8))
 
-      subv,subh = myplot.definesubplot( len(tabtodo) , fig )
+      subv,subh = mcdcomp.definesubplot( len(tabtodo) , fig )
 
       for i in range(len(tabtodo)):
         yeah = fig.add_subplot(subv,subh,i+1)
@@ -971,8 +971,8 @@ class mcd():
 
         ## define field. bound field.
         what_I_plot = np.transpose(field)
-        zevmin, zevmax = myplot.calculate_bounds(what_I_plot,vmin=self.min2d,vmax=self.max2d)  
-        what_I_plot = myplot.bounds(what_I_plot,zevmin,zevmax)
+        zevmin, zevmax = mcdcomp.calculate_bounds(what_I_plot,vmin=self.min2d,vmax=self.max2d)  
+        what_I_plot = mcdcomp.bounds(what_I_plot,zevmin,zevmax)
         ## define contour field levels. define color palette
         ticks = ndiv + 1
         zelevels = np.linspace(zevmin,zevmax,ticks)
