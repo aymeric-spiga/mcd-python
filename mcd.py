@@ -8,8 +8,12 @@
 
 import numpy as np
 import matplotlib.pyplot as mpl
-import frozen_myplot as myplot
 
+def errormess(text,printvar=None):
+    print text
+    if printvar is not None: print printvar
+    exit()
+    return
 
 class mcd():
  
@@ -229,7 +233,7 @@ class mcd():
           whichfield[74] = "H column (kg/m2)"
           whichfield[75] = "H2 column (kg/m2)"
           whichfield[76] = "Total Electronic Content (TEC) (m-2)"
-        if num not in whichfield: myplot.errormess("Incorrect subscript in extvar.")
+        if num not in whichfield: errormess("Incorrect subscript in extvar.")
         dastuff = whichfield[num]
         if "(K)" in dastuff:      self.fmt="%.0f"
         elif "effective radius" in dastuff: self.fmt="%.2e"
@@ -365,7 +369,7 @@ class mcd():
         elif num == "groundice":
             if "v5" in self.name:  num = 34
             else:                  num = 11 # an undefined variable to avoid misleading output
-        elif not isinstance(num, np.int): myplot.errormess("field reference not found.")
+        elif not isinstance(num, np.int): errormess("field reference not found.")
         return num
 
 ###################
@@ -543,7 +547,7 @@ class mcd():
     def put1d(self,i):
     ## fill in subscript i in output arrays
     ## (arrays must have been correctly defined through prepare)
-      if self.prestab is None:  myplot.errormess("arrays must be prepared first through self.prepare")
+      if self.prestab is None:  errormess("arrays must be prepared first through self.prepare")
       self.prestab[i] = self.pres ; self.denstab[i] = self.dens ; self.temptab[i] = self.temp
       self.zonwindtab[i] = self.zonwind ; self.merwindtab[i] = self.merwind
       self.meanvartab[i,1:5] = self.meanvar[0:4]  ## note: var numbering according to MCD manual is kept
@@ -631,6 +635,7 @@ class mcd():
 
     def plot1d(self,tabtodo):
     ### complete 1D figure with possible multiplots
+      import frozen_myplot as myplot
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       fig = mpl.figure() ; subv,subh = myplot.definesubplot( len(tabtodo) , fig ) 
@@ -640,6 +645,7 @@ class mcd():
     ### complete 1D figure with possible multiplots
     ### added in 09/2012 for online MCD
     ### see http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
+      import frozen_myplot as myplot
       from matplotlib.figure import Figure
       from matplotlib.backends.backend_agg import FigureCanvasAgg
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
@@ -793,7 +799,7 @@ class mcd():
     def put2d(self,i,j):
     ## fill in subscript i,j in output arrays
     ## (arrays must have been correctly defined through prepare)
-      if self.prestab is None:  myplot.errormess("arrays must be prepared first through self.prepare")
+      if self.prestab is None:  errormess("arrays must be prepared first through self.prepare")
       self.prestab[i,j] = self.pres ; self.denstab[i,j] = self.dens ; self.temptab[i,j] = self.temp
       self.zonwindtab[i,j] = self.zonwind ; self.merwindtab[i,j] = self.merwind
       self.meanvartab[i,j,1:5] = self.meanvar[0:4]  ## note: var numbering according to MCD manual is kept
@@ -801,6 +807,7 @@ class mcd():
 
     def makemap2d(self,choice,incwind=False,proj="cyl"):
     ### one 2D map is created for the user-defined variable in choice.
+      import frozen_myplot as myplot
       self.latlon() ## a map is implicitely a lat-lon plot. otherwise it is a plot (cf. makeplot2d)
       if choice == "wind" or incwind:
           (windx, fieldlabwx) = self.definefield("u")
@@ -816,6 +823,7 @@ class mcd():
 
     def map2d(self,tabtodo,incwind=False,proj="cyl"):
     ### complete 2D figure with possible multiplots
+      import frozen_myplot as myplot
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       fig = mpl.figure()
@@ -836,6 +844,7 @@ class mcd():
     ### complete 2D figure with possible multiplots
     ### added in 09/2012 for online MCD
     ### see http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
+      import frozen_myplot as myplot
       from matplotlib.figure import Figure
       from matplotlib.backends.backend_agg import FigureCanvasAgg
       from matplotlib.cm import get_cmap
@@ -926,6 +935,7 @@ class mcd():
     ### complete 2D figure with possible multiplots
     ### added in 10/2012 for online MCD
     ### see http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
+      import frozen_myplot as myplot
       from matplotlib.figure import Figure
       from matplotlib.backends.backend_agg import FigureCanvasAgg
       from matplotlib.cm import get_cmap
