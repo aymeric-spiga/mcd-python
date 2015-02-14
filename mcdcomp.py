@@ -1,3 +1,9 @@
+
+## Those are additional functions
+## Useful only for plots with mcd.py
+## This is not intended to be improved
+## -- instead planetoplot will be used one day
+
 def min (field,axis=None): 
         import numpy as np
         if field is None: return None
@@ -407,7 +413,6 @@ def define_proj (char,wlon,wlat,back=None,blat=None,blon=None):
     from    mpl_toolkits.basemap            import Basemap
     import  numpy                           as np
     import  matplotlib                      as mpl
-    from frozen_mymath import max
     meanlon = 0.5*(wlon[0]+wlon[1])
     meanlat = 0.5*(wlat[0]+wlat[1])
     zewidth = np.abs(wlon[0]-wlon[1])*60000.*np.cos(3.14*meanlat/180.)
@@ -477,7 +482,7 @@ def define_proj (char,wlon,wlat,back=None,blat=None,blon=None):
 #        else:  ## GLOBAL OR REGIONAL MODE
 #            m.drawmeridians(np.r_[-180.:180.:steplon], labels=[0,0,0,1], color=zecolor, linewidth=zelinewidth, fontsize=fontsizemer, latmax=zelatmax)
 #            m.drawparallels(np.r_[-90.:90.:step], labels=[1,0,0,0], color=zecolor, linewidth=zelinewidth, fontsize=fontsizemer, latmax=zelatmax)
-    if back: 
+    if back is not None: 
       if back not in ["coast","sea"]:   m.warpimage(marsmap(back),scale=0.75)
       elif back == "coast":             m.drawcoastlines()
       elif back == "sea":               m.drawlsmask(land_color='white',ocean_color='aqua')
@@ -491,7 +496,6 @@ def define_proj (char,wlon,wlat,back=None,blat=None,blon=None):
 ## Author: AS
 def calculate_bounds(field,vmin=None,vmax=None):
     import numpy as np
-    from frozen_mymath import max,min,mean
     ind = np.where(field < 9e+35)
     fieldcalc = field[ ind ] # la syntaxe compacte ne marche si field est un tuple
     ###
@@ -514,7 +518,6 @@ def calculate_bounds(field,vmin=None,vmax=None):
 
 ## Author: AS
 def bounds(what_I_plot,zevmin,zevmax):
-    from frozen_mymath import max,min,mean
     ### might be convenient to add the missing value in arguments
     #what_I_plot[ what_I_plot < zevmin ] = zevmin#*(1. + 1.e-7)
     if zevmin < 0: what_I_plot[ what_I_plot < zevmin*(1. - 1.e-7) ] = zevmin*(1. - 1.e-7)
@@ -527,7 +530,6 @@ def bounds(what_I_plot,zevmin,zevmax):
 
 ## Author: AS
 def nolow(what_I_plot):
-    from frozen_mymath import max,min
     lim = 0.15*0.5*(abs(max(what_I_plot))+abs(min(what_I_plot)))
     print "NO PLOT BELOW VALUE ", lim
     what_I_plot [ abs(what_I_plot) < lim ] = 1.e40 
@@ -643,7 +645,7 @@ def latinterv (area="Whole"):
      
 ## Author : AS
 def maplatlon( lon,lat,field,\
-               proj="cyl",colorb="jet",ndiv=10,zeback="molabw",trans=0.6,title="",\
+               proj="cyl",colorb="jet",ndiv=10,zeback=None,trans=0.6,title="",\
                vecx=None,vecy=None,stride=2 ):
     ### an easy way to map a field over lat/lon grid
     import numpy as np
