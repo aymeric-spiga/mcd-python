@@ -1,0 +1,17 @@
+test_mcd.py        Example of a python script calling the mcd
+test_mcd.def       Example of user inputs to test_mcd.py
+
+GENERAL DESCRIPTION:
+====================
+The test_mcd.py python script is an illustrative example of how one may
+call upon the fortran routine call_mcd.F (as well as the Julian.F routine)
+to retreive data from the Mars Climate Database.
+
+USAGE:
+======
+The "test_mcd.py" script provides a simple and straightforward example of
+how one can call the mcd from within a python script. When run it requires
+some input from the user (hence the "test_mcd.def" file, for those who prefer
+to redirect input from a file rather than type as the program proceeds).
+
+  
