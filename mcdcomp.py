@@ -276,94 +276,6 @@ def getdimfromvar (nc):
     dim = nc.variables[varinfile[-1]].shape ## usually the last variable is 4D or 3D
     return dim
 
-## FROM COOKBOOK http://www.scipy.org/Cookbook/SignalSmooth
-def smooth1d(x,window_len=11,window='hanning'):
-    import numpy
-    """smooth the data using a window with requested size.
-    This method is based on the convolution of a scaled window with the signal.
-    The signal is prepared by introducing reflected copies of the signal 
-    (with the window size) in both ends so that transient parts are minimized
-    in the begining and end part of the output signal.
-    input:
-        x: the input signal 
-        window_len: the dimension of the smoothing window; should be an odd integer
-        window: the type of window from 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'
-            flat window will produce a moving average smoothing.
-    output:
-        the smoothed signal
-    example:
-    t=linspace(-2,2,0.1)
-    x=sin(t)+randn(len(t))*0.1
-    y=smooth(x)
-    see also: 
-    numpy.hanning, numpy.hamming, numpy.bartlett, numpy.blackman, numpy.convolve
-    scipy.signal.lfilter
-    TODO: the window parameter could be the window itself if an array instead of a string   
-    """
-    x = numpy.array(x)
-    if x.ndim != 1:
-        raise ValueError, "smooth only accepts 1 dimension arrays."
-    if x.size < window_len:
-        raise ValueError, "Input vector needs to be bigger than window size."
-    if window_len<3:
-        return x
-    if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
-        raise ValueError, "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
-    s=numpy.r_[x[window_len-1:0:-1],x,x[-1:-window_len:-1]]
-    #print(len(s))
-    if window == 'flat': #moving average
-        w=numpy.ones(window_len,'d')
-    else:
-        w=eval('numpy.'+window+'(window_len)')
-    y=numpy.convolve(w/w.sum(),s,mode='valid')
-    return y
-
-## Author: AS
-def smooth (field, coeff):
-	## actually blur_image could work with different coeff on x and y
-	if coeff > 1:	result = blur_image(field,int(coeff))
-	else:		result = field
-	return result
-
-## FROM COOKBOOK http://www.scipy.org/Cookbook/SignalSmooth
-def gauss_kern(size, sizey=None):
-	import numpy as np
-    	# Returns a normalized 2D gauss kernel array for convolutions
-    	size = int(size)
-    	if not sizey:
-	        sizey = size
-	else:
-	        sizey = int(sizey)
-	x, y = np.mgrid[-size:size+1, -sizey:sizey+1]
-	g = np.exp(-(x**2/float(size)+y**2/float(sizey)))
-	return g / g.sum()
-
-## FROM COOKBOOK http://www.scipy.org/Cookbook/SignalSmooth
-def blur_image(im, n, ny=None) :
-	from scipy.signal import convolve
-	# blurs the image by convolving with a gaussian kernel of typical size n. 
-	# The optional keyword argument ny allows for a different size in the y direction.
-    	g = gauss_kern(n, sizey=ny)
-    	improc = convolve(im, g, mode='same')
-    	return improc
-
-## Author: AS
-def getwinddef (nc):    
-    ###
-    varinfile = nc.variables.keys()
-    if 'Um' in varinfile:   [uchar,vchar] = ['Um','Vm'] #; print "this is API meso file"
-    elif 'U' in varinfile:  [uchar,vchar] = ['U','V']   #; print "this is RAW meso file"
-    elif 'u' in varinfile:  [uchar,vchar] = ['u','v']   #; print "this is GCM file"
-    elif 'vitu' in varinfile:  [uchar,vchar] = ['vitu','vitv']   #; print "this is GCM v5 file"
-    ### you can add choices here !
-    else:                   [uchar,vchar] = ['not found','not found']
-    ###
-    if uchar in ['U']:         metwind = False ## geometrical (wrt grid) 
-    else:                      metwind = True  ## meteorological (zon/mer)
-    if metwind is False:       print "Not using meteorological winds. You trust numerical grid as being (x,y)"
-    ###
-    return uchar,vchar,metwind
-
 ## Author: AS
 def vectorfield (u, v, x, y, stride=3, scale=15., factor=250., color='black', csmooth=1, key=True):
     ## scale regle la reference du vecteur
@@ -374,8 +286,6 @@ def vectorfield (u, v, x, y, stride=3, scale=15., factor=250., color='black', cs
     #posy = np.min(y) - np.std(y) / 10.
     posx = np.min(x) 
     posy = np.min(y) - 4.*np.std(y) / 10.
-    u = smooth(u,csmooth)
-    v = smooth(v,csmooth)
     widthvec = 0.003 #0.005 #0.003
     q = plt.quiver( x[::stride,::stride],\
                     y[::stride,::stride],\
