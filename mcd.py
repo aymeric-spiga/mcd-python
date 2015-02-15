@@ -640,6 +640,7 @@ class mcd():
       if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       fig = mpl.figure() ; subv,subh = mcdcomp.definesubplot( len(tabtodo) , fig ) 
       for i in range(len(tabtodo)): mpl.subplot(subv,subh,i+1).grid(True, linestyle=':', color='grey') ; self.makeplot1d(tabtodo[i])
+      mpl.show()
 
     def htmlplot1d(self,tabtodo,figname="temp.png",title=""):
     ### complete 1D figure with possible multiplots
@@ -829,6 +830,7 @@ class mcd():
       fig = mpl.figure()
       subv,subh = mcdcomp.definesubplot( len(tabtodo) , fig ) 
       for i in range(len(tabtodo)): mpl.subplot(subv,subh,i+1) ; self.makemap2d(tabtodo[i],incwind=incwind,proj=proj)
+      mpl.show() 
 
     def makeinterv(self):
       self.latinterv = 30.
