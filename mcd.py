@@ -852,13 +852,16 @@ class mcd():
       from matplotlib.cm import get_cmap
       from matplotlib import rcParams 
       #from mpl_toolkits.basemap import Basemap # does not work
-      from Scientific.IO import NetCDF
 
-      filename = "/home/marshttp/surface.nc"
-      zefile = NetCDF.NetCDFFile(filename, 'r') 
-      fieldc = zefile.variables[back]
-      yc = zefile.variables['latitude']
-      xc = zefile.variables['longitude']
+      try:
+        from Scientific.IO import NetCDF
+        filename = "/home/marshttp/surface.nc"
+        zefile = NetCDF.NetCDFFile(filename, 'r') 
+        fieldc = zefile.variables[back]
+        yc = zefile.variables['latitude']
+        xc = zefile.variables['longitude']
+      except:
+        print "Trouble with netCDF or surface.nc file. Continue without topo lines."
 
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
@@ -904,13 +907,17 @@ class mcd():
         zelevels = np.linspace(zevmin,zevmax,ticks)
         palette = get_cmap(name=colorb)
 
-        # You can set negative contours to be solid instead of dashed:
-        rcParams['contour.negative_linestyle'] = 'solid'
-        ## contours topo
-        zelevc = np.linspace(-9.,20.,11)
-        yeah.contour( xc, yc, fieldc, zelevc, colors='black',linewidths = 0.4)
-        yeah.contour( np.array(xc) + 360., yc, fieldc, zelevc, colors='black',linewidths = 0.4)
-        yeah.contour( np.array(xc) - 360., yc, fieldc, zelevc, colors='black',linewidths = 0.4)
+        try:
+            # You can set negative contours to be solid instead of dashed:
+            rcParams['contour.negative_linestyle'] = 'solid'
+            ## contours topo
+            zelevc = np.linspace(-9.,20.,11)
+            yeah.contour( xc, yc, fieldc, zelevc, colors='black',linewidths = 0.4)
+            yeah.contour( np.array(xc) + 360., yc, fieldc, zelevc, colors='black',linewidths = 0.4)
+            yeah.contour( np.array(xc) - 360., yc, fieldc, zelevc, colors='black',linewidths = 0.4)
+        except:
+            pass
+
         # contour field
         c = yeah.contourf( x, y, what_I_plot, zelevels, cmap = palette, alpha = trans )
         clb = Figure.colorbar(fig,c,orientation='vertical',format=self.fmt,ticks=np.linspace(zevmin,zevmax,num=min([ticks/2+1,21])))
