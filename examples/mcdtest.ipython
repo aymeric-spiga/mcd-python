@@ -1,7 +1,0 @@
-example of use
---------------
-
-from mcd import mcd
-myrequest = mcd()
-myrequest.latlon()
-myrequest.map2d(22)
