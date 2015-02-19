@@ -85,7 +85,8 @@ else:
 # set MCD version changes if needed
 try:     betatest = form.getvalue("betatest")
 except:  betatest = "off"
-if betatest == "on": query.toversion5()
+if betatest == "on": query.toversion5(version="5.2")
+else: query.toversion5(version="5.1")
 
 # Get the kind of vertical coordinates and choose default behavior for "all"
 try: query.zkey = int(form.getvalue("zkey"))
