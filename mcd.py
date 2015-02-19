@@ -87,9 +87,9 @@ class mcd():
         self.dpi = 80.
         self.islog = False
 
-    def toversion5(self):
-        self.name      = "MCD v5.1"
-        self.dset      = '/home/marshttp/MCD_v5.1/data/'
+    def toversion5(self,version="5.1"):
+        self.name      = "MCD v"+version
+        self.dset      = '/home/marshttp/MCD_v'+version+'/data/'
         self.extvarkey = np.ones(100)
 
     def viking1(self): self.name = "Viking 1 site. MCD v4.3 output" ; self.lat = 22.48 ; self.lon = -49.97 ; self.xdate = 97.
@@ -385,8 +385,9 @@ class mcd():
             self.locte = abs(self.locte)%24
             if self.locts == self.locte: self.locte = self.locts + 24
         ## now MCD request
-        if "v5" in self.name: from fmcd5 import call_mcd
-        else:                 from fmcd import call_mcd
+        if "v5.1" in self.name: from fmcd51 import call_mcd
+        elif "v5.2" in self.name: from fmcd52 import call_mcd
+        else: from fmcd import call_mcd
         (self.pres, self.dens, self.temp, self.zonwind, self.merwind, \
          self.meanvar, self.extvar, self.seedout, self.ierr) \
          = \
@@ -412,7 +413,8 @@ class mcd():
         strxz = str(self.xz)+str(self.xzs)+str(self.xze)
         strloct = str(self.loct)+str(self.locts)+str(self.locte)
         name = str(self.zkey)+strxz+strlon+strlat+str(self.hrkey)+str(self.datekey)+str(self.xdate)+strloct+str(self.dust)
-        if "v5" in self.name: name = "v5_" + name
+        if "v5.1" in self.name: name = "v51_" + name
+        elif "v5.2" in self.name: name = "v52_" + name
         return name
 
     def printcoord(self):
