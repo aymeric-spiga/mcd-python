@@ -110,6 +110,7 @@ class mcd():
         elif self.dust == 6: self.dustlabel = "dust storm maximum solar scenario"
         elif self.dust == 7: self.dustlabel = "warm scenario (dusty, maximum solar)"
         elif self.dust == 8: self.dustlabel = "cold scenario (low dust, minimum solar)"
+        elif self.dust > 20: self.dustlabel = "Martian Year "+str(self.dust)+" scenario"
 
     def gettitle(self,oneline=False):
         self.getdustlabel()
