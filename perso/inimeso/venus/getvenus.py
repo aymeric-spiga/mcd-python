@@ -22,13 +22,15 @@ vitu  = pp(file=zefile,t=ttt,x=lon,y=lat,var="vitu" ).getf()
 vitv  = pp(file=zefile,t=ttt,x=lon,y=lat,var="vitv" ).getf()
 dtlwr = pp(file=zefile,t=ttt,x=lon,y=lat,var="dtlwr").getf()
 dtswr = pp(file=zefile,t=ttt,x=lon,y=lat,var="dtswr").getf()
+geop  = pp(file=zefile,t=ttt,x=lon,y=lat,var="geop").getf()
 
 ### COMPUTATIONS
 refpres = pres[0] ; surftpot = temp[0] ; surfh = 0.
 ### -- tpot
 tpot = temp*(refpres/pres)**(Venus.R()/Venus.cp)
 ### -- alt
-alt = Venus.H()*np.log(refpres/pres)
+#alt = Venus.H(T0=temp)*np.log(refpres/pres)
+alt = geop / Venus.g
 ### -- rho
 rho = pres / Venus.R() / temp
 
