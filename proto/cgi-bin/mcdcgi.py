@@ -175,7 +175,7 @@ if sumfree >= 3: errormess = errormess + "<li>3 or more free dimensions are set.
 
 # Get additional parameters
 try: query.hrkey = int(form.getvalue("hrkey"))
-except: query.hrkey = int(1)
+except: query.hrkey = int(0)
 #        self.perturkey = 0  #integer perturkey ! perturbation type (0: none)
 #        self.seedin    = 1  #random number generator seed (unused if perturkey=0)
 #        self.gwlength  = 0. #gravity Wave wavelength (unused if perturkey=0)
