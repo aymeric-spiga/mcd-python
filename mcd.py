@@ -275,6 +275,8 @@ class mcd():
         elif num == "ps_ddv": num = 22
         elif num == "p_ddv": num = 21
         elif num == "t_ddv": num = 23
+        elif num == "u_ddv": num = 24
+        elif num == "v_ddv": num = 25
         elif num == "w": num = 26
         elif num == "tsurfmx": num = 16
         elif num == "tsurfmn": num = 17
