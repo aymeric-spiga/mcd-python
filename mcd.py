@@ -126,9 +126,11 @@ class mcd():
         if self.xzs is None:   
             self.vertunits()
             self.title = self.title + " Altitude " + str(self.xz) + " " + self.vunits
-        if self.locts is None:
+        if self.datekey == 1:
+          if self.locts is None:
             self.title = self.title + " Local time " + str(self.loct) + "h"
             if not self.fixedlt:  self.title = self.title + " (at longitude 0) "
+            else: self.title = self.title + " (at all longitudes) "
 
     def getextvarlab(self,num):
         whichfield = { \
@@ -387,6 +389,8 @@ class mcd():
             self.locts = abs(self.locts)%24
             self.locte = abs(self.locte)%24
             if self.locts == self.locte: self.locte = self.locts + 24
+        ## ensure that local time = 0 when using Earth dates
+        if self.datekey == 0: self.loct = 0.
         ## now MCD request
         if "v5.1" in self.name: from fmcd51 import call_mcd
         elif "v5.2" in self.name: from fmcd52 import call_mcd
