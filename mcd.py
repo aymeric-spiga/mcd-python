@@ -86,6 +86,7 @@ class mcd():
         self.max2d = None
         self.dpi = 80.
         self.islog = False
+        self.proj = False
 
     def toversion5(self,version="5.1"):
         self.name      = "MCD v"+version
@@ -860,7 +861,11 @@ class mcd():
       from matplotlib.backends.backend_agg import FigureCanvasAgg
       from matplotlib.cm import get_cmap
       from matplotlib import rcParams 
-      #from mpl_toolkits.basemap import Basemap # does not work
+      ####
+      isproj = (self.proj is not None)
+      if isproj:
+        from mpl_toolkits.basemap import Basemap
+      ####
 
       try:
         from Scientific.IO import NetCDF
@@ -948,6 +953,8 @@ class mcd():
       # The size * the dpi gives the final image size
       #   a4"x4" image * 80 dpi ==> 320x320 pixel image
       canvas.print_figure(figname, dpi=self.dpi)
+
+
 
     def htmlplot2d(self,tabtodo,figname="temp.png"):
     ### complete 2D figure with possible multiplots
