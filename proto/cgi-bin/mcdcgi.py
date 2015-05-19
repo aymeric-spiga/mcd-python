@@ -188,6 +188,13 @@ try: query.max2d = float(form.getvalue("maxval"))
 except: query.max2d = None
 
 try: 
+  proj = form.getvalue("proj")
+  if proj == "": query.proj = None
+  else: query.proj = proj
+except: 
+  query.proj = None
+
+try: 
   query.dpi = form.getvalue("dpi")
   if query.dpi == "eps":  yeaheps = True  ; query.dpi = 300.
   else:                   yeaheps = False ; query.dpi = float(query.dpi)
@@ -228,7 +235,7 @@ else:              query.islog=False
 if errormess == "":
 
  # reference name (to test which figures are already in the database)
- try: reference = query.getnameset()+str(var1)+str(var2)+str(var3)+str(var4)+str(iswind)+str(isfixedlt)+str(iszonmean)+query.colorm+str(query.min2d)+str(query.max2d)+str(query.dpi)+str(islog)
+ try: reference = query.getnameset()+str(var1)+str(var2)+str(var3)+str(var4)+str(iswind)+str(isfixedlt)+str(iszonmean)+query.colorm+str(query.min2d)+str(query.max2d)+str(query.dpi)+str(islog)+str(proj)
  except: reference = "test"
  if dev == "on": reference = 'dev_'+reference
  if yeaheps:  figname = '../img/'+reference+'.eps'
