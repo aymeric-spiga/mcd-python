@@ -244,6 +244,8 @@ class mcd():
         elif "(Pa)" in dastuff:   self.fmt="%.2e"
         elif "(W/m2)" in dastuff: self.fmt="%.0f"
         elif "(m/s)" in dastuff:  self.fmt="%.1f"
+        elif "(mol/mol)" in dastuff: self.fmt="%.2e"
+        elif "(kg/m2)" in dastuff: self.fmt="%.2e"
         elif "(m)" in dastuff:    self.fmt="%.0f"
         else:                     self.fmt="%.2e"
         return dastuff
