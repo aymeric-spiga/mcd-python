@@ -419,23 +419,36 @@ def calculate_bounds(field,vmin=None,vmax=None):
     if vmin == vmax:
                       zevmin = mean(fieldcalc) - dev  ### for continuity
                       zevmax = mean(fieldcalc) + dev  ### for continuity            
-    ###
-    if zevmin < min(fieldcalc): zevmin = min(fieldcalc)
-    if zevmax > max(fieldcalc): zevmax = max(fieldcalc)
-    #if zevmin < 0. and min(fieldcalc) > 0.: zevmin = 0.
-    #print "BOUNDS field ", min(fieldcalc), max(fieldcalc), " //// adopted", zevmin, zevmax
+    ####
+    #if zevmin < min(fieldcalc): zevmin = min(fieldcalc)
+    #if zevmax > max(fieldcalc): zevmax = max(fieldcalc)
+    ###if zevmin < 0. and min(fieldcalc) > 0.: zevmin = 0.
+    ###print "BOUNDS field ", min(fieldcalc), max(fieldcalc), " //// adopted", zevmin, zevmax
     return zevmin, zevmax
 
-## Author: AS
-def bounds(what_I_plot,zevmin,zevmax):
-    ### might be convenient to add the missing value in arguments
-    #what_I_plot[ what_I_plot < zevmin ] = zevmin#*(1. + 1.e-7)
-    if zevmin < 0: what_I_plot[ what_I_plot < zevmin*(1. - 1.e-7) ] = zevmin*(1. - 1.e-7)
-    else:          what_I_plot[ what_I_plot < zevmin*(1. + 1.e-7) ] = zevmin*(1. + 1.e-7)
-    #print "NEW MIN ", min(what_I_plot)
-    what_I_plot[ what_I_plot > 9e+35  ] = -9e+35
-    what_I_plot[ what_I_plot > zevmax ] = zevmax*(1. - 1.e-7)
-    #print "NEW MAX ", max(what_I_plot)
+### Author: AS
+#def bounds(what_I_plot,zevmin,zevmax):
+#    ### might be convenient to add the missing value in arguments
+#    #what_I_plot[ what_I_plot < zevmin ] = zevmin#*(1. + 1.e-7)
+#    if zevmin < 0: what_I_plot[ what_I_plot < zevmin*(1. - 1.e-7) ] = zevmin*(1. - 1.e-7)
+#    else:          what_I_plot[ what_I_plot < zevmin*(1. + 1.e-7) ] = zevmin*(1. + 1.e-7)
+#    #print "NEW MIN ", min(what_I_plot)
+#    what_I_plot[ what_I_plot > 9e+35  ] = -9e+35
+#    what_I_plot[ what_I_plot > zevmax ] = zevmax*(1. - 1.e-7)
+#    #print "NEW MAX ", max(what_I_plot)
+#    return what_I_plot
+
+# a function to solve the problem with blank bounds !
+# -------------------------------
+def bounds(what_I_plot,zevmin,zevmax,miss=9e+35):
+    import numpy as np
+    small_enough = 1.e-7
+    if zevmin < 0: what_I_plot[ what_I_plot < zevmin*(1.-small_enough) ] = zevmin*(1.-small_enough)
+    else:          what_I_plot[ what_I_plot < zevmin*(1.+small_enough) ] = zevmin*(1.+small_enough)
+    what_I_plot[ what_I_plot > miss  ] = -miss
+    what_I_plot[ what_I_plot > zevmax ] = zevmax*(1.-small_enough)
+    ## test
+    what_I_plot[ np.abs(what_I_plot) < small_enough ] = small_enough
     return what_I_plot
 
 ## Author: AS
