@@ -191,8 +191,17 @@ try:
   proj = form.getvalue("proj")
   if proj == "": query.proj = None
   else: query.proj = proj
-except: 
+except:
+  proj = "" 
   query.proj = None
+
+try: query.trans = float(form.getvalue("trans"))/100.
+except: query.trans = 0.0
+
+try: query.plat = float(form.getvalue("plat"))
+except: query.plat = 0.0
+try: query.plon = float(form.getvalue("plon"))
+except: query.plon = 0.0
 
 try: 
   query.dpi = form.getvalue("dpi")
@@ -235,7 +244,7 @@ else:              query.islog=False
 if errormess == "":
 
  # reference name (to test which figures are already in the database)
- try: reference = query.getnameset()+str(var1)+str(var2)+str(var3)+str(var4)+str(iswind)+str(isfixedlt)+str(iszonmean)+query.colorm+str(query.min2d)+str(query.max2d)+str(query.dpi)+str(islog)+str(proj)
+ try: reference = query.getnameset()+str(var1)+str(var2)+str(var3)+str(var4)+str(iswind)+str(isfixedlt)+str(iszonmean)+query.colorm+str(query.min2d)+str(query.max2d)+str(query.dpi)+str(islog)+str(proj)+str(query.trans)+str(query.plat)+str(query.plon)
  except: reference = "test"
  if dev == "on": reference = 'dev_'+reference
  if yeaheps:  figname = '../img/'+reference+'.eps'

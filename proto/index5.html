@@ -65,9 +65,9 @@ If longitude is a free dimension, local time value is<br />
 <input type="radio" name="isfixedlt" value="on"          /> fixed for the whole planet<br />
 <hr>
 Earth <span style="font-size: 75%;">Julian Date</span> <input type="text" size="6" name="julian" readonly="readonly" style="background-color : #F5DEB3;"><br />
-Mars <span style="font-size: 75%;">year</span> <input type="text" size="1" name="martianyear" readonly="readonly" style="background-color : #F5DEB3;"> 
- - <span style="font-size: 75%;">month</span> <input type="text" size="1" name="martianmonth" readonly="readonly" style="background-color : #F5DEB3;"><span style="font-size: 75%;"> / 12</span>
- - <span style="font-size: 75%;">sol</span> <input type="text" size="2" name="sol" readonly="readonly" style="background-color : #F5DEB3;"><span style="font-size: 75%;"> / 669</span><br />
+Mars <span style="font-size: 75%;">MY</span> <input type="text" size="1" name="martianyear" readonly="readonly" style="background-color : #F5DEB3;"> 
+ - <span style="font-size: 75%;">MM</span> <input type="text" size="1" name="martianmonth" readonly="readonly" style="background-color : #F5DEB3;"><span style="font-size: 50%;"> / 12</span>
+ - <span style="font-size: 75%;">sol</span> <input type="text" size="2" name="sol" readonly="readonly" style="background-color : #F5DEB3;"><span style="font-size: 50%;"> / 669</span><br />
 <input type="button" value="EARTH DATE >>> MARS DATE" onClick="Convert2Ls();"><br />
 </td>
 </tr>
@@ -105,10 +105,13 @@ Mars <span style="font-size: 75%;">year</span> <input type="text" size="1" name=
 </select>
 </ul>
 </td>
-<td align="center">
+<td align="left">
 <ul>
+<li> MCD version
+<input type="radio" name="betatest" value="on"  checked /> 5.2
+</span>
+</li>
 <li>
-
 <a href="http://www-mars.lmd.jussieu.fr/mars/info_web/index.html">Dust/EUV scenario</a> 
 <select name="dust">
 <option value="1" selected>climatology ave solar</option>
@@ -129,9 +132,14 @@ Mars <span style="font-size: 75%;">year</span> <input type="text" size="1" name=
 <option value="31"        >Martian Year 31 </option>
 </select></li>
 <li>Interpolate using MOLA topography <input type="checkbox" name="hrkey" value="1" checked /> </li>
-<li> MCD version
-<input type="radio" name="betatest" value="on"  checked /> 5.2 
-</span>
+<li> Zonal averaging (only lat/alt plot) 
+<input type="radio" name="zonmean" value="off" checked /> off
+<input type="radio" name="zonmean" value="on"          /> on
+</li>
+<li> Picture resolution
+<input type="radio" name="dpi" value="80" checked> medium
+<input type="radio" name="dpi" value="160"> high
+<input type="radio" name="dpi" value="eps"> eps
 </li>
 </ul>
 </td>
@@ -383,14 +391,14 @@ Variable 4 <select name="var4">
 <option value="visc"          >Air viscosity estimation (N s m-2)</option>
 </select>
 </td>
-<td align="center">
+<td align="left">
 <ul>
-<li> Picture resolution
-<input type="radio" name="dpi" value="80" checked> medium
-<input type="radio" name="dpi" value="160"> high
-<input type="radio" name="dpi" value="eps"> eps
 </li>
-<li> Colormap
+<li>[1D] Log(values)
+<input type="radio" name="islog" value="off" checked /> off
+<input type="radio" name="islog" value="on" /> on
+</li>
+<li> [2D] Colormap
 <select name="colorm">
 <option value="jet"       selected>blue green yellow red</option>
 <option value="Greys"             >grey</option>
@@ -401,21 +409,26 @@ Variable 4 <select name="var4">
 <option value="RdBu_r"            >blue white red</option>
 </select>
 </li>
-<li> Bounds (2D plot)
+<li> [2D] Bounds
 <input type="text" size="2" name="minval"> min
 <input type="text" size="2" name="maxval"> max
 </li>
-<li> Wind vectors in lat/lon plot
+<li> [2D map] 
+<select name="proj">
+<!--<option value=""          selected>flat (cylindrical lat-lon)</option>-->
+<option value="cyl" selected>flat</option>
+<option value="ortho">sphere</option>
+<option value="npstere">N pole</option>
+<option value="spstere">S pole</option>
+<!--<option value="robin">map</option>-->
+<!--<option value="laea">laea</option>-->
+</select>
+lat <input type="text" size="1" name="plat"> lon <input type="text" size="1" name="plon">
+</li>
+<li> [2D map] Transparency (%) <input type="text" size="1" name="trans"></li>
+<li> [2D map] Wind vectors
 <input type="radio" name="iswind" value="off" checked /> off
-<input type="radio" name="iswind" value="on"          /> on</li>  
-</li>
-<li> Zonal average in lat/alt plot
-<input type="radio" name="zonmean" value="off" checked /> off
-<input type="radio" name="zonmean" value="on"          /> on
-</li>
-<li>Log(values) in 1D plots
-<input type="radio" name="islog" value="off" checked /> off
-<input type="radio" name="islog" value="on" /> on 
+<input type="radio" name="iswind" value="on"          /> on</li>
 </li>
 </ul>
 </td>
