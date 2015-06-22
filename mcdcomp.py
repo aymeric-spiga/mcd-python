@@ -419,11 +419,11 @@ def calculate_bounds(field,vmin=None,vmax=None):
     if vmin == vmax:
                       zevmin = mean(fieldcalc) - dev  ### for continuity
                       zevmax = mean(fieldcalc) + dev  ### for continuity            
-    ####
-    #if zevmin < min(fieldcalc): zevmin = min(fieldcalc)
-    #if zevmax > max(fieldcalc): zevmax = max(fieldcalc)
-    ###if zevmin < 0. and min(fieldcalc) > 0.: zevmin = 0.
-    ###print "BOUNDS field ", min(fieldcalc), max(fieldcalc), " //// adopted", zevmin, zevmax
+    ###
+    if zevmin < min(fieldcalc): zevmin = min(fieldcalc)
+    if zevmax > max(fieldcalc): zevmax = max(fieldcalc)
+    ##if zevmin < 0. and min(fieldcalc) > 0.: zevmin = 0.
+    ##print "BOUNDS field ", min(fieldcalc), max(fieldcalc), " //// adopted", zevmin, zevmax
     return zevmin, zevmax
 
 ### Author: AS
