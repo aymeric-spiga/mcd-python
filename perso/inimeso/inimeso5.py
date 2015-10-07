@@ -13,7 +13,9 @@ nueff = 0.5
 
 ### MCD INSTANCE and SETTINGS (actually, default. but one never knows)
 query = mcd() ; query.zkey = 3 ; query.dust = 2 ; query.hrkey = 1
-query.toversion5()
+query.dust = 29
+#query.dust = 24
+query.toversion5(version="5.2")
 
 ### GET COORDINATES
 lines = open("input_coord", "r").readlines()
