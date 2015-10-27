@@ -175,7 +175,7 @@ if sumfree >= 3: errormess = errormess + "<li>3 or more free dimensions are set.
 
 # Get additional parameters
 try: query.hrkey = int(form.getvalue("hrkey"))
-except: query.hrkey = int(1)
+except: query.hrkey = int(0)
 #        self.perturkey = 0  #integer perturkey ! perturbation type (0: none)
 #        self.seedin    = 1  #random number generator seed (unused if perturkey=0)
 #        self.gwlength  = 0. #gravity Wave wavelength (unused if perturkey=0)
@@ -186,6 +186,22 @@ try: query.min2d = float(form.getvalue("minval"))
 except: query.min2d = None
 try: query.max2d = float(form.getvalue("maxval"))
 except: query.max2d = None
+
+try: 
+  proj = form.getvalue("proj")
+  if proj == "": query.proj = None
+  else: query.proj = proj
+except:
+  proj = "" 
+  query.proj = None
+
+try: query.trans = float(form.getvalue("trans"))/100.
+except: query.trans = 0.0
+
+try: query.plat = float(form.getvalue("plat"))
+except: query.plat = 0.0
+try: query.plon = float(form.getvalue("plon"))
+except: query.plon = 0.0
 
 try: 
   query.dpi = form.getvalue("dpi")
@@ -228,7 +244,7 @@ else:              query.islog=False
 if errormess == "":
 
  # reference name (to test which figures are already in the database)
- try: reference = query.getnameset()+str(var1)+str(var2)+str(var3)+str(var4)+str(iswind)+str(isfixedlt)+str(iszonmean)+query.colorm+str(query.min2d)+str(query.max2d)+str(query.dpi)+str(islog)
+ try: reference = query.getnameset()+str(var1)+str(var2)+str(var3)+str(var4)+str(iswind)+str(isfixedlt)+str(iszonmean)+query.colorm+str(query.min2d)+str(query.max2d)+str(query.dpi)+str(islog)+str(proj)+str(query.trans)+str(query.plat)+str(query.plon)
  except: reference = "test"
  if dev == "on": reference = 'dev_'+reference
  if yeaheps:  figname = '../img/'+reference+'.eps'

@@ -86,6 +86,11 @@ class mcd():
         self.max2d = None
         self.dpi = 80.
         self.islog = False
+        self.proj = False
+        self.trans = 0.0
+        self.iscontour = False
+        self.plat = 0.0
+        self.plon = 0.0
 
     def toversion5(self,version="5.1"):
         self.name      = "MCD v"+version
@@ -126,9 +131,11 @@ class mcd():
         if self.xzs is None:   
             self.vertunits()
             self.title = self.title + " Altitude " + str(self.xz) + " " + self.vunits
-        if self.locts is None:
+        if self.datekey == 1:
+          if self.locts is None:
             self.title = self.title + " Local time " + str(self.loct) + "h"
             if not self.fixedlt:  self.title = self.title + " (at longitude 0) "
+            else: self.title = self.title + " (at all longitudes) "
 
     def getextvarlab(self,num):
         whichfield = { \
@@ -241,6 +248,8 @@ class mcd():
         elif "(Pa)" in dastuff:   self.fmt="%.2e"
         elif "(W/m2)" in dastuff: self.fmt="%.0f"
         elif "(m/s)" in dastuff:  self.fmt="%.1f"
+        elif "(mol/mol)" in dastuff: self.fmt="%.2e"
+        elif "(kg/m2)" in dastuff: self.fmt="%.2e"
         elif "(m)" in dastuff:    self.fmt="%.0f"
         else:                     self.fmt="%.2e"
         return dastuff
@@ -275,6 +284,8 @@ class mcd():
         elif num == "ps_ddv": num = 22
         elif num == "p_ddv": num = 21
         elif num == "t_ddv": num = 23
+        elif num == "u_ddv": num = 24
+        elif num == "v_ddv": num = 25
         elif num == "w": num = 26
         elif num == "tsurfmx": num = 16
         elif num == "tsurfmn": num = 17
@@ -385,6 +396,8 @@ class mcd():
             self.locts = abs(self.locts)%24
             self.locte = abs(self.locte)%24
             if self.locts == self.locte: self.locte = self.locts + 24
+        ## ensure that local time = 0 when using Earth dates
+        if self.datekey == 0: self.loct = 0.
         ## now MCD request
         if "v5.1" in self.name: from fmcd51 import call_mcd
         elif "v5.2" in self.name: from fmcd52 import call_mcd
@@ -854,7 +867,15 @@ class mcd():
       from matplotlib.backends.backend_agg import FigureCanvasAgg
       from matplotlib.cm import get_cmap
       from matplotlib import rcParams 
-      #from mpl_toolkits.basemap import Basemap # does not work
+      ####
+      isproj = (self.proj is not None)
+      if isproj:
+        from mpl_toolkits.basemap import Basemap
+      ####
+      if (self.trans > 0.): isback = True
+      else: isback = False
+      if (self.trans > 0.99): self.iscontour = True
+      ####
 
       try:
         from Scientific.IO import NetCDF
@@ -885,21 +906,42 @@ class mcd():
         (field, fieldlab) = self.definefield(choice)
         if incwind: (windx, fieldlabwx) = self.definefield("u") ; (windy, fieldlabwy) = self.definefield("v")
 
-        proj="moll" ; colorb= self.colorm ; ndiv=20 ; zeback="molabw" ; trans=1.0 #0.6
+        ndiv = 40
         vecx=None ; vecy=None ; stride=2
-        lon = self.xcoord
-        lat = self.ycoord
-        
-        #[lon2d,lat2d] = np.meshgrid(lon,lat)
-        ##### define projection and background. define x and y given the projection
-        ##[wlon,wlat] = mcdcomp.latinterv()
-        ##yeahm = mcdcomp.define_proj(proj,wlon,wlat,back=zeback,blat=None,blon=None)
-        ##x, y = yeahm(lon2d, lat2d)
-        #map = Basemap(projection='ortho',lat_0=45,lon_0=-100)
-        #x, y = map(lon2d, lat2d)
+        lon = self.xcoord ; lat = self.ycoord
+     
+        if isproj: 
+          ##
+          if self.plat is None: self.plat = 0.5*(self.lats+self.late)
+          if self.plon is None: self.plon = 0.5*(self.lons+self.lone)
+          ##
+          if self.proj == "cyl": yeah = Basemap(projection=self.proj,\
+                                                llcrnrlat=self.lats,urcrnrlat=self.late,\
+                                                llcrnrlon=self.lons,urcrnrlon=self.lone,\
+                                                ax=yeah,resolution=None)
+          elif self.proj == "laea": yeah = Basemap(projection=self.proj,ax=yeah,resolution=None,\
+                                                   lon_0=self.plon,lat_0=self.plat,\
+                                                   llcrnrlat=self.lats,urcrnrlat=self.late,\
+                                                   llcrnrlon=self.lons,urcrnrlon=self.lone)
+          elif self.proj == "npstere": yeah = Basemap(projection=self.proj,boundinglat=self.plat,lon_0=self.plon,resolution=None,ax=yeah)
+          elif self.proj == "spstere": yeah = Basemap(projection=self.proj,boundinglat=self.plat,lon_0=self.plon,resolution=None,ax=yeah)
+          elif self.proj == "ortho": yeah = Basemap(projection=self.proj,lat_0=self.plat,lon_0=self.plon,resolution=None,ax=yeah)
+          elif self.proj == "robin": yeah = Basemap(projection=self.proj,lon_0=0.,resolution=None,ax=yeah)
+          ## NB: resolution=None is here to avoid loading coastlines which caused problems with some (plat,plon) couples
+          ### background
+          if isback:
+            img="/home/marshttp/www-mars/mcd_python/MarsMap_2500x1250.jpg"
+            yeah.warpimage(img,scale=0.75)
+          mertab,partab = np.r_[-180.:180.:30.],np.r_[-90.:90.:15.]
+          merlab,parlab = [0,0,0,1],[1,0,0,0]
+          #format = '%.1f'
 
-        #### TEMP
-        x = lon ; y = lat
+          yeah.drawmeridians(mertab,color="grey",labels=merlab)
+          yeah.drawparallels(partab,color="grey",labels=parlab)
+          [lon2d,lat2d] = np.meshgrid(lon,lat)
+          x, y = yeah(lon2d, lat2d)
+        else:
+          x = lon ; y = lat
 
         ## define field. bound field.
         what_I_plot = np.transpose(field)
@@ -908,40 +950,68 @@ class mcd():
         ## define contour field levels. define color palette
         ticks = ndiv + 1
         zelevels = np.linspace(zevmin,zevmax,ticks)
-        palette = get_cmap(name=colorb)
+        palette = get_cmap(name=self.colorm)
 
+        ## topography contours
         try:
-            # You can set negative contours to be solid instead of dashed:
-            rcParams['contour.negative_linestyle'] = 'solid'
-            ## contours topo
-            zelevc = np.linspace(-9.,20.,11)
-            yeah.contour( xc, yc, fieldc, zelevc, colors='black',linewidths = 0.4)
-            yeah.contour( np.array(xc) + 360., yc, fieldc, zelevc, colors='black',linewidths = 0.4)
-            yeah.contour( np.array(xc) - 360., yc, fieldc, zelevc, colors='black',linewidths = 0.4)
+            rcParams['contour.negative_linestyle'] = 'solid' # negative contours solid instead of dashed
+            zelevc = np.linspace(-9.,20.,11,0.)
+            if isproj:
+              [xc2,yc2] = np.meshgrid(xc,yc)
+              xc,yc = yeah(xc2,yc2)
+            else:
+              yeah.contour( np.array(xc) + 360., yc, fieldc, zelevc, colors='black',linewidths = 0.4)
+              yeah.contour( np.array(xc) - 360., yc, fieldc, zelevc, colors='black',linewidths = 0.4)
+            ##
+            yeah.contour( xc, yc, fieldc, zelevc, colors='black',linewidths = 0.4 )
         except:
             pass
 
         # contour field
-        c = yeah.contourf( x, y, what_I_plot, zelevels, cmap = palette, alpha = trans )
-        clb = Figure.colorbar(fig,c,orientation='vertical',format=self.fmt,ticks=np.linspace(zevmin,zevmax,num=min([ticks/2+1,21])))
+        if self.iscontour: c = yeah.contour( x, y, what_I_plot, zelevels, cmap = palette )
+        else: c = yeah.contourf( x, y, what_I_plot, zelevels, cmap = palette, alpha = 1.-self.trans )
+
+        # colorbar
+        if not isproj:               orientation='vertical'   ; frac = 0.15  ; pad = 0.04 ; lu = 0.5
+        elif self.proj in ['moll']:  orientation="horizontal" ; frac = 0.08  ; pad = 0.03 ; lu = 1.0
+        elif self.proj in ['robin']: orientation="horizontal" ; frac = 0.07  ; pad = 0.1  ; lu = 1.0
+        elif self.proj in ['cyl']:   orientation="vertical"   ; frac = 0.023 ; pad = 0.03 ; lu = 0.5
+        else:                        orientation='vertical'   ; frac = 0.05  ; pad = 0.03 ; lu = 0.5
+        zelevpal = np.linspace(zevmin,zevmax,num=min([ticks/2+1,21]))
+        clb = Figure.colorbar(fig,c,orientation=orientation,format=self.fmt,ticks=zelevpal,\
+             fraction=frac,pad=pad,extend='both',spacing='proportional')
         clb.set_label(fieldlab)
+
+        # wind vectors
         if incwind:
-          [x2d,y2d] = np.meshgrid(x,y)
-          yeah.quiver(x2d,y2d,np.transpose(windx),np.transpose(windy))
+          if isproj: x2d,y2d = x,y
+          else: [x2d,y2d] = np.meshgrid(lon,lat)
+          wcolor = str(self.trans) # trans=0 black, trans=100 white
+          yeah.quiver(x2d,y2d,np.transpose(windx),np.transpose(windy),color=wcolor)
 
-        ax = fig.gca() ; ax.set_ylabel("Latitude") ; ax.set_xlabel("Longitude")
+        # operation on axis
+        ax = fig.gca()
+        if not isproj:
+          ax.set_ylabel("Latitude") ; ax.set_xlabel("Longitude")
+          # make intervals 
+          self.makeinterv()
+          ax.set_xticks(np.arange(-360,361,self.loninterv)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
+          ax.set_yticks(np.arange(-90,91,self.latinterv)) ; ax.set_ybound(lower=self.lats, upper=self.late)
 
-        # make intervals 
-        self.makeinterv()
-        ax.set_xticks(np.arange(-360,361,self.loninterv)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
-        ax.set_yticks(np.arange(-90,91,self.latinterv)) ; ax.set_ybound(lower=self.lats, upper=self.late)
+      ## titles and final production
       self.gettitle()
+      #ax.set_title(self.title,x=0.5,y=1.05)
+      #ax.set_xlabel('\n'+self.ack,x=0.5,y=0.05)
+
       fig.text(0.5, 0.95, self.title, ha='center')
       fig.text(0.5, 0.01, self.ack, ha='center')
       canvas = FigureCanvasAgg(fig)
       # The size * the dpi gives the final image size
       #   a4"x4" image * 80 dpi ==> 320x320 pixel image
-      canvas.print_figure(figname, dpi=self.dpi)
+      canvas.print_figure(figname, dpi=self.dpi) 
+             #, bbox_inches='tight') removes title. and ax.set_title cannot set a global title for multiplots.
+
+
 
     def htmlplot2d(self,tabtodo,figname="temp.png"):
     ### complete 2D figure with possible multiplots
