@@ -37,15 +37,14 @@
 <tr>
 <td align="center">
 <b>LANDING SITE & DATE</b><br />
-<input type="radio" name="lander" value="Now!" onClick="DefaultDateValues();DefaultTimeValues();Convert2Ls();PlaceValues(0.0,0.0)" />Land now at equator!<br />
-<input type="radio" name="lander" value="Curiosity" onClick="DateAndTimeValues(2012,8,6,05,17,57);Convert2Ls();PlaceValues(137.4,-4.6)" /><a href="https://en.wikipedia.org/wiki/Curiosity_%28rover%29">Curiosity</a>
-<input type="radio" name="lander" value="Phoenix" onClick="DateAndTimeValues(2008,5,25,23,38,23);Convert2Ls();PlaceValues(234.25,68.22)" /><a href="https://en.wikipedia.org/wiki/Phoenix_%28spacecraft%29">Phoenix</a> <br />
-<input type="radio" name="lander" value="Opportunity" onClick="DateAndTimeValues(2004,1,25,4,55,0);Convert2Ls();PlaceValues(354.47,-1.95)" /><a href="https://en.wikipedia.org/wiki/Opportunity_%28rover%29">Opportunity</a>
-<input type="radio" name="lander" value="Spirit" onClick="DateAndTimeValues(2004,1,4,4,26,0);Convert2Ls();PlaceValues(175.48,-14.57)" /><a href="https://en.wikipedia.org/wiki/Spirit_%28rover%29">Spirit</a> <br />
-<input type="radio" name="lander" value="Pathfinder" onClick="DateAndTimeValues(1997,7,4,16,56,55);Convert2Ls();PlaceValues(-33.22,19.13)" /><a href="https://en.wikipedia.org/wiki/Mars_Pathfinder">Pathfinder</a><br /> 
-Viking Landers
-<input type="radio" name="lander" value="Viking Lander 1" onClick="DateAndTimeValues(1976,7,20,11,53,6);Convert2Ls();PlaceValues(-49.97,22.48)" /><a href="https://en.wikipedia.org/wiki/Viking_1">1</a>
-<input type="radio" name="lander" value="Viking Lander 2" onClick="DateAndTimeValues(1976,9,3,22,58,20);Convert2Ls();PlaceValues(-225.74,47.97)" /><a href="https://en.wikipedia.org/wiki/Viking_2">2</a>
+<input type="button" value="Land now at equator!" onClick="DefaultDateValues();DefaultTimeValues();Convert2Ls();PlaceValues(0.0,0.0)" /><br />
+<input type="button" value="Curiosity" onClick="DateAndTimeValues(2012,8,6,05,17,57);Convert2Ls();PlaceValues(137.4,-4.6)" />
+<input type="button" value="Phoenix" onClick="DateAndTimeValues(2008,5,25,23,38,23);Convert2Ls();PlaceValues(234.25,68.22)" /><br />
+<input type="button" value="Opportunity" onClick="DateAndTimeValues(2004,1,25,4,55,0);Convert2Ls();PlaceValues(354.47,-1.95)" />
+<input type="button" value="Spirit" onClick="DateAndTimeValues(2004,1,4,4,26,0);Convert2Ls();PlaceValues(175.48,-14.57)" /><br />
+<input type="button" value="Pathfinder" onClick="DateAndTimeValues(1997,7,4,16,56,55);Convert2Ls();PlaceValues(-33.22,19.13)" /><br /> 
+<input type="button" value="Viking 1" onClick="DateAndTimeValues(1976,7,20,11,53,6);Convert2Ls();PlaceValues(-49.97,22.48)" />
+<input type="button" value="Viking 2" onClick="DateAndTimeValues(1976,9,3,22,58,20);Convert2Ls();PlaceValues(-225.74,47.97)" />
 </td>
 <td align="center">
 <input type="radio" name="datekeyhtml" value="1" checked>
@@ -76,17 +75,17 @@ Mars <span style="font-size: 75%;">MY</span> <input type="text" size="1" name="m
 <td align="center">
 <hr>
 <b>TIME OF DAY</b>
-<input type="radio" name="tata" value="Morning" onClick="PlaceValues2(9.)" />Morning<br />
-<input type="radio" name="tata" value="Afternoon" onClick="PlaceValues2(15.)" />Afternoon
-<input type="radio" name="tata" value="Evening" onClick="PlaceValues2(21.)" />Evening
-<input type="radio" name="tata" value="Night" onClick="PlaceValues2(3.)" />Night<br />
+<input type="button" value="Morning" onClick="PlaceValues2(9.)" /><br />
+<input type="button" value="Afternoon" onClick="PlaceValues2(15.)" />
+<input type="button" value="Evening" onClick="PlaceValues2(21.)" />
+<input type="button" value="Night" onClick="PlaceValues2(3.)" /><br />
 <hr>
 <b>ALTITUDE</b>
-<input type="radio" name="toto" value="Near surface" onClick="PlaceValues3(2.)" />Near-surface<br />
-<input type="radio" name="toto" value="Boundary layer" onClick="PlaceValues3(1000.)" />Boundary layer
-<input type="radio" name="toto" value="Troposphere" onClick="PlaceValues3(10000.)" />Troposphere<br/>
-<input type="radio" name="toto" value="Mesophere" onClick="PlaceValues3(80000.)" />Mesosphere
-<input type="radio" name="toto" value="Thermosphere" onClick="PlaceValues3(180000.)" />Thermosphere<br />
+<input type="button" value="Near surface" onClick="PlaceValues3(2.)" /><br />
+<input type="button" value="Boundary layer" onClick="PlaceValues3(1000.)" />
+<input type="button" value="Troposphere" onClick="PlaceValues3(10000.)" /><br/>
+<input type="button" value="Mesophere" onClick="PlaceValues3(80000.)" />
+<input type="button" value="Thermosphere" onClick="PlaceValues3(180000.)" /><br />
 <hr>
 </td>
 <td align="center">
@@ -154,15 +153,15 @@ Mars <span style="font-size: 75%;">MY</span> <input type="text" size="1" name="m
 <tr>
 <td align="center">
 <b>INTEREST</b>
-<input type="radio" name="yeah" value="Atmosphere" onClick="PlaceVar('t','p','none','none');ChooseColor('jet')" />Atmosphere<br />
-<input type="radio" name="yeah" value="Winds" onClick="PlaceVar('wind','w','u','v');ChooseColor('RdBu_r')" />Winds
-<input type="radio" name="yeah" value="Weather" onClick="PlaceVar('ps_ddv','rho_ddv','none','none');ChooseColor('RdBu_r')" />Weather<br />
-<input type="radio" name="yeah" value="Water cycle" onClick="PlaceVar('h2ovap','mtot','h2oice','icetot');ChooseColor('Blues')" />Water cycle
-<input type="radio" name="yeah" value="Chemistry" onClick="PlaceVar('o3','h2ovap','none','none');ChooseColor('jet')" />Chemistry<br />
-<input type="radio" name="yeah" value="Landing engineering" onClick="PlaceVar('rho','visc','none','none');ChooseColor('YlOrRd')" />Landing engineering<br />
-<input type="radio" name="yeah" value="Glaciology" onClick="PlaceVar('tsurfmn','tsurfmx','co2ice','icetot');ChooseColor('spectral')" />Glaciology
-<input type="radio" name="yeah" value="Surface meteorology" onClick="PlaceVar('ps','tsurf','none','none');ChooseColor('jet')" />Surface meteorology<br />
-<input type="radio" name="yeah" value="Radiative balance" onClick="PlaceVar('lwdown','swdown','lwup','swup');ChooseColor('hot')" />Radiative balance<br />
+<input type="button" value="Atmosphere" onClick="PlaceVar('t','p','none','none');ChooseColor('jet')" /><br />
+<input type="button" value="Winds" onClick="PlaceVar('wind','w','u','v');ChooseColor('RdBu_r')" />
+<input type="button" value="Weather" onClick="PlaceVar('ps_ddv','rho_ddv','none','none');ChooseColor('RdBu_r')" /><br />
+<input type="button" value="Water cycle" onClick="PlaceVar('h2ovap','mtot','h2oice','icetot');ChooseColor('Blues')" />
+<input type="button" value="Chemistry" onClick="PlaceVar('o3','h2ovap','none','none');ChooseColor('jet')" /><br />
+<input type="button" value="Landing engineering" onClick="PlaceVar('rho','visc','none','none');ChooseColor('YlOrRd')" /><br />
+<input type="button" value="Glaciology" onClick="PlaceVar('tsurfmn','tsurfmx','co2ice','icetot');ChooseColor('spectral')" />
+<input type="button" value="Surface meteorology" onClick="PlaceVar('ps','tsurf','none','none');ChooseColor('jet')" /><br />
+<input type="button" value="Radiative balance" onClick="PlaceVar('lwdown','swdown','lwup','swup');ChooseColor('hot')" /><br />
 </td>
 <td align="center">
 <b>CUSTOMIZE VARIABLE(S) TO BE DISPLAYED</b><br />
@@ -449,9 +448,9 @@ lat <input type="text" size="1" name="plat"> lon <input type="text" size="1" nam
 <input type="button" value="Global map" style="font-weight:bold" onClick="PlaceValues('all','all');submit_form_beginner()"/><br />
 -->
 <b>PLOT REQUEST</b>
-<input type="radio" name="reqmode" onClick="PlaceValues2('all');Checkaltitude();Checklatitude();Checklongitude()" />Daily cycle<br />
-<input type="radio" name="reqmode" onClick="PlaceValues3('all');Checklatitude();Checklongitude();Checklocaltime()" />Vertical profile
-<input type="radio" name="reqmode" onClick="PlaceValues('all','all');Checkaltitude();Checklocaltime()" />Global map<br />
+<input type="button" value="Daily cycle" onClick="PlaceValues2('all');Checkaltitude();Checklatitude();Checklongitude()" /><br />
+<input type="button" value="Vertical profile" onClick="PlaceValues3('all');Checklatitude();Checklongitude();Checklocaltime()" />
+<input type="button" value="Global map" onClick="PlaceValues('all','all');Checkaltitude();Checklocaltime()" /><br />
 </td>
 <td align="center">
 <input type="button" value="SUBMIT" style="font-weight:bold" onClick="submit_form()"/>
