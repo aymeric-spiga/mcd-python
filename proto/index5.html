@@ -24,10 +24,10 @@
 
 <tr>
 <td align="center">
-<i>Beginners' column (1-click presets)</i>
+<i>One-click presets</i>
 </td>
 <td align="center">
-<i>Regular users' column</i>
+<i>Settings</i>
 </td>
 <td align="center">
 <i>Advanced settings and information</i>
@@ -435,10 +435,16 @@ lat <input type="text" size="1" name="plat"> lon <input type="text" size="1" nam
 </tr>
 <tr>
 <td align="center">
+<!--
 <input type="button" value="Values" style="font-weight:bold" onClick="CorrectValue();submit_form_beginner()"/>
 <input type="button" value="Daily cycle" style="font-weight:bold" onClick="CorrectValue();PlaceValues2('all');submit_form_beginner()"/><br />
 <input type="button" value="Vertical profile" style="font-weight:bold" onClick="CorrectValue();PlaceValues3('all');submit_form_beginner()"/>
 <input type="button" value="Global map" style="font-weight:bold" onClick="PlaceValues('all','all');submit_form_beginner()"/><br />
+-->
+<b>PLOT REQUEST</b>
+<input type="radio" name="reqmode" onClick="Checkaltitude();Checklatitude();Checklongitude();PlaceValues2('all')" />Daily cycle<br />
+<input type="radio" name="reqmode" onClick="Checklocaltime()Checklatitude();Checklongitude();PlaceValues3('all')" />Vertical profile
+<input type="radio" name="reqmode" onClick="Checkaltitude();Checklocaltime();PlaceValues('all','all')" />Global map<br />
 </td>
 <td align="center">
 <input type="button" value="SUBMIT" style="font-weight:bold" onClick="submit_form()"/>
