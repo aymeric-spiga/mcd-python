@@ -450,7 +450,8 @@ lat <input type="text" size="1" name="plat"> lon <input type="text" size="1" nam
 <b>PLOT REQUEST</b>
 <input type="button" value="Daily cycle" onClick="PlaceValues2('all');Checkaltitude();Checklatitude();Checklongitude()" /><br />
 <input type="button" value="Vertical profile" onClick="PlaceValues3('all');Checklatitude();Checklongitude();Checklocaltime()" />
-<input type="button" value="Global map" onClick="PlaceValues('all','all');Checkaltitude();Checklocaltime()" /><br />
+<input type="button" value="Global map" onClick="Setproj('flat');PlaceValues('all','all');Checkaltitude();Checklocaltime()" /><br />
+<input type="button" value="Sphere" onClick="Setproj('ortho');PlaceValues('all','all');Checkaltitude();Checklocaltime()" /><br />
 </td>
 <td align="center">
 <input type="button" value="SUBMIT" style="font-weight:bold;font-size:125%;color:#006600" onClick="submit_form()"/>

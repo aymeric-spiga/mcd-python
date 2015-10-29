@@ -517,6 +517,11 @@ var colorm;
 document.calendar.colorm.value=colorm;
 }
 
+function Setproj(proj){
+var proj;
+document.calendar.proj.value=proj;
+}
+
 function submit_form_beginner() {
 submit_form()
 document.calendar.reset();
