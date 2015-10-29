@@ -402,6 +402,15 @@ yeah=document.calendar.toto.value;
 //}
 }
 
+function MapValues(lon,lat){
+var lon;
+var lat;
+document.calendar.plat.value=lat;
+document.calendar.plon.value=lon;
+document.calendar.latpoint.value=lat;
+document.calendar.lonpoint.value=lon;
+}
+
 function PlaceVar(var1,var2,var3,var4){
 var var1;
 var var2;
