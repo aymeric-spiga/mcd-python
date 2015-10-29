@@ -1,4 +1,4 @@
-####################################################
+###################################################
 ### A Python Class for the Mars Climate Database ###
 ### ---------------------------------------------###
 ### Aymeric SPIGA 17-21/04/2012                  ###
@@ -91,6 +91,8 @@ class mcd():
         self.iscontour = False
         self.plat = 0.0
         self.plon = 0.0
+        self.latpoint = None
+        self.lonpoint = None
 
     def toversion5(self,version="5.1"):
         self.name      = "MCD v"+version
@@ -867,6 +869,7 @@ class mcd():
       from matplotlib.backends.backend_agg import FigureCanvasAgg
       from matplotlib.cm import get_cmap
       from matplotlib import rcParams 
+      import matplotlib.pyplot as plt
       ####
       isproj = (self.proj is not None)
       if isproj:
@@ -988,6 +991,11 @@ class mcd():
           else: [x2d,y2d] = np.meshgrid(lon,lat)
           wcolor = str(self.trans) # trans=0 black, trans=100 white
           yeah.quiver(x2d,y2d,np.transpose(windx),np.transpose(windy),color=wcolor)
+
+        # add a point (TBD: text, use ax.annotate)
+        if (self.lonpoint is not None) and (self.latpoint is not None):
+          xpt,ypt = yeah(self.lonpoint,self.latpoint) # compute the native map projection coordinates
+          yeah.plot(xpt,ypt,'go',markersize=8) # plot filled circle at the location
 
         # operation on axis
         ax = fig.gca()

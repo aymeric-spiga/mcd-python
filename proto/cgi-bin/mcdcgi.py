@@ -203,6 +203,15 @@ except: query.plat = 0.0
 try: query.plon = float(form.getvalue("plon"))
 except: query.plon = 0.0
 
+try:
+  query.latpoint = float(form.getvalue("latpoint"))
+  query.lonpoint = float(form.getvalue("lonpoint"))
+  strpoint = str(query.latpoint)+str(query.lonpoint)
+except:
+  query.latpoint = None
+  query.lonpoint = None
+  strpoint = ""
+
 try: 
   query.dpi = form.getvalue("dpi")
   if query.dpi == "eps":  yeaheps = True  ; query.dpi = 300.
@@ -244,7 +253,7 @@ else:              query.islog=False
 if errormess == "":
 
  # reference name (to test which figures are already in the database)
- try: reference = query.getnameset()+str(var1)+str(var2)+str(var3)+str(var4)+str(iswind)+str(isfixedlt)+str(iszonmean)+query.colorm+str(query.min2d)+str(query.max2d)+str(query.dpi)+str(islog)+str(proj)+str(query.trans)+str(query.plat)+str(query.plon)
+ try: reference = query.getnameset()+str(var1)+str(var2)+str(var3)+str(var4)+str(iswind)+str(isfixedlt)+str(iszonmean)+query.colorm+str(query.min2d)+str(query.max2d)+str(query.dpi)+str(islog)+str(proj)+str(query.trans)+str(query.plat)+str(query.plon)+strpoint
  except: reference = "test"
  if dev == "on": reference = 'dev_'+reference
  if yeaheps:  figname = '../img/'+reference+'.eps'
