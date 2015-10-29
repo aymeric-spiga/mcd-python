@@ -426,37 +426,74 @@ var localtime;
 var savlocaltime;
 savlocaltime=document.calendar.localtime.value
 document.calendar.localtime.value=localtime;
-if ( document.calendar.localtime.value == "all" ) {
- if ( document.calendar.altitude.value == "all" ) {
-    alert("Not allowed! Now choose either a fixed altitude or a fixed time.");
-    //document.calendar.localtime.value=savlocaltime;
- }
-}
-if ( document.calendar.localtime.value == "all" ) {
- if ( document.calendar.longitude.value == "all" ) {
-    alert("Not allowed! Now choose either a lander or a fixed time.");
-    //document.calendar.localtime.value=savlocaltime;
- }
-}
+//if ( document.calendar.localtime.value == "all" ) {
+// if ( document.calendar.altitude.value == "all" ) {
+//    alert("Not allowed! Now choose either a fixed altitude or a fixed time.");
+//    //document.calendar.localtime.value=savlocaltime;
+// }
+//}
+//if ( document.calendar.localtime.value == "all" ) {
+// if ( document.calendar.longitude.value == "all" ) {
+//    alert("Not allowed! Now choose either a lander or a fixed time.");
+//    //document.calendar.localtime.value=savlocaltime;
+// }
+//}
 }
 function PlaceValues3(altitude){
 var altitude;
 var savaltitude;
 savaltitude=document.calendar.altitude.value
 document.calendar.altitude.value=altitude;
-if ( document.calendar.altitude.value == "all" ) {
- if ( document.calendar.localtime.value == "all") {
-    alert("Not allowed! Now choose either a fixed time or a fixed altitude.");
-    //document.calendar.altitude.value=savaltitude;
- }
+//if ( document.calendar.altitude.value == "all" ) {
+// if ( document.calendar.localtime.value == "all") {
+//    alert("Not allowed! Now choose either a fixed time or a fixed altitude.");
+//    //document.calendar.altitude.value=savaltitude;
+// }
+//}
+//if ( document.calendar.altitude.value == "all" ) {
+// if ( document.calendar.longitude.value == "all") {
+//    alert("Not allowed! Now choose either a lander or a fixed altitude.");
+//    //document.calendar.altitude.value=savaltitude;
+// }
+//}
 }
-if ( document.calendar.altitude.value == "all" ) {
- if ( document.calendar.longitude.value == "all") {
-    alert("Not allowed! Now choose either a lander or a fixed altitude.");
-    //document.calendar.altitude.value=savaltitude;
- }
+
+function Checkaltitude(){
+altitude=document.calendar.altitude.value
+num=+altitude // returns numeric value, or NaN if string not purely numeric characters
+while ( isNaN(num) ) {
+ num=prompt("\nAltitude is set as 'all' or a range, which makes it a free dimension.\nPlease indicate a numerical value to make the requested mode work:\n",1000)
 }
+document.calendar.altitude.value=num
 }
+
+function Checklocaltime(){
+localtime=document.calendar.localtime.value
+num=+localtime // returns numeric value, or NaN if string not purely numeric characters
+while ( isNaN(num) ) {
+ num=prompt("\nLocal time is set as 'all' or a range, which makes it a free dimension.\nPlease indicate a numerical value to make the requested mode work:\n",12)
+}
+document.calendar.localtime.value=num
+}
+
+function Checklongitude(){
+longitude=document.calendar.longitude.value
+num=+longitude // returns numeric value, or NaN if string not purely numeric characters
+while ( isNaN(num) ) {
+ num=prompt("\nLongitude is set as 'all' or a range, which makes it a free dimension.\nPlease indicate a numerical value to make the requested mode work:\n",0)
+}
+document.calendar.longitude.value=num
+}
+
+function Checklatitude(){
+latitude=document.calendar.latitude.value
+num=+latitude // returns numeric value, or NaN if string not purely numeric characters
+while ( isNaN(num) ) {
+ num=prompt("\nLatitude is set as 'all' or a range, which makes it a free dimension.\nPlease indicate a numerical value to make the requested mode work:\n",0)
+}
+document.calendar.latitude.value=num
+}
+
 
 function ChooseColor(colorm){
 var colorm;
@@ -477,4 +514,8 @@ function submit_form() {
 Convert2Julian();
 document.calendar.submit();
 }
+
+
+
+
 
