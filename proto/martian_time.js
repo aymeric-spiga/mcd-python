@@ -383,23 +383,23 @@ savlat=document.calendar.latitude.value;
 document.calendar.longitude.value=lon;
 document.calendar.latitude.value=lat;
 yeah=document.calendar.toto.value;
-// to be improved. lon and lat should be separated. but for the moment
-// only mapping capabilities exist as 2D plots which means if lon is all
-// lat is all and vice versa.
-if ( document.calendar.longitude.value == "all") {
- if ( document.calendar.altitude.value == "all") {
-    alert("Not allowed! Altitude and time must be fixed in mapping mode.");
-    document.calendar.longitude.value=savlon;
-    document.calendar.latitude.value=savlat;
-    document.calendar.toto.value=yeah;
- }
- if ( document.calendar.localtime.value == "all") {
-    alert("Not allowed! Altitude and time must be fixed in mapping mode.");
-    document.calendar.longitude.value=savlon;
-    document.calendar.latitude.value=savlat;
-    document.calendar.toto.value=yeah;
- }
-}
+//// to be improved. lon and lat should be separated. but for the moment
+//// only mapping capabilities exist as 2D plots which means if lon is all
+//// lat is all and vice versa.
+//if ( document.calendar.longitude.value == "all") {
+// if ( document.calendar.altitude.value == "all") {
+//    alert("Not allowed! Altitude and time must be fixed in mapping mode.");
+//    document.calendar.longitude.value=savlon;
+//    document.calendar.latitude.value=savlat;
+//    document.calendar.toto.value=yeah;
+// }
+// if ( document.calendar.localtime.value == "all") {
+//    alert("Not allowed! Altitude and time must be fixed in mapping mode.");
+//    document.calendar.longitude.value=savlon;
+//    document.calendar.latitude.value=savlat;
+//    document.calendar.toto.value=yeah;
+// }
+//}
 }
 
 function PlaceVar(var1,var2,var3,var4){
