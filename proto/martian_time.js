@@ -469,46 +469,46 @@ document.calendar.altitude.value=altitude;
 
 function Checkaltitude(){
 var altitude;
-var num;
+var num1;
 altitude=document.calendar.altitude.value;
-num=+altitude; // returns numeric value, or NaN if string not purely numeric characters
-while ( isNaN(num) ) {
- num=prompt("\nAltitude is set as 'all' or a range, which makes it a free dimension.\nPlease indicate a numerical value to make the requested mode work:\n",1000)
+num1=+altitude; // returns numeric value, or NaN if string not purely numeric characters
+while ( isNaN(num1) ) {
+ num1=prompt("\nAltitude is set as 'all' or a range, which makes it a free dimension.\nPlease indicate a numerical value to make the requested mode work:\n",1000)
 }
-document.calendar.altitude.value=num;
+document.calendar.altitude.value=num1;
 }
 
 function Checklocaltime(){
 var localtime;
-var num;
+var num2;
 localtime=document.calendar.localtime.value;
-num=+localtime; // returns numeric value, or NaN if string not purely numeric characters
-while ( isNaN(num) ) {
- num=prompt("\nLocal time is set as 'all' or a range, which makes it a free dimension.\nPlease indicate a numerical value to make the requested mode work:\n",12)
+num2=+localtime; // returns numeric value, or NaN if string not purely numeric characters
+while ( isNaN(num2) ) {
+ num2=prompt("\nLocal time is set as 'all' or a range, which makes it a free dimension.\nPlease indicate a numerical value to make the requested mode work:\n",12)
 }
-document.calendar.localtime.value=num;
+document.calendar.localtime.value=num2;
 }
 
 function Checklongitude(){
 var longitude;
-var num;
+var num3;
 longitude=document.calendar.longitude.value;
-num=+longitude; // returns numeric value, or NaN if string not purely numeric characters
-while ( isNaN(num) ) {
- num=prompt("\nLongitude is set as 'all' or a range, which makes it a free dimension.\nPlease indicate a numerical value to make the requested mode work:\n",0)
+num3=+longitude; // returns numeric value, or NaN if string not purely numeric characters
+while ( isNaN(num3) ) {
+ num3=prompt("\nLongitude is set as 'all' or a range, which makes it a free dimension.\nPlease indicate a numerical value to make the requested mode work:\n",0)
 }
-document.calendar.longitude.value=num;
+document.calendar.longitude.value=num3;
 }
 
 function Checklatitude(){
 var latitude;
-var num;
+var num4;
 latitude=document.calendar.latitude.value;
-num=+latitude; // returns numeric value, or NaN if string not purely numeric characters
-while ( isNaN(num) ) {
- num=prompt("\nLatitude is set as 'all' or a range, which makes it a free dimension.\nPlease indicate a numerical value to make the requested mode work:\n",0)
+num4=+latitude; // returns numeric value, or NaN if string not purely numeric characters
+while ( isNaN(num4) ) {
+ num4=prompt("\nLatitude is set as 'all' or a range, which makes it a free dimension.\nPlease indicate a numerical value to make the requested mode work:\n",0)
 }
-document.calendar.latitude.value=num;
+document.calendar.latitude.value=num4;
 }
 
 
@@ -517,9 +517,9 @@ var colorm;
 document.calendar.colorm.value=colorm;
 }
 
-function Setproj(proj){
-var proj;
-document.calendar.proj.value=proj;
+function Setproj(daproj){
+var daproj;
+document.calendar.proj.value=daproj;
 }
 
 function submit_form_beginner() {
@@ -536,7 +536,6 @@ function submit_form() {
 Convert2Julian();
 document.calendar.submit();
 }
-
 
 
 
