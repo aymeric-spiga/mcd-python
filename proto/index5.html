@@ -449,9 +449,9 @@ lat <input type="text" size="1" name="plat"> lon <input type="text" size="1" nam
 <input type="button" value="Global map" style="font-weight:bold" onClick="PlaceValues('all','all');submit_form_beginner()"/><br />
 -->
 <b>PLOT REQUEST</b>
-<input type="radio" name="reqmode" onClick="Checkaltitude();Checklatitude();Checklongitude();PlaceValues2('all')" />Daily cycle<br />
-<input type="radio" name="reqmode" onClick="Checklocaltime()Checklatitude();Checklongitude();PlaceValues3('all')" />Vertical profile
-<input type="radio" name="reqmode" onClick="Checkaltitude();Checklocaltime();PlaceValues('all','all')" />Global map<br />
+<input type="radio" name="reqmode" onClick="PlaceValues2('all');Checkaltitude();Checklatitude();Checklongitude()" />Daily cycle<br />
+<input type="radio" name="reqmode" onClick="PlaceValues3('all');Checklatitude();Checklongitude();Checklocaltime()" />Vertical profile
+<input type="radio" name="reqmode" onClick="PlaceValues('all','all');Checkaltitude();Checklocaltime()" />Global map<br />
 </td>
 <td align="center">
 <input type="button" value="SUBMIT" style="font-weight:bold" onClick="submit_form()"/>
