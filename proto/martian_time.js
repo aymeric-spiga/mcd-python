@@ -459,39 +459,47 @@ document.calendar.altitude.value=altitude;
 }
 
 function Checkaltitude(){
-altitude=document.calendar.altitude.value
-num=+altitude // returns numeric value, or NaN if string not purely numeric characters
+var altitude;
+var num;
+altitude=document.calendar.altitude.value;
+num=+altitude; // returns numeric value, or NaN if string not purely numeric characters
 while ( isNaN(num) ) {
  num=prompt("\nAltitude is set as 'all' or a range, which makes it a free dimension.\nPlease indicate a numerical value to make the requested mode work:\n",1000)
 }
-document.calendar.altitude.value=num
+document.calendar.altitude.value=num;
 }
 
 function Checklocaltime(){
-localtime=document.calendar.localtime.value
-num=+localtime // returns numeric value, or NaN if string not purely numeric characters
+var localtime;
+var num;
+localtime=document.calendar.localtime.value;
+num=+localtime; // returns numeric value, or NaN if string not purely numeric characters
 while ( isNaN(num) ) {
  num=prompt("\nLocal time is set as 'all' or a range, which makes it a free dimension.\nPlease indicate a numerical value to make the requested mode work:\n",12)
 }
-document.calendar.localtime.value=num
+document.calendar.localtime.value=num;
 }
 
 function Checklongitude(){
-longitude=document.calendar.longitude.value
-num=+longitude // returns numeric value, or NaN if string not purely numeric characters
+var longitude;
+var num;
+longitude=document.calendar.longitude.value;
+num=+longitude; // returns numeric value, or NaN if string not purely numeric characters
 while ( isNaN(num) ) {
  num=prompt("\nLongitude is set as 'all' or a range, which makes it a free dimension.\nPlease indicate a numerical value to make the requested mode work:\n",0)
 }
-document.calendar.longitude.value=num
+document.calendar.longitude.value=num;
 }
 
 function Checklatitude(){
-latitude=document.calendar.latitude.value
-num=+latitude // returns numeric value, or NaN if string not purely numeric characters
+var latitude;
+var num;
+latitude=document.calendar.latitude.value;
+num=+latitude; // returns numeric value, or NaN if string not purely numeric characters
 while ( isNaN(num) ) {
  num=prompt("\nLatitude is set as 'all' or a range, which makes it a free dimension.\nPlease indicate a numerical value to make the requested mode work:\n",0)
 }
-document.calendar.latitude.value=num
+document.calendar.latitude.value=num;
 }
 
 
