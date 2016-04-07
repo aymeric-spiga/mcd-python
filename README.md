@@ -25,6 +25,7 @@ The `netCDF` library should be installed on your system.
 Moreover, from our experience, it seems that it must have been build
 using the `-fPIC` (for `gfortran`; the name of the option changes with compilers) 
 option which generates position independent code suitable for use in a shared library.
+An example script is given in the `netcdf` folder.
 
 The installation below relies on `f2py` utility, which is part of the `numpy` package.
 
