@@ -78,7 +78,7 @@ class mcd():
         ## plot stuff
         self.xlabel = None ; self.ylabel = None ; self.title = ""
         self.vertplot = False
-        self.fmt = "%.2e" 
+        self.fmt = "%.1e" 
         self.colorm = "jet"
         self.fixedlt = False
         self.zonmean = False
@@ -245,15 +245,16 @@ class mcd():
           whichfield[76] = "Total Electronic Content (TEC) (m-2)"
         if num not in whichfield: errormess("Incorrect subscript in extvar.")
         dastuff = whichfield[num]
+        expf = "%.1e"
         if "(K)" in dastuff:      self.fmt="%.0f"
-        elif "effective radius" in dastuff: self.fmt="%.2e"
-        elif "(Pa)" in dastuff:   self.fmt="%.2e"
+        elif "effective radius" in dastuff: self.fmt=expf
+        elif "(Pa)" in dastuff:   self.fmt=expf
         elif "(W/m2)" in dastuff: self.fmt="%.0f"
         elif "(m/s)" in dastuff:  self.fmt="%.1f"
-        elif "(mol/mol)" in dastuff: self.fmt="%.2e"
-        elif "(kg/m2)" in dastuff: self.fmt="%.2e"
+        elif "(mol/mol)" in dastuff: self.fmt=expf
+        elif "(kg/m2)" in dastuff: self.fmt=expf
         elif "(m)" in dastuff:    self.fmt="%.0f"
-        else:                     self.fmt="%.2e"
+        else:                     self.fmt=expf
         return dastuff
 
     def convertlab(self,num):        
@@ -695,12 +696,13 @@ class mcd():
         if not self.vertplot and self.islog: ax.set_yscale('log')
         if self.vertplot and self.islog: ax.set_xscale('log')
 
-        #ax.ticklabel_format(useOffset=False,axis='x')
-        #ax.ticklabel_format(useOffset=False,axis='y')
-
         if self.lats is not None:      ax.set_xticks(np.arange(-90,91,15)) ; ax.set_xbound(lower=self.lats, upper=self.late)
         elif self.lons is not None:    ax.set_xticks(np.arange(-360,361,30)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
         elif self.locts is not None:   ax.set_xticks(np.arange(0,26,2)) ; ax.set_xbound(lower=self.locts, upper=self.locte)
+
+        ## does not work
+        #ax.ticklabel_format(useOffset=False,axis='x')
+        #ax.ticklabel_format(useOffset=False,axis='y')
 
         ax.grid(True, linestyle=':', color='grey')
 

@@ -22,6 +22,8 @@ import cStringIO
 import os as daos
 import matplotlib.pyplot as mpl
 
+import hashlib
+
 ### a function to read HTML arguments for coordinates
 def gethtmlcoord(userinput,defmin,defmax):
    import string
@@ -82,11 +84,14 @@ else:
   from modules import mcd
   query=mcd.mcd()
 
-# set MCD version changes if needed
-try:     betatest = form.getvalue("betatest")
-except:  betatest = "off"
-if betatest == "on": query.toversion5(version="5.2")
-else: query.toversion5(version="5.1")
+# MCD version
+query.toversion5(version="5.2")
+
+## set MCD version changes if needed
+#try:     betatest = form.getvalue("betatest")
+#except:  betatest = "off"
+#if betatest == "on": query.toversion5(version="5.2")
+#else: query.toversion5(version="5.1")
 
 # Get the kind of vertical coordinates and choose default behavior for "all"
 try: query.zkey = int(form.getvalue("zkey"))
@@ -256,6 +261,9 @@ if errormess == "":
  try: reference = query.getnameset()+str(var1)+str(var2)+str(var3)+str(var4)+str(iswind)+str(isfixedlt)+str(iszonmean)+query.colorm+str(query.min2d)+str(query.max2d)+str(query.dpi)+str(islog)+str(proj)+str(query.trans)+str(query.plat)+str(query.plon)+strpoint
  except: reference = "test"
  if dev == "on": reference = 'dev_'+reference
+ ## -- use a MD5 hash for a unique reference which avoids long names
+ reference = hashlib.md5(reference).hexdigest()
+ ##
  if yeaheps:  figname = '../img/'+reference+'.eps'
  else:        figname = '../img/'+reference+'.png'
  txtname = '../txt/'+reference+'.txt'
