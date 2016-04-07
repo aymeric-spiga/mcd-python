@@ -1,0 +1,44 @@
+#!/bin/bash
+
+fd="./"
+
+##################
+
+# get absolute path
+here=$PWD
+cd $fd
+installfd=$PWD
+echo install in $installfd
+cd $here
+
+# download
+\rm -rf netcdf-4.0.1.tar.gz*
+\rm -rf netcdf-4.0.1
+wget ftp://ftp.unidata.ucar.edu/pub/netcdf/old/netcdf-4.0.1.tar.gz
+tar xzvf netcdf-4.0.1.tar.gz > /dev/null 2>&1
+
+# make netcdf library
+cd netcdf-4.0.1
+pwd
+
+export FC=gfortran
+export FFLAGS=" -O2"
+export F90=gfortran
+export FCFLAGS="-O2 -ffree-form"
+export CPPFLAGS=""
+export CC=gcc
+export CFLAGS="-O2"
+export CXX=g++
+export CXXFLAGS="-O2"
+
+\rm -rf *.log
+echo ...configure
+./configure --with-pic --prefix=$installfd > $installfd/configure.log 2>&1
+echo ...make
+make > $installfd/make.log 2>&1
+echo ...test
+make test > $installfd/make_test.log 2>&1
+echo ...install
+make install > $installfd/make_install.log 2>&1
+
+
