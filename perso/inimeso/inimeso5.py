@@ -60,7 +60,7 @@ for iz in range(len(query.prestab)):
     dust.write( "%18.6e%18.6e\n" % (q,N) )
 
 ### FINISH
-sounding.close() ; additional.close() ; dust.close()
+sounding.close() ; additional.close() ; dust.close() ; water.close()
 query.plot1d(["p","t","u","v","h2ovap","h2oice"]) ; mpl.show()
 
 
