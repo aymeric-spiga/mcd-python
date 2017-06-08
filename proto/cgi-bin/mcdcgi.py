@@ -283,7 +283,6 @@ if errormess == "":
     else:			exit()  
 
     ### generic building of figure
-    query.getascii(vartoplot,filename=txtname)
     query.htmlplot1d(vartoplot,figname=figname)
 
   ### 2D plots
@@ -292,6 +291,9 @@ if errormess == "":
     ### getting data
     if islatfree == 1 and islonfree == 1:     query.htmlmap2d(vartoplot,incwind=iswindlog,figname=figname) 
     else:                                     query.htmlplot2d(vartoplot,figname=figname)
+
+  ### ASCII file outputs
+  query.getascii(vartoplot,filename=txtname)
 
 #### NOW WRITE THE HTML PAGE TO USER
 
@@ -321,10 +323,7 @@ if errormess != "":
                        print "</ul>"
 else:
   if sumfree == 0: 	query.update() ; query.htmlprinttabextvar(vartoplot)
-  elif sumfree == 2: 	
-                        if yeaheps:  print "<hr><a href='"+figname+"'>!!!! Click here to download the EPS figure file !!!!</a><br /><hr>"
-                        else:        print "<img src='"+figname+"'><br />"
-  elif sumfree == 1:      
+  elif sumfree >= 1:      
                         print "<a href='"+txtname+"'>Click here to download an ASCII file containing data</a><br />"
                         print "<hr>"
                         if yeaheps:  print "<hr><a href='"+figname+"'>!!!! Click here to download the EPS figure file !!!!</a><br /><hr>"

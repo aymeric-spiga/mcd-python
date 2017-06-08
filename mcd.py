@@ -634,9 +634,23 @@ class mcd():
           asciifile.write("### " + self.title + "\n")
           asciifile.write("### " + self.ack + "\n")
           asciifile.write("### Column 1 is " + self.xlabel + "\n")
-          asciifile.write("### Column 2 is " + fieldlab + "\n")
-          for ix in range(len(self.xcoord)):
+          dim = field.ndim
+          if (dim == 1):
+            asciifile.write("### Column 2 is " + fieldlab + "\n")
+            for ix in range(len(self.xcoord)):
               asciifile.write("%15.5e%15.5e\n" % ( self.xcoord[ix], field[ix] ) )
+          elif (dim == 2):
+            asciifile.write("### Columns 2+ are " + fieldlab + "\n")
+            asciifile.write("### Line 1 is " + self.ylabel + "\n")
+            asciifile.write("---- ||")
+            for iy in range(len(self.ycoord)):
+              asciifile.write("%15.5e" % ( self.ycoord[iy] ) )
+            asciifile.write("\n-----------------------------------\n") 
+            for ix in range(len(self.xcoord)):
+             zestr = "%+.03d ||" % (self.xcoord[ix])
+             for iy in range(len(self.ycoord)):
+               zestr = zestr + "%15.5e" % (field[ix,iy])
+             asciifile.write(zestr+"\n")
       asciifile.close()
       return 
 
