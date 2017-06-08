@@ -85,6 +85,7 @@ def whatkindfile (nc):
 def definesubplot ( numplot, fig, ipreferline=False):
     from matplotlib.pyplot import rcParams
     rcParams['font.size'] = 12. ## default (important for multiple calls)
+    fc = 1.33
     if numplot <= 0:
         subv = 99999
         subh = 99999
@@ -94,47 +95,47 @@ def definesubplot ( numplot, fig, ipreferline=False):
     elif numplot == 2:
         subv = 2 #1 #2
         subh = 1 #2 #1
-        fig.subplots_adjust(wspace = 0.35)
-        fig.subplots_adjust(hspace = 0.3)
+        fig.subplots_adjust(wspace = 0.35*fc)
+        fig.subplots_adjust(hspace = 0.3*fc)
         #rcParams['font.size'] = int( rcParams['font.size'] * 3. / 4. )
     elif numplot == 3:
         subv = 3
         subh = 1
-        fig.subplots_adjust(hspace = 0.25)
-        fig.subplots_adjust(wspace = 0.35)
-        if ipreferline: subv = 1 ; subh = 3 ; fig.subplots_adjust(wspace = 0.35)
+        fig.subplots_adjust(hspace = 0.25*fc)
+        fig.subplots_adjust(wspace = 0.35*fc)
+        if ipreferline: subv = 1 ; subh = 3 ; fig.subplots_adjust(wspace = 0.35*fc)
         #rcParams['font.size'] = int( rcParams['font.size'] * 3. / 4. )
     elif numplot == 4:
         subv = 2
         subh = 2
         #fig.subplots_adjust(wspace = 0.4, hspace = 0.6)
-        fig.subplots_adjust(wspace = 0.25, hspace = 0.3)
+        fig.subplots_adjust(wspace = 0.25*fc, hspace = 0.3*fc)
         #rcParams['font.size'] = int( rcParams['font.size'] * 3. / 4. )
     elif numplot <= 6:
         subv = 2
         subh = 3
         #fig.subplots_adjust(wspace = 0.4, hspace = 0.0)
-        fig.subplots_adjust(wspace = 0.5, hspace = 0.3)
+        fig.subplots_adjust(wspace = 0.5*fc, hspace = 0.3*fc)
         rcParams['font.size'] = int( rcParams['font.size'] * 1. / 2. )
     elif numplot <= 8:
         subv = 2
         subh = 4
-        fig.subplots_adjust(wspace = 0.3, hspace = 0.3)
+        fig.subplots_adjust(wspace = 0.3*fc, hspace = 0.3*fc)
         rcParams['font.size'] = int( rcParams['font.size'] * 1. / 2. )
     elif numplot <= 9:
         subv = 3
         subh = 3
-        fig.subplots_adjust(wspace = 0.3, hspace = 0.3)
+        fig.subplots_adjust(wspace = 0.3*fc, hspace = 0.3*fc)
         rcParams['font.size'] = int( rcParams['font.size'] * 1. / 2. )
     elif numplot <= 12:
         subv = 3
         subh = 4
-        fig.subplots_adjust(wspace = 0, hspace = 0.1)
+        fig.subplots_adjust(wspace = 0, hspace = 0.1*fc)
         rcParams['font.size'] = int( rcParams['font.size'] * 1. / 2. )
     elif numplot <= 16:
         subv = 4
         subh = 4
-        fig.subplots_adjust(wspace = 0.3, hspace = 0.3)
+        fig.subplots_adjust(wspace = 0.3*fc, hspace = 0.3*fc)
         rcParams['font.size'] = int( rcParams['font.size'] * 1. / 2. )
     else:
         print "number of plot supported: 1 to 16"
