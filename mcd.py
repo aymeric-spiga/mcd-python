@@ -999,7 +999,7 @@ class mcd():
         zelevpal = np.linspace(zevmin,zevmax,num=min([ticks/2+1,21]))
         clb = Figure.colorbar(fig,c,orientation=orientation,format=self.fmt,ticks=zelevpal,\
              fraction=frac,pad=pad,extend='both',spacing='proportional')
-        clb.set_label(fieldlab)
+        #clb.set_label(fieldlab)
 
         # wind vectors
         if incwind:
@@ -1013,8 +1013,10 @@ class mcd():
           xpt,ypt = yeah(self.lonpoint,self.latpoint) # compute the native map projection coordinates
           yeah.plot(xpt,ypt,'go',markersize=8) # plot filled circle at the location
 
-        # operation on axis
+        # operation on axis: title, labels, ticks, etc.
         ax = fig.gca()
+        rcParams['axes.titlesize'] = rcParams['font.size']
+        ax.set_title(fieldlab)
         if not isproj:
           ax.set_ylabel("Latitude") ; ax.set_xlabel("Longitude")
           # make intervals 
@@ -1042,6 +1044,7 @@ class mcd():
     ### added in 10/2012 for online MCD
     ### see http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
       import mcdcomp as mcdcomp
+      from matplotlib import rcParams
       from matplotlib.figure import Figure
       from matplotlib.backends.backend_agg import FigureCanvasAgg
       from matplotlib.cm import get_cmap
@@ -1086,8 +1089,10 @@ class mcd():
         # contour field
         c = yeah.contourf( self.xcoord, self.ycoord, what_I_plot, zelevels, cmap = palette )
         clb = Figure.colorbar(fig,c,orientation='vertical',format=self.fmt,ticks=np.linspace(zevmin,zevmax,num=min([ticks/2+1,21])))
-        clb.set_label(fieldlab)
+        #clb.set_label(fieldlab)
         ax = fig.gca() ; ax.set_ylabel(self.ylabel) ; ax.set_xlabel(self.xlabel)
+        rcParams['axes.titlesize'] = rcParams['font.size']
+        ax.set_title(fieldlab)
 
         self.makeinterv()
         if self.lons is not None:   ax.set_xticks(np.arange(-360,361,self.loninterv)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
