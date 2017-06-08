@@ -721,7 +721,7 @@ class mcd():
         ax.grid(True, linestyle=':', color='grey')
 
       self.gettitle()
-      fig.text(0.5, 0.95, self.title, ha='center')
+      fig.text(0.5, 0.95, self.title, ha='center', transform=fig.gca().transAxes, fontweight='bold')
       fig.text(0.5, 0.01, self.ack, ha='center')
       canvas = FigureCanvasAgg(fig)
       # The size * the dpi gives the final image size
@@ -1027,7 +1027,7 @@ class mcd():
       #ax.set_title(self.title,x=0.5,y=1.05)
       #ax.set_xlabel('\n'+self.ack,x=0.5,y=0.05)
 
-      fig.text(0.5, 0.95, self.title, ha='center')
+      fig.text(0.5, 0.95, self.title, ha='center', transform=fig.gca().transAxes, fontweight='bold')
       fig.text(0.5, 0.01, self.ack, ha='center')
       canvas = FigureCanvasAgg(fig)
       # The size * the dpi gives the final image size
@@ -1104,7 +1104,7 @@ class mcd():
             ax.set_ybound(lower=self.xzs, upper=self.xze)
 
       self.gettitle()
-      fig.text(0.5, 0.95, self.title, ha='center')
+      fig.text(0.5, 0.95, self.title, ha='center', transform=fig.gca().transAxes, fontweight='bold')
       fig.text(0.5, 0.01, self.ack, ha='center')
       canvas = FigureCanvasAgg(fig)
       # The size * the dpi gives the final image size
