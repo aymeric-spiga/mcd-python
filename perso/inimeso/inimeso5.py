@@ -35,7 +35,9 @@ sounding.write( "%10.2f%12.2f%12.2f\n" % (query.pres/100.,query.temp*(610./query
 more.write( "%10.2f%10.2f" % (query.extvar[1],query.extvar[14]) ) ; more.close()
 
 ### GET and WRITE VERTICAL PROFILE
-query.profile( tabperso = np.append([0.1,5,10,20,50,100],np.linspace(200.,float(split(lines[4])[0])*1000.,float(split(lines[5])[0]))) )
+closesurf = [0.1,5,10,20,50,100]
+#closesurf = [0.1,0.5,1,2,5,10,20,50,100]
+query.profile( tabperso = np.append(closesurf,np.linspace(200.,float(split(lines[4])[0])*1000.,float(split(lines[5])[0]))) )
 for iz in range(len(query.prestab)):
 
     wvapor = query.extvartab[iz,42] #1.5*1e-3 
@@ -61,3 +63,57 @@ for iz in range(len(query.prestab)):
 sounding.close() ; additional.close() ; dust.close()
 query.plot1d(["p","t","u","v","h2ovap","h2oice"]) ; mpl.show()
 
+
+
+
+
+
+##### ESTIMATE CCNs
+#dustq,dustn = np.loadtxt("input_dust",unpack=True)
+#############################################################################
+#############################################################################
+##fqdust = np.squeeze(query.extvartab[:,38])
+#fwice = np.squeeze(query.extvartab[:,44])
+#####
+##### I: fwice, fqdust --> O: finter
+#####
+##import numpy as np
+#from scipy.interpolate import InterpolatedUnivariateSpline
+### remove profile points with a cloud
+#x = np.arange(fwice.size)
+#w = np.where(fwice < np.mean(fwice)/10.)
+### spline-interpolate with remaining points
+#yyq = dustq[w]
+#xxq = x[w]
+#splq = InterpolatedUnivariateSpline(xxq, yyq)
+#yyn = dustn[w]
+#xxn = x[w]
+#spln = InterpolatedUnivariateSpline(xxn, yyn)
+### get interpolated profile
+### -- a good match for qdust + qccn
+### -- treat negative values because of spline
+#finterq = splq(x) - dustq
+#finterq[np.where(finterq < 0.)] = -finterq[np.where(finterq < 0.)]
+#fintern = spln(x) - dustn
+#fintern[np.where(fintern < 0.)] = -fintern[np.where(fintern < 0.)]
+### plot
+#mpl.figure()
+#mpl.plot(yyn,xxn,'bo')
+#mpl.plot(dustn,x)
+#mpl.plot(fintern,x)
+#mpl.figure()
+#mpl.plot(yyq,xxq,'bo')
+#mpl.plot(dustq,x)
+#mpl.plot(finterq,x)
+#mpl.figure()
+#mpl.plot(fwice,x,'b.')
+#mpl.show()
+#############################################################################
+#############################################################################
+#
+#ccn = open("input_ccn", "w")
+#for iz in range(len(query.prestab)):
+#  print iz,dustq[iz],finterq[iz]
+#  #ccn.write( "%18.6e%18.6e\n" % (finterq[iz],fintern[iz]) )
+#  ccn.write( "%18.6e%18.6e\n" % (np.max(finterq),np.max(fintern)) )
+#ccn.close()
