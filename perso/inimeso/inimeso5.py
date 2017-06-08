@@ -25,29 +25,30 @@ query.printcoord()
 
 ### OPEN FILES TO BE WRITTEN
 sounding = open("input_sounding", "w") ; additional = open("input_therm", "w") ; more = open("input_more", "w")
-dust = open("input_dust", "w")
+dust = open("input_dust", "w") ; water = open("input_water", "w")
 
 ### GET and WRITE SURFACE VALUES
 query.xz = 0.1 ; query.update() ; query.printmeanvar()
-query.extvar[42] = 1.5*1e-3
-query.extvar[44] = 0.0
-sounding.write( "%10.2f%12.2f%12.2f\n" % (query.pres/100.,query.temp*(610./query.pres)**(1.0/3.9),(query.extvar[42]+query.extvar[44])*1e3) )
+wvapor = query.extvar[42] #1.5*1e-3
+wice = query.extvar[44] #0.0
+sounding.write( "%10.2f%12.2f%12.2f\n" % (query.pres/100.,query.temp*(610./query.pres)**(1.0/3.9),(wvapor+wice)*1e3) )
 more.write( "%10.2f%10.2f" % (query.extvar[1],query.extvar[14]) ) ; more.close()
 
 ### GET and WRITE VERTICAL PROFILE
 query.profile( tabperso = np.append([0.1,5,10,20,50,100],np.linspace(200.,float(split(lines[4])[0])*1000.,float(split(lines[5])[0]))) )
 for iz in range(len(query.prestab)):
 
-    query.extvartab[iz,42] = 1.5*1e-3
-    query.extvartab[iz,44] = 0.0
+    wvapor = query.extvartab[iz,42] #1.5*1e-3 
+    wice = query.extvartab[iz,44] #0.0
 
     sounding.write(   "%10.2f%12.2f%12.2f%12.2f%12.2f\n" % ( \
                       query.extvartab[iz,2],query.temptab[iz]*(610./query.prestab[iz])**(1.0/3.9),\
-                      (query.extvartab[iz,42]+query.extvartab[iz,44])*1e3,\
+                      (wvapor+wice)*1e3,\
                       query.zonwindtab[iz],query.merwindtab[iz]) )
     additional.write( "%12.2f%12.2f%18.6e%18.6e%12.2f\n" % ( \
                       query.extvartab[iz,53],query.extvartab[iz,8],\
                       query.prestab[iz],query.denstab[iz],query.temptab[iz]) )
+    water.write( "%18.6e%18.6e\n" % (wvapor*1e3,wice*1e3) )
 
     ### DUST PROFILES
     q = query.extvartab[iz,38] # extvar(38)= Dust mass mixing ratio (kg/kg)
