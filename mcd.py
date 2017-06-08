@@ -972,19 +972,15 @@ class mcd():
         palette = get_cmap(name=self.colorm)
 
         ## topography contours
-        try:
-            rcParams['contour.negative_linestyle'] = 'solid' # negative contours solid instead of dashed
-            zelevc = np.linspace(-9.,20.,11,0.)
-            if isproj:
-              [xc2,yc2] = np.meshgrid(xc,yc)
-              xc,yc = yeah(xc2,yc2)
-            else:
-              yeah.contour( np.array(xc) + 360., yc, fieldc, zelevc, colors='black',linewidths = 0.4)
-              yeah.contour( np.array(xc) - 360., yc, fieldc, zelevc, colors='black',linewidths = 0.4)
-            ##
-            yeah.contour( xc, yc, fieldc, zelevc, colors='black',linewidths = 0.4 )
-        except:
-            pass
+        rcParams['contour.negative_linestyle'] = 'solid' # negative contours solid instead of dashed
+        zelevc = np.linspace(-9.,20.,11,0.)
+        if isproj:
+           [xc2,yc2] = np.meshgrid(xc,yc)
+           xc3,yc3 = yeah(xc2,yc2)
+           yeah.contour( xc3, yc3, fieldc, zelevc, colors='black',linewidths = 0.4 )
+        else:
+           yeah.contour( np.array(xc) + 360., yc, fieldc, zelevc, colors='black',linewidths = 0.4)
+           yeah.contour( np.array(xc) - 360., yc, fieldc, zelevc, colors='black',linewidths = 0.4)
 
         # contour field
         if self.iscontour: c = yeah.contour( x, y, what_I_plot, zelevels, cmap = palette )
