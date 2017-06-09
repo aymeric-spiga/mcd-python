@@ -26,6 +26,32 @@ def setbounds(field,vmin=None,vmax=None):
         limtype = "both"
     return vmin,vmax,limtype
 
+## set size of figure for optimal rendering
+def setfig(howmanyplots, proj=None):
+    from matplotlib.figure import Figure
+    ##
+    if proj is None:
+      squared = False
+    else:
+      squared = proj in ["npstere","spstere","ortho"]
+    ##
+    if howmanyplots == 1:
+      if squared: fig = Figure(figsize=(10,10))
+      else:       fig = Figure(figsize=(16,8))
+    elif howmanyplots == 2:
+      if squared: fig = Figure(figsize=(7,14))
+      else:       fig = Figure(figsize=(10,12))
+    elif howmanyplots == 3:
+      if squared: fig = Figure(figsize=(7,21))
+      else:       fig = Figure(figsize=(8,16))
+    elif howmanyplots == 4:
+      if squared: fig = Figure(figsize=(10,10))
+      else:       fig = Figure(figsize=(24,12))
+    return fig
+
+
+################################################################
+################################################################
 
 
 ## Those are additional functions

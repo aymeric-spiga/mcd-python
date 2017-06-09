@@ -909,12 +909,7 @@ class mcd():
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
 
-      howmanyplots = len(tabtodo)
-      if howmanyplots == 1: fig = Figure(figsize=(16,8)) 
-      elif howmanyplots == 2: fig = Figure(figsize=(8,8)) 
-      elif howmanyplots == 3: fig = Figure(figsize=(8,16)) 
-      elif howmanyplots == 4: fig = Figure(figsize=(16,8)) 
-
+      fig = mcdcomp.setfig(len(tabtodo),proj=self.proj)
       subv,subh = mcdcomp.definesubplot( len(tabtodo) , fig )
 
       for i in range(len(tabtodo)):
@@ -1046,12 +1041,7 @@ class mcd():
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
 
-      howmanyplots = len(tabtodo)
-      if howmanyplots == 1: fig = Figure(figsize=(16,8))
-      elif howmanyplots == 2: fig = Figure(figsize=(8,8))
-      elif howmanyplots == 3: fig = Figure(figsize=(8,16))
-      elif howmanyplots == 4: fig = Figure(figsize=(16,8))
-
+      fig = mcdcomp.setfig(len(tabtodo))
       subv,subh = mcdcomp.definesubplot( len(tabtodo) , fig )
 
       for i in range(len(tabtodo)):
