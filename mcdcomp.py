@@ -1,3 +1,32 @@
+## set colorbar-type and value limits
+def setbounds(field,vmin=None,vmax=None):
+    import numpy as np
+    limtype = "neither"
+    if vmin is None and vmax is None:
+      vmin = np.min(field)
+      vmax = np.max(field)
+    elif vmin is None:        
+      vmin = np.min(field)
+      if vmax < np.max(field): 
+        limtype = "max"
+    elif vmax is None:
+      vmax = np.max(field)
+      if vmin > np.min(field): 
+        limtype = "min"
+    else:
+      mintoosmall = vmin < np.min(field)
+      maxtoohigh = vmax > np.max(field)
+      if mintoosmall and maxtoohigh:
+        limtype = "neither"
+      elif mintoosmall:
+        limtype = "max"
+      elif maxtoohigh:
+        limtype = "min"
+      else:
+        limtype = "both"
+    return vmin,vmax,limtype
+
+
 
 ## Those are additional functions
 ## Useful only for plots with mcd.py
@@ -404,28 +433,28 @@ def define_proj (char,wlon,wlat,back=None,blat=None,blon=None):
             #    else:                                              pass             ## else:              draw None
     return m
 
-## Author: AS
-def calculate_bounds(field,vmin=None,vmax=None):
-    import numpy as np
-    ind = np.where(field < 9e+35)
-    fieldcalc = field[ ind ] # la syntaxe compacte ne marche si field est un tuple
-    ###
-    dev = np.std(fieldcalc)*3.0
-    ###
-    if vmin is None:  zevmin = mean(fieldcalc) - dev
-    else:             zevmin = vmin
-    ###
-    if vmax is None:  zevmax = mean(fieldcalc) + dev
-    else:             zevmax = vmax
-    if vmin == vmax:
-                      zevmin = mean(fieldcalc) - dev  ### for continuity
-                      zevmax = mean(fieldcalc) + dev  ### for continuity            
-    ###
-    if zevmin < min(fieldcalc): zevmin = min(fieldcalc)
-    if zevmax > max(fieldcalc): zevmax = max(fieldcalc)
-    ##if zevmin < 0. and min(fieldcalc) > 0.: zevmin = 0.
-    ##print "BOUNDS field ", min(fieldcalc), max(fieldcalc), " //// adopted", zevmin, zevmax
-    return zevmin, zevmax
+### Author: AS
+#def calculate_bounds(field,vmin=None,vmax=None):
+#    import numpy as np
+#    ind = np.where(field < 9e+35)
+#    fieldcalc = field[ ind ] # la syntaxe compacte ne marche si field est un tuple
+#    ###
+#    dev = np.std(fieldcalc)*3.0
+#    ###
+#    if vmin is None:  zevmin = mean(fieldcalc) - dev
+#    else:             zevmin = vmin
+#    ###
+#    if vmax is None:  zevmax = mean(fieldcalc) + dev
+#    else:             zevmax = vmax
+#    if vmin == vmax:
+#                      zevmin = mean(fieldcalc) - dev  ### for continuity
+#                      zevmax = mean(fieldcalc) + dev  ### for continuity            
+#    ###
+#    if zevmin < min(fieldcalc): zevmin = min(fieldcalc)
+#    if zevmax > max(fieldcalc): zevmax = max(fieldcalc)
+#    ##if zevmin < 0. and min(fieldcalc) > 0.: zevmin = 0.
+#    ##print "BOUNDS field ", min(fieldcalc), max(fieldcalc), " //// adopted", zevmin, zevmax
+#    return zevmin, zevmax
 
 ### Author: AS
 #def bounds(what_I_plot,zevmin,zevmax):
@@ -439,18 +468,18 @@ def calculate_bounds(field,vmin=None,vmax=None):
 #    #print "NEW MAX ", max(what_I_plot)
 #    return what_I_plot
 
-# a function to solve the problem with blank bounds !
-# -------------------------------
-def bounds(what_I_plot,zevmin,zevmax,miss=9e+35):
-    import numpy as np
-    small_enough = 1.e-7
-    if zevmin < 0: what_I_plot[ what_I_plot < zevmin*(1.-small_enough) ] = zevmin*(1.-small_enough)
-    else:          what_I_plot[ what_I_plot < zevmin*(1.+small_enough) ] = zevmin*(1.+small_enough)
-    what_I_plot[ what_I_plot > miss  ] = -miss
-    what_I_plot[ what_I_plot > zevmax ] = zevmax*(1.-small_enough)
-    ## test
-    what_I_plot[ np.abs(what_I_plot) < small_enough ] = small_enough
-    return what_I_plot
+## a function to solve the problem with blank bounds !
+## -------------------------------
+#def bounds(what_I_plot,zevmin,zevmax,miss=9e+35):
+#    import numpy as np
+#    small_enough = 1.e-7
+#    if zevmin < 0: what_I_plot[ what_I_plot < zevmin*(1.-small_enough) ] = zevmin*(1.-small_enough)
+#    else:          what_I_plot[ what_I_plot < zevmin*(1.+small_enough) ] = zevmin*(1.+small_enough)
+#    what_I_plot[ what_I_plot > miss  ] = -miss
+#    what_I_plot[ what_I_plot > zevmax ] = zevmax*(1.-small_enough)
+#    ## test
+#    what_I_plot[ np.abs(what_I_plot) < small_enough ] = small_enough
+#    return what_I_plot
 
 ## Author: AS
 def nolow(what_I_plot):

@@ -1,4 +1,4 @@
-###################################################
+####################################################
 ### A Python Class for the Mars Climate Database ###
 ### ---------------------------------------------###
 ### Aymeric SPIGA 17-21/04/2012                  ###
@@ -964,8 +964,7 @@ class mcd():
 
         ## define field. bound field.
         what_I_plot = np.transpose(field)
-        zevmin, zevmax = mcdcomp.calculate_bounds(what_I_plot,vmin=self.min2d,vmax=self.max2d)  
-        what_I_plot = mcdcomp.bounds(what_I_plot,zevmin,zevmax)
+        zevmin,zevmax,limtype = mcdcomp.setbounds(what_I_plot,vmin=self.min2d,vmax=self.max2d)
         ## define contour field levels. define color palette
         ticks = ndiv + 1
         zelevels = np.linspace(zevmin,zevmax,ticks)
@@ -984,7 +983,7 @@ class mcd():
 
         # contour field
         if self.iscontour: c = yeah.contour( x, y, what_I_plot, zelevels, cmap = palette )
-        else: c = yeah.contourf( x, y, what_I_plot, zelevels, cmap = palette, alpha = 1.-self.trans )
+        else: c = yeah.contourf( x, y, what_I_plot, zelevels, cmap = palette, alpha = 1.-self.trans, extend=limtype )
 
         # colorbar
         if not isproj:               orientation='vertical'   ; frac = 0.15  ; pad = 0.04 ; lu = 0.5
@@ -994,7 +993,7 @@ class mcd():
         else:                        orientation='vertical'   ; frac = 0.05  ; pad = 0.03 ; lu = 0.5
         zelevpal = np.linspace(zevmin,zevmax,num=min([ticks/2+1,21]))
         clb = Figure.colorbar(fig,c,orientation=orientation,format=self.fmt,ticks=zelevpal,\
-             fraction=frac,pad=pad,extend='both',spacing='proportional')
+             fraction=frac,pad=pad,spacing='proportional')
         #clb.set_label(fieldlab)
 
         # wind vectors
@@ -1076,14 +1075,13 @@ class mcd():
 
         ## define field. bound field.
         what_I_plot = np.transpose(field)
-        zevmin, zevmax = mcdcomp.calculate_bounds(what_I_plot,vmin=self.min2d,vmax=self.max2d)  
-        what_I_plot = mcdcomp.bounds(what_I_plot,zevmin,zevmax)
+        zevmin,zevmax,limtype = mcdcomp.setbounds(what_I_plot,vmin=self.min2d,vmax=self.max2d)  
         ## define contour field levels. define color palette
         ticks = ndiv + 1
         zelevels = np.linspace(zevmin,zevmax,ticks)
         palette = get_cmap(name=colorb)
         # contour field
-        c = yeah.contourf( self.xcoord, self.ycoord, what_I_plot, zelevels, cmap = palette )
+        c = yeah.contourf( self.xcoord, self.ycoord, what_I_plot, zelevels, cmap = palette, extend=limtype )
         clb = Figure.colorbar(fig,c,orientation='vertical',format=self.fmt,ticks=np.linspace(zevmin,zevmax,num=min([ticks/2+1,21])))
         #clb.set_label(fieldlab)
         ax = fig.gca() ; ax.set_ylabel(self.ylabel) ; ax.set_xlabel(self.xlabel)
