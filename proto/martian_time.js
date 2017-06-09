@@ -50,13 +50,8 @@ function CheckGivenYear(){
 var bissextil; // bissextil year ? (0==no, 1==yes) (returned value)
 var val=document.calendar.year.value;
 
-while ((val!=Math.round(val))||(val<1583)) {
-  if (val!=Math.round(val)) {
-    val=prompt("Year must be an integer! e.g.:",Math.round(val));
-  }
-  if (val<1583) {
-    val=prompt("Sorry, Year must not be less than 1583 \n (in order to stick to the Gregorian calendar)",1583);
-  }
+while ((val!=Math.round(val))||(val<1800)||(val>=2200)) {
+  val=prompt("Year must be an integer between 1800 and 2200\n (domain of validity of julian date computations in the MCD)",Math.round(val));
 }
 
 document.calendar.year.value=val;
