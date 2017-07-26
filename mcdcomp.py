@@ -2,20 +2,22 @@
 def setbounds(field,vmin=None,vmax=None):
     import numpy as np
     limtype = "neither"
+    w = np.where(np.isnan(field) == False)
+    fieldclean = field[w]
     if vmin is None and vmax is None:
-      vmin = np.min(field)
-      vmax = np.max(field)
+      vmin = np.min(fieldclean)
+      vmax = np.max(fieldclean)
     elif vmin is None:        
-      vmin = np.min(field)
-      if vmax < np.max(field): 
+      vmin = np.min(fieldclean)
+      if vmax < np.max(fieldclean): 
         limtype = "max"
     elif vmax is None:
-      vmax = np.max(field)
-      if vmin > np.min(field): 
+      vmax = np.max(fieldclean)
+      if vmin > np.min(fieldclean): 
         limtype = "min"
     else:
-      mintoosmall = vmin < np.min(field)
-      maxtoohigh = vmax > np.max(field)
+      mintoosmall = vmin < np.min(fieldclean)
+      maxtoohigh = vmax > np.max(fieldclean)
       if mintoosmall and maxtoohigh:
         limtype = "neither"
       elif mintoosmall:
