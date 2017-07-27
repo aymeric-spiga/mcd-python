@@ -293,7 +293,9 @@ if errormess == "":
     else:                                     query.htmlplot2d(vartoplot,figname=figname)
 
   ### ASCII file outputs
-  query.getascii(vartoplot,filename=txtname)
+  if sumfree in [1,2]:
+    query.getascii(vartoplot,filename=txtname)
+
 
 #### NOW WRITE THE HTML PAGE TO USER
 
