@@ -714,7 +714,7 @@ class mcd():
         if self.lats is not None:      ax.set_xticks(np.arange(-90,91,15)) ; ax.set_xbound(lower=self.lats, upper=self.late)
         elif self.lons is not None:    ax.set_xticks(np.arange(-360,361,30)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
         elif self.locts is not None:   ax.set_xticks(np.arange(0,26,2)) ; ax.set_xbound(lower=self.locts, upper=self.locte)
-        elif self.xdates is not None:  ax.set_xticks(np.arange(0,360,30)) ; ax.set_xbound(lower=self.xdates, upper=self.xdatee)
+        elif self.xdates is not None:  ax.set_xticks(np.arange(0,361,30)) ; ax.set_xbound(lower=self.xdates, upper=self.xdatee)
 
         ## does not work
         #ax.ticklabel_format(useOffset=False,axis='x')
