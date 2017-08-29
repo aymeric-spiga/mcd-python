@@ -116,10 +116,8 @@ if minxz < 0.1: minxz=0.1 # otherwise bug with values smaller than 0.1m
 
 try: query.datekey = int(form.getvalue("datekeyhtml"))
 except: query.datekey = float(1)
-badlschar = False
 if query.datekey == 1:
-    try: query.xdate = float(form.getvalue("ls"))
-    except: query.xdate = float(1) ; badlschar = True # comment the second part if in debug command line mode
+    islsfree, query.xdate, query.xdates,  query.xdatee  = gethtmlcoord( form.getvalue("ls"), 0., 360. )
 else:
     try: query.xdate = float(form.getvalue("julian"))
     except: query.xdate = float(1)
@@ -128,14 +126,14 @@ try: query.dust = int(form.getvalue("dust"))
 except: query.dust  = int(1)
 
 # Prevent the user from doing bad
-badinterv = (islatfree == -1) or (islonfree == -1) or (isloctfree == -1) or (isaltfree == -1)
+badinterv = (islatfree == -1) or (islonfree == -1) or (isloctfree == -1) or (isaltfree == -1) or (islsfree == -1)
 if badinterv: 
     errormess = errormess+"<li>Bad syntax. Write a value (or) a range val1 val2 (or) 'all'. Separator shall be either ; : , / _ space"
-badls = (query.datekey == 1 and (query.xdate < 0. or query.xdate > 360.))
+badls = (islsfree == 0 and query.datekey == 1 and (query.xdate < 0. or query.xdate > 360.) and not (query.xdate == 666)) \
+     or (islsfree == 1 and (query.xdates > 360. or query.xdatee > 360.)) \
+     or (islsfree == 1 and (query.xdates < 0. or query.xdatee < 0.)) 
 if badls: 
-    errormess = errormess+"<li>Solar longitude must be between 0 and 360."
-if badlschar:
-    errormess = errormess+"<li>Solar longitude is in the wrong format. It should be a positive number between 0 and 360. Intervals of solar longitude are not allowed."
+    errormess = errormess+"<li>Solar longitude must be between 0. (northern spring) and 360."
 badloct = (isloctfree == 0 and query.loct > 24.) \
        or (isloctfree == 1 and (query.locts > 24. or query.locte > 24.)) \
        or (isloctfree == 0 and query.loct < 0.) \
@@ -175,7 +173,7 @@ if query.xdate == 666.:
     errormess = "<li>CONGRATULATIONS! <br><img src='../surprise.jpg'><br> You reached secret mode.<br> You can <a href='http://www.youtube.com/watch?v=fTpQOZcNASw'>watch a nice video</a>."
 
 # Get how many free dimensions we have
-sumfree = islatfree + islonfree + isloctfree + isaltfree 
+sumfree = islatfree + islonfree + isloctfree + isaltfree + islsfree
 if sumfree >= 3: errormess = errormess + "<li>3 or more free dimensions are set... but only 1D and 2D plots are supported!"
 
 # Get additional parameters
@@ -209,9 +207,14 @@ try: query.plon = float(form.getvalue("plon"))
 except: query.plon = 0.0
 
 try:
-  query.latpoint = float(form.getvalue("latpoint"))
-  query.lonpoint = float(form.getvalue("lonpoint"))
-  strpoint = str(query.latpoint)+str(query.lonpoint)
+  if (form.getvalue("istherepoint") == "on"):
+    query.latpoint = float(form.getvalue("latpoint"))
+    query.lonpoint = float(form.getvalue("lonpoint"))
+    strpoint = str(query.latpoint)+str(query.lonpoint)
+  else:
+    query.latpoint = None
+    query.lonpoint = None
+    strpoint = ""
 except:
   query.latpoint = None
   query.lonpoint = None
@@ -280,6 +283,7 @@ if errormess == "":
     elif islonfree == 1: 	query.zonal(nd=64)
     elif islatfree == 1: 	query.meridional(nd=48)
     elif isaltfree == 1: 	query.profile(nd=35)   
+    elif islsfree == 1:         query.seasonal(nd=12)
     else:			exit()  
 
     ### generic building of figure

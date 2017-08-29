@@ -429,7 +429,8 @@ class mcd():
         strlon = str(self.lon)+str(self.lons)+str(self.lone)
         strxz = str(self.xz)+str(self.xzs)+str(self.xze)
         strloct = str(self.loct)+str(self.locts)+str(self.locte)
-        name = str(self.zkey)+strxz+strlon+strlat+str(self.hrkey)+str(self.datekey)+str(self.xdate)+strloct+str(self.dust)
+        strdate = str(self.datekey)+str(self.xdate)+str(self.xdates)+str(self.xdatee)
+        name = str(self.zkey)+strxz+strlon+strlat+str(self.hrkey)+strdate+strloct+str(self.dust)
         if "v5.1" in self.name: name = "v51_" + name
         elif "v5.2" in self.name: name = "v52_" + name
         return name
@@ -713,6 +714,7 @@ class mcd():
         if self.lats is not None:      ax.set_xticks(np.arange(-90,91,15)) ; ax.set_xbound(lower=self.lats, upper=self.late)
         elif self.lons is not None:    ax.set_xticks(np.arange(-360,361,30)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
         elif self.locts is not None:   ax.set_xticks(np.arange(0,26,2)) ; ax.set_xbound(lower=self.locts, upper=self.locte)
+        elif self.xdates is not None:  ax.set_xticks(np.arange(0,360,30)) ; ax.set_xbound(lower=self.xdates, upper=self.xdatee)
 
         ## does not work
         #ax.ticklabel_format(useOffset=False,axis='x')
