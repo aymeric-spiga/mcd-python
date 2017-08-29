@@ -6,4 +6,7 @@
 input_more
 input_sounding
 input_therm
+input_dust
+input_water
 dustopacity.def
+perso/inimeso/*.png
