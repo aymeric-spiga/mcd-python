@@ -616,7 +616,7 @@ class mcd():
       for i in range(nd): self.xz = self.xcoord[i] ; self.update() ; self.put1d(i)
       self.xz = save
 
-    def seasonal(self,nd=12):
+    def seasonal(self,nd=25):
     ### retrieve a seasonal slice
       save = self.xdate
       self.xlabel = "Areocentric longitude (degrees)"
@@ -804,34 +804,60 @@ class mcd():
       self.loct = umst #fixedlt false for this case
       self.lon = save1 ; self.xz = save2 ; self.loct = save3 ; self.lat = save4
 
-    def hovmoller(self,ndtime=25,ndcoord=20,typex="lat"):
+    def hovmoller(self,ndcoord=20,typex="lat",typey="loct"):
     ### retrieve a time/other coordinate slice
-      save1 = self.lat ; save2 = self.xz ; save3 = self.loct ; save4 = self.lon
+      save1 = self.lat ; save2 = self.xz ; save3 = self.loct ; save4 = self.lon ; save5 = self.xdate
+      # set up time axis
+      ndtime=25
+      if typey == "loct":
+          labeltime = "Local time (Martian hour)"
+          zestart,zeend = 0.,24.
+          zestarti,zeendi = self.locts,self.locte
+          zeyaxis = True
+      elif typey == "ls":
+          labeltime = "Areocentric longitude (degrees)"    
+          zestart,zeend = 0.,360.
+          zestarti,zeendi = self.xdates,self.xdatee
+          zeyaxis = False
+      # hovmoller with ls is more standard with ls as horizontal axis
+      if typey == "ls" or typex == "alt":
+          ndx,ndy = ndtime,ndcoord
+      else:
+          ndx,ndy = ndcoord,ndtime
+      # set up spatial axis
       if typex == "lat": 
-          ndx = ndcoord ; self.xlabel = "North latitude (degrees)" 
-          ndy = ndtime ; self.ylabel = "Local time (Martian hour)"
+          self.xlabel = "North latitude (degrees)" 
+          self.ylabel = labeltime
+          if typey == "ls": self.xlabel,self.ylabel = self.ylabel,self.xlabel
           self.prepare(ndx=ndx,ndy=ndy)
-          self.ininterv(-90.,90.,ndx,start=self.lats,end=self.late)
-          self.ininterv(0.,24.,ndy,start=self.locts,end=self.locte,yaxis=True)
+          self.ininterv(-90.,90.,ndcoord,start=self.lats,end=self.late,yaxis=(not zeyaxis))
+          self.ininterv(zestart,zeend,ndtime,start=zestarti,end=zeendi,yaxis=zeyaxis)
       elif typex == "lon":
-          ndx = ndcoord ; self.xlabel = "East longitude (degrees)"
-          ndy = ndtime ; self.ylabel = "Local time (Martian hour)"
+          self.xlabel = "East longitude (degrees)"
+          self.ylabel = labeltime
+          if typey == "ls": self.xlabel,self.ylabel = self.ylabel,self.xlabel
           self.prepare(ndx=ndx,ndy=ndy)
-          self.ininterv(-180.,180.,ndx,start=self.lons,end=self.lone)
-          self.ininterv(0.,24.,ndy,start=self.locts,end=self.locte,yaxis=True)
+          self.ininterv(-180.,180.,ndcoord,start=self.lons,end=self.lone,yaxis=(not zeyaxis))
+          self.ininterv(zestart,zeend,ndtime,start=zestarti,end=zeendi,yaxis=zeyaxis)
       elif typex == "alt":
-          ndy = ndcoord ; self.vertlabel() ; self.ylabel = self.xlabel
-          ndx = ndtime ; self.xlabel = "Local time (Martian hour)"
+          self.vertlabel() ; self.ylabel = self.xlabel
+          self.xlabel = labeltime
           self.prepare(ndx=ndx,ndy=ndy)
           self.vertaxis(ndy,yaxis=True)
-          self.ininterv(0.,24.,ndx,start=self.locts,end=self.locte)
+          self.ininterv(zestart,zeend,ndx,start=zestarti,end=zeendi)
       for i in range(ndx):
        for j in range(ndy):
-         if typex == "lat":   self.lat = self.xcoord[i] ; self.loct = self.ycoord[j]
-         elif typex == "lon": self.lon = self.xcoord[i] ; self.loct = self.ycoord[j]
-         elif typex == "alt": self.xz = self.ycoord[j] ; self.loct = self.xcoord[i]
+         tup = self.xcoord[i],self.ycoord[j]
+         # fill in the spatial and time axis
+         if typex == "lat" and typey == "loct": self.lat,self.loct  = tup
+         if typex == "lon" and typey == "loct": self.lon,self.loct  = tup
+         if typex == "alt" and typey == "loct": self.loct,self.xz   = tup
+         if typex == "lat" and typey == "ls":   self.xdate,self.lat = tup
+         if typex == "lon" and typey == "ls":   self.xdate,self.lon = tup
+         if typex == "alt" and typey == "ls":   self.xdate,self.xz  = tup
+         # query field
          self.update() ; self.put2d(i,j)
-      self.lat = save1 ; self.xz = save2 ; self.loct = save3 ; self.lon = save4
+      self.lat = save1 ; self.xz = save2 ; self.loct = save3 ; self.lon = save4 ; self.xdate = save5
 
     def put2d(self,i,j):
     ## fill in subscript i,j in output arrays
@@ -1050,16 +1076,27 @@ class mcd():
         yeah = fig.add_subplot(subv,subh,i+1)
         choice = tabtodo[i]
 
+        # explore all types of 2D plots
+        # -- retrieve kind of time axis
+        if self.locts is not None: zetypey = "loct"
+        elif self.xdates is not None: zetypey = "ls"
+        else: zetypey = None
+        # -- if longitude is free dimension
         if self.lons is not None:    
-           if self.locts is None:  self.secalt(ndx=64,ndy=35,typex="lon")
-           else:                   self.hovmoller(ndcoord=64,typex="lon")
+           if zetypey is None:
+             self.secalt(ndx=64,ndy=35,typex="lon")
+           else:
+             self.hovmoller(ndcoord=64,typex="lon",typey=zetypey)
         elif self.lats is not None:  
-           if self.locts is None:  
-               if self.zonmean:   self.zonalmean()
-               else:         self.secalt(ndx=48,ndy=35,typex="lat")
-           else:                   self.hovmoller(ndcoord=48,typex="lat")
+           if zetypey is None:  
+               if self.zonmean:    
+                 self.zonalmean()
+               else:               
+                 self.secalt(ndx=48,ndy=35,typex="lat")
+           else:                   
+             self.hovmoller(ndcoord=48,typex="lat",typey=zetypey)
         else:
-           self.hovmoller(ndcoord=35,typex="alt")
+           self.hovmoller(ndcoord=35,typex="alt",typey=zetypey)
 
         (field, fieldlab) = self.definefield(choice)
 
@@ -1081,12 +1118,24 @@ class mcd():
         ax.set_title(fieldlab)
 
         self.makeinterv()
-        if self.lons is not None:   ax.set_xticks(np.arange(-360,361,self.loninterv)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
-        elif self.lats is not None: ax.set_xticks(np.arange(-90,91,self.latinterv)) ; ax.set_xbound(lower=self.lats, upper=self.late)
+        if self.lons is not None:
+          if self.xdates is not None:
+            ax.set_yticks(np.arange(-360,361,self.loninterv)) ; ax.set_ybound(lower=self.lons, upper=self.lone)
+          else:
+            ax.set_xticks(np.arange(-360,361,self.loninterv)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
+        elif self.lats is not None: 
+          if self.xdates is not None:
+            ax.set_yticks(np.arange(-90,91,self.latinterv)) ; ax.set_ybound(lower=self.lats, upper=self.late)
+          else:
+            ax.set_xticks(np.arange(-90,91,self.latinterv)) ; ax.set_xbound(lower=self.lats, upper=self.late)
 
         if self.locts is not None: 
-            if self.xzs is not None: ax.set_xticks(np.arange(0,26,2)) ; ax.set_xbound(lower=self.locts, upper=self.locte)
-            else:                    ax.set_yticks(np.arange(0,26,2)) ; ax.set_ybound(lower=self.locts, upper=self.locte)
+          if self.xzs is not None: 
+            ax.set_xticks(np.arange(0,26,2)) ; ax.set_xbound(lower=self.locts, upper=self.locte)
+          else:
+            ax.set_yticks(np.arange(0,26,2)) ; ax.set_ybound(lower=self.locts, upper=self.locte)
+        elif self.xdates is not None:
+            ax.set_xticks(np.arange(0,361,30)) ; ax.set_xbound(lower=self.xdates, upper=self.xdatee)
 
         if self.zkey == 4 and self.xzs is not None: 
             ax.set_yscale('log') ; ax.set_ylim(ax.get_ylim()[::-1])

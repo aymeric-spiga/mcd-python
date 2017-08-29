@@ -129,6 +129,9 @@ except: query.dust  = int(1)
 badinterv = (islatfree == -1) or (islonfree == -1) or (isloctfree == -1) or (isaltfree == -1) or (islsfree == -1)
 if badinterv: 
     errormess = errormess+"<li>Bad syntax. Write a value (or) a range val1 val2 (or) 'all'. Separator shall be either ; : , / _ space"
+badhovmoller = (islsfree == 1 and isloctfree == 1)
+if badhovmoller:
+    errormess = errormess+"<li>Solar longitude and Local time cannot be both free dimensions (not supported)."
 badls = (islsfree == 0 and query.datekey == 1 and (query.xdate < 0. or query.xdate > 360.) and not (query.xdate == 666)) \
      or (islsfree == 1 and (query.xdates > 360. or query.xdatee > 360.)) \
      or (islsfree == 1 and (query.xdates < 0. or query.xdatee < 0.)) 
@@ -283,7 +286,7 @@ if errormess == "":
     elif islonfree == 1: 	query.zonal(nd=64)
     elif islatfree == 1: 	query.meridional(nd=48)
     elif isaltfree == 1: 	query.profile(nd=35)   
-    elif islsfree == 1:         query.seasonal(nd=12)
+    elif islsfree == 1:         query.seasonal(nd=25)
     else:			exit()  
 
     ### generic building of figure
