@@ -122,8 +122,11 @@ class mcd():
     def gettitle(self,oneline=False):
         self.getdustlabel()
         self.title = self.name + " with " + self.dustlabel + "."
-        if self.datekey == 1:    self.title = self.title + " Ls " + str(self.xdate) + "deg."
-        elif self.datekey == 0:  self.title = self.title + " JD " + str(self.xdate) + "."
+        if self.datekey == 1:    
+          if self.xdates is None:
+           self.title = self.title + " Ls " + str(self.xdate) + "deg."
+        elif self.datekey == 0:  
+          self.title = self.title + " JD " + str(self.xdate) + "."
         if not oneline: self.title = self.title + "\n"
         if self.lats is None:  self.title = self.title + " Latitude " + str(self.lat) + "N"
         if self.zonmean and self.lats is not None and self.xzs is not None: 
