@@ -5,8 +5,8 @@ def setbounds(field,vmin=None,vmax=None):
     w = np.where(np.isnan(field) == False)
     fieldclean = field[w]
     if vmin is None and vmax is None:
-      vmin = np.min(fieldclean)
-      vmax = np.max(fieldclean)
+      vmin = np.min(fieldclean) - 1.e-35 # epsilon to avoid blank spaces
+      vmax = np.max(fieldclean) + 1.e-35 # epsilon to avoid blank spaces
     elif vmin is None:        
       vmin = np.min(fieldclean)
       if vmax < np.max(fieldclean): 

@@ -1014,6 +1014,8 @@ class mcd():
         elif self.proj in ['robin']: orientation="horizontal" ; frac = 0.07  ; pad = 0.1  ; lu = 1.0
         elif self.proj in ['cyl']:   orientation="vertical"   ; frac = 0.023 ; pad = 0.03 ; lu = 0.5
         else:                        orientation='vertical'   ; frac = 0.05  ; pad = 0.03 ; lu = 0.5
+        if np.abs(zevmax) == 1e-35: zevmax=0.
+        if np.abs(zevmin) == 1e-35: zevmin=0.
         zelevpal = np.linspace(zevmin,zevmax,num=min([ticks/2+1,21]))
         clb = Figure.colorbar(fig,c,orientation=orientation,format=self.fmt,ticks=zelevpal,\
              fraction=frac,pad=pad,spacing='proportional')
@@ -1111,6 +1113,8 @@ class mcd():
         palette = get_cmap(name=colorb)
         # contour field
         c = yeah.contourf( self.xcoord, self.ycoord, what_I_plot, zelevels, cmap = palette, extend=limtype )
+        if np.abs(zevmax) == 1e-35: zevmax=0.
+        if np.abs(zevmin) == 1e-35: zevmin=0.
         clb = Figure.colorbar(fig,c,orientation='vertical',format=self.fmt,ticks=np.linspace(zevmin,zevmax,num=min([ticks/2+1,21])))
         #clb.set_label(fieldlab)
         ax = fig.gca() ; ax.set_ylabel(self.ylabel) ; ax.set_xlabel(self.xlabel)
