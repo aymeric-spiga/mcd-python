@@ -249,7 +249,8 @@ class mcd():
         if num not in whichfield: errormess("Incorrect subscript in extvar.")
         dastuff = whichfield[num]
         expf = "%.1e"
-        if "(K)" in dastuff:      self.fmt="%.0f"
+        if "variations (K)" in dastuff: self.fmt="%.1f"
+        elif "(K)" in dastuff:      self.fmt="%.0f"
         elif "effective radius" in dastuff: self.fmt=expf
         elif "(Pa)" in dastuff:   self.fmt=expf
         elif "(W/m2)" in dastuff: self.fmt="%.0f"
