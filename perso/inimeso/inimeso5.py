@@ -12,15 +12,14 @@ ksi = 3. / 4. / rho_dust / grav
 nueff = 0.5
 
 ### MCD INSTANCE and SETTINGS (actually, default. but one never knows)
-query = mcd() ; query.zkey = 3 ; query.dust = 2 ; query.hrkey = 1
-query.dust = 29
-#query.dust = 24
+query = mcd() ; query.zkey = 3 ; query.hrkey = 1
 query.toversion5(version="5.2")
 
 ### GET COORDINATES
 lines = open("input_coord", "r").readlines()
 query.lon   = float(split(lines[0])[0]) ; query.lat   = float(split(lines[1])[0]) 
 query.xdate = float(split(lines[2])[0]) ; query.loct  = float(split(lines[3])[0])
+query.dust = float(split(lines[6])[0])
 query.printcoord()
 
 ### OPEN FILES TO BE WRITTEN
