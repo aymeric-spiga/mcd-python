@@ -408,6 +408,7 @@ class mcd():
         ## now MCD request
         if "v5.1" in self.name: from fmcd51 import call_mcd
         elif "v5.2" in self.name: from fmcd52 import call_mcd
+        elif "v5.3" in self.name: from fmcd53 import call_mcd
         else: from fmcd import call_mcd
         (self.pres, self.dens, self.temp, self.zonwind, self.merwind, \
          self.meanvar, self.extvar, self.seedout, self.ierr) \
@@ -437,6 +438,7 @@ class mcd():
         name = str(self.zkey)+strxz+strlon+strlat+str(self.hrkey)+strdate+strloct+str(self.dust)
         if "v5.1" in self.name: name = "v51_" + name
         elif "v5.2" in self.name: name = "v52_" + name
+        elif "v5.3" in self.name: name = "v53_" + name
         return name
 
     def printcoord(self):

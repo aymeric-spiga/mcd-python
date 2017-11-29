@@ -23,6 +23,8 @@ NETCDF=/home/marshttp/NETCDF/netcdf64-4.0.1_gfortran_fPIC/
 wheremcd=/home/marshttp/MCD_v5.2/mcd/
 num="52"
 
+wheremcd="/home/marshttp/MCD5.3/mcd/"
+num="53"
 
 
 ### local use -- version 5
