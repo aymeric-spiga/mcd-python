@@ -388,6 +388,9 @@ class mcd():
         elif num == "groundice":
             if "v5" in self.name:  num = 34
             else:                  num = 11 # an undefined variable to avoid misleading output
+        elif num == "rice":
+            if "v5" in self.name:  num = 45
+            else:                  num = 11 # an undefined variable to avoid misleading output
         elif not isinstance(num, np.int): errormess("field reference not found.")
         return num
 
