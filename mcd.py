@@ -246,6 +246,8 @@ class mcd():
           whichfield[74] = "H column (kg/m2)"
           whichfield[75] = "H2 column (kg/m2)"
           whichfield[76] = "Total Electronic Content (TEC) (m-2)"
+          whichfield[77] = "He column (kg/m2)"
+          whichfield[78] = "[He] vol. mixing ratio (mol/mol)"
         if num not in whichfield: errormess("Incorrect subscript in extvar.")
         dastuff = whichfield[num]
         expf = "%.1e"
@@ -384,6 +386,12 @@ class mcd():
             else:                  num = 11 # an undefined variable to avoid misleading output
         elif num == "ecol":
             if "v5" in self.name:  num = 76
+            else:                  num = 11 # an undefined variable to avoid misleading output
+        elif num == "he":
+            if "v5" in self.name:  num = 78
+            else:                  num = 11 # an undefined variable to avoid misleading output
+        elif num == "hecol":
+            if "v5" in self.name:  num = 77
             else:                  num = 11 # an undefined variable to avoid misleading output
         elif num == "groundice":
             if "v5" in self.name:  num = 34
