@@ -641,35 +641,55 @@ class mcd():
       for i in range(nd): self.xdate = self.xcoord[i] ; self.update() ; self.put1d(i)
       self.xdate = save
 
-    def getascii(self,tabtodo,filename="output.txt"):
+    def getascii(self,tabtodo,filename="output.txt",log=None):
     ### print out values in an ascii file
+      import datetime
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       asciifile = open(filename, "w")
+      if log is not None:
+          logfile = open(log, "a")
       for i in range(len(tabtodo)):  
+          txt = "##########################################################################################\n"
+          ### print out header
           (field, fieldlab) = self.definefield(tabtodo[i])
           self.gettitle(oneline=True)
-          asciifile.write("### " + self.title + "\n")
-          asciifile.write("### " + self.ack + "\n")
-          asciifile.write("### Column 1 is " + self.xlabel + "\n")
+          txt = txt + "### " + self.title + "\n"
+          txt = txt.replace("scenario.","scenario.\n###")
+          txt = txt + "### --------------------------------------------------------------------------------------\n"
+          txt = txt + "### Column 1 is " + self.xlabel + "\n"
           dim = field.ndim
           if (dim == 1):
-            asciifile.write("### Column 2 is " + fieldlab + "\n")
-            for ix in range(len(self.xcoord)):
-              asciifile.write("%15.5e%15.5e\n" % ( self.xcoord[ix], field[ix] ) )
+            txt = txt + "### Column 2 is " + fieldlab + "\n"
+            data = txt
           elif (dim == 2):
-            asciifile.write("### Columns 2+ are " + fieldlab + "\n")
-            asciifile.write("### Line 1 is " + self.ylabel + "\n")
-            asciifile.write("---- ||")
+            txt = txt + "### Columns 2+ are " + fieldlab + "\n"
+            txt = txt + "### Line 1 is " + self.ylabel + "\n"
+          txt = txt + "### --------------------------------------------------------------------------------------\n"
+          txt = txt + "### Retrieved on: " + datetime.datetime.today().isoformat() + "\n"
+          txt = txt + "### " + self.ack + "\n"
+          txt = txt + "##########################################################################################\n"
+          ### print out data
+          data = txt
+          if (dim == 1):
+            for ix in range(len(self.xcoord)):
+              data = data + "%15.5e%15.5e\n" % ( self.xcoord[ix], field[ix] )
+          elif (dim == 2):
+            data = data + "---- ||"
             for iy in range(len(self.ycoord)):
-              asciifile.write("%15.5e" % ( self.ycoord[iy] ) )
-            asciifile.write("\n-----------------------------------\n") 
+              data = data + "%15.5e" % ( self.ycoord[iy] )
+            data = data + "\n-----------------------------------\n"
             for ix in range(len(self.xcoord)):
              zestr = "%+.03d ||" % (self.xcoord[ix])
              for iy in range(len(self.ycoord)):
                zestr = zestr + "%15.5e" % (field[ix,iy])
-             asciifile.write(zestr+"\n")
+             data = data + zestr+"\n"
+          asciifile.write(data)
+          if log is not None:
+             logfile.write(txt)
       asciifile.close()
+      if log is not None:
+         logfile.close()
       return 
 
     def makeplot1d(self,choice):
