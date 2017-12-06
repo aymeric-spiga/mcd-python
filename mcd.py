@@ -139,8 +139,9 @@ class mcd():
         if self.datekey == 1:
           if self.locts is None:
             self.title = self.title + " Local time " + str(self.loct) + "h"
-            if not self.fixedlt:  self.title = self.title + " (at longitude 0) "
-            else: self.title = self.title + " (at all longitudes) "
+            if self.lons is not None: # if longitude is a free dimension
+              if not self.fixedlt:  self.title = self.title + " (at longitude 0) "
+              else: self.title = self.title + " (fixed at all longitudes) "
 
     def getextvarlab(self,num):
         whichfield = { \
