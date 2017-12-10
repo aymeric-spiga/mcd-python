@@ -78,7 +78,7 @@ class mcd():
         ## plot stuff
         self.xlabel = None ; self.ylabel = None ; self.title = ""
         self.vertplot = False
-        self.fmt = "%.2e" 
+        self.fmt = "%.1e" 
         self.colorm = "jet"
         self.fixedlt = False
         self.zonmean = False
@@ -86,10 +86,17 @@ class mcd():
         self.max2d = None
         self.dpi = 80.
         self.islog = False
+        self.proj = False
+        self.trans = 0.0
+        self.iscontour = False
+        self.plat = 0.0
+        self.plon = 0.0
+        self.latpoint = None
+        self.lonpoint = None
 
-    def toversion5(self):
-        self.name      = "MCD v5.1"
-        self.dset      = '/home/marshttp/MCD_v5.1/data/'
+    def toversion5(self,version="5.1"):
+        self.name      = "MCD v"+version
+        self.dset      = '/home/marshttp/MCD_v'+version+'/data/'
         self.extvarkey = np.ones(100)
 
     def viking1(self): self.name = "Viking 1 site. MCD v4.3 output" ; self.lat = 22.48 ; self.lon = -49.97 ; self.xdate = 97.
@@ -110,12 +117,16 @@ class mcd():
         elif self.dust == 6: self.dustlabel = "dust storm maximum solar scenario"
         elif self.dust == 7: self.dustlabel = "warm scenario (dusty, maximum solar)"
         elif self.dust == 8: self.dustlabel = "cold scenario (low dust, minimum solar)"
+        elif self.dust > 20: self.dustlabel = "Martian Year "+str(self.dust)+" scenario"
 
     def gettitle(self,oneline=False):
         self.getdustlabel()
         self.title = self.name + " with " + self.dustlabel + "."
-        if self.datekey == 1:    self.title = self.title + " Ls " + str(self.xdate) + "deg."
-        elif self.datekey == 0:  self.title = self.title + " JD " + str(self.xdate) + "."
+        if self.datekey == 1:    
+          if self.xdates is None:
+           self.title = self.title + " Ls " + str(self.xdate) + "deg."
+        elif self.datekey == 0:  
+          self.title = self.title + " JD " + str(self.xdate) + "."
         if not oneline: self.title = self.title + "\n"
         if self.lats is None:  self.title = self.title + " Latitude " + str(self.lat) + "N"
         if self.zonmean and self.lats is not None and self.xzs is not None: 
@@ -125,9 +136,12 @@ class mcd():
         if self.xzs is None:   
             self.vertunits()
             self.title = self.title + " Altitude " + str(self.xz) + " " + self.vunits
-        if self.locts is None:
+        if self.datekey == 1:
+          if self.locts is None:
             self.title = self.title + " Local time " + str(self.loct) + "h"
-            if not self.fixedlt:  self.title = self.title + " (at longitude 0) "
+            if self.lons is not None: # if longitude is a free dimension
+              if not self.fixedlt:  self.title = self.title + " (at longitude 0) "
+              else: self.title = self.title + " (fixed at all longitudes) "
 
     def getextvarlab(self,num):
         whichfield = { \
@@ -233,15 +247,21 @@ class mcd():
           whichfield[74] = "H column (kg/m2)"
           whichfield[75] = "H2 column (kg/m2)"
           whichfield[76] = "Total Electronic Content (TEC) (m-2)"
+          whichfield[77] = "He column (kg/m2)"
+          whichfield[78] = "[He] vol. mixing ratio (mol/mol)"
         if num not in whichfield: errormess("Incorrect subscript in extvar.")
         dastuff = whichfield[num]
-        if "(K)" in dastuff:      self.fmt="%.0f"
-        elif "effective radius" in dastuff: self.fmt="%.2e"
-        elif "(Pa)" in dastuff:   self.fmt="%.2e"
+        expf = "%.1e"
+        if "variations (K)" in dastuff: self.fmt="%.1f"
+        elif "(K)" in dastuff:      self.fmt="%.0f"
+        elif "effective radius" in dastuff: self.fmt=expf
+        elif "(Pa)" in dastuff:   self.fmt=expf
         elif "(W/m2)" in dastuff: self.fmt="%.0f"
         elif "(m/s)" in dastuff:  self.fmt="%.1f"
+        elif "(mol/mol)" in dastuff: self.fmt=expf
+        elif "(kg/m2)" in dastuff: self.fmt=expf
         elif "(m)" in dastuff:    self.fmt="%.0f"
-        else:                     self.fmt="%.2e"
+        else:                     self.fmt=expf
         return dastuff
 
     def convertlab(self,num):        
@@ -274,6 +294,8 @@ class mcd():
         elif num == "ps_ddv": num = 22
         elif num == "p_ddv": num = 21
         elif num == "t_ddv": num = 23
+        elif num == "u_ddv": num = 24
+        elif num == "v_ddv": num = 25
         elif num == "w": num = 26
         elif num == "tsurfmx": num = 16
         elif num == "tsurfmn": num = 17
@@ -366,8 +388,17 @@ class mcd():
         elif num == "ecol":
             if "v5" in self.name:  num = 76
             else:                  num = 11 # an undefined variable to avoid misleading output
+        elif num == "he":
+            if "v5" in self.name:  num = 78
+            else:                  num = 11 # an undefined variable to avoid misleading output
+        elif num == "hecol":
+            if "v5" in self.name:  num = 77
+            else:                  num = 11 # an undefined variable to avoid misleading output
         elif num == "groundice":
             if "v5" in self.name:  num = 34
+            else:                  num = 11 # an undefined variable to avoid misleading output
+        elif num == "rice":
+            if "v5" in self.name:  num = 45
             else:                  num = 11 # an undefined variable to avoid misleading output
         elif not isinstance(num, np.int): errormess("field reference not found.")
         return num
@@ -384,9 +415,13 @@ class mcd():
             self.locts = abs(self.locts)%24
             self.locte = abs(self.locte)%24
             if self.locts == self.locte: self.locte = self.locts + 24
+        ## ensure that local time = 0 when using Earth dates
+        if self.datekey == 0: self.loct = 0.
         ## now MCD request
-        if "v5" in self.name: from fmcd5 import call_mcd
-        else:                 from fmcd import call_mcd
+        if "v5.1" in self.name: from fmcd51 import call_mcd
+        elif "v5.2" in self.name: from fmcd52 import call_mcd
+        elif "v5.3" in self.name: from fmcd53 import call_mcd
+        else: from fmcd import call_mcd
         (self.pres, self.dens, self.temp, self.zonwind, self.merwind, \
          self.meanvar, self.extvar, self.seedout, self.ierr) \
          = \
@@ -411,8 +446,11 @@ class mcd():
         strlon = str(self.lon)+str(self.lons)+str(self.lone)
         strxz = str(self.xz)+str(self.xzs)+str(self.xze)
         strloct = str(self.loct)+str(self.locts)+str(self.locte)
-        name = str(self.zkey)+strxz+strlon+strlat+str(self.hrkey)+str(self.datekey)+str(self.xdate)+strloct+str(self.dust)
-        if "v5" in self.name: name = "v5_" + name
+        strdate = str(self.datekey)+str(self.xdate)+str(self.xdates)+str(self.xdatee)
+        name = str(self.zkey)+strxz+strlon+strlat+str(self.hrkey)+strdate+strloct+str(self.dust)
+        if "v5.1" in self.name: name = "v51_" + name
+        elif "v5.2" in self.name: name = "v52_" + name
+        elif "v5.3" in self.name: name = "v53_" + name
         return name
 
     def printcoord(self):
@@ -596,7 +634,7 @@ class mcd():
       for i in range(nd): self.xz = self.xcoord[i] ; self.update() ; self.put1d(i)
       self.xz = save
 
-    def seasonal(self,nd=12):
+    def seasonal(self,nd=25):
     ### retrieve a seasonal slice
       save = self.xdate
       self.xlabel = "Areocentric longitude (degrees)"
@@ -604,21 +642,55 @@ class mcd():
       for i in range(nd): self.xdate = self.xcoord[i] ; self.update() ; self.put1d(i)
       self.xdate = save
 
-    def getascii(self,tabtodo,filename="output.txt"):
+    def getascii(self,tabtodo,filename="output.txt",log=None):
     ### print out values in an ascii file
+      import datetime
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       asciifile = open(filename, "w")
+      if log is not None:
+          logfile = open(log, "a")
       for i in range(len(tabtodo)):  
+          txt = "##########################################################################################\n"
+          ### print out header
           (field, fieldlab) = self.definefield(tabtodo[i])
           self.gettitle(oneline=True)
-          asciifile.write("### " + self.title + "\n")
-          asciifile.write("### " + self.ack + "\n")
-          asciifile.write("### Column 1 is " + self.xlabel + "\n")
-          asciifile.write("### Column 2 is " + fieldlab + "\n")
-          for ix in range(len(self.xcoord)):
-              asciifile.write("%15.5e%15.5e\n" % ( self.xcoord[ix], field[ix] ) )
+          txt = txt + "### " + self.title + "\n"
+          txt = txt.replace("scenario.","scenario.\n###")
+          txt = txt + "### --------------------------------------------------------------------------------------\n"
+          txt = txt + "### Column 1 is " + self.xlabel + "\n"
+          dim = field.ndim
+          if (dim == 1):
+            txt = txt + "### Column 2 is " + fieldlab + "\n"
+            data = txt
+          elif (dim == 2):
+            txt = txt + "### Columns 2+ are " + fieldlab + "\n"
+            txt = txt + "### Line 1 is " + self.ylabel + "\n"
+          txt = txt + "### --------------------------------------------------------------------------------------\n"
+          txt = txt + "### Retrieved on: " + datetime.datetime.today().isoformat() + "\n"
+          txt = txt + "### " + self.ack + "\n"
+          txt = txt + "##########################################################################################\n"
+          ### print out data
+          data = txt
+          if (dim == 1):
+            for ix in range(len(self.xcoord)):
+              data = data + "%15.5e%15.5e\n" % ( self.xcoord[ix], field[ix] )
+          elif (dim == 2):
+            data = data + "---- ||"
+            for iy in range(len(self.ycoord)):
+              data = data + "%15.5e" % ( self.ycoord[iy] )
+            data = data + "\n-----------------------------------\n"
+            for ix in range(len(self.xcoord)):
+             zestr = "%+.03d ||" % (self.xcoord[ix])
+             for iy in range(len(self.ycoord)):
+               zestr = zestr + "%15.5e" % (field[ix,iy])
+             data = data + zestr+"\n"
+          asciifile.write(data)
+          if log is not None:
+             logfile.write(txt)
       asciifile.close()
+      if log is not None:
+         logfile.close()
       return 
 
     def makeplot1d(self,choice):
@@ -677,17 +749,19 @@ class mcd():
         if not self.vertplot and self.islog: ax.set_yscale('log')
         if self.vertplot and self.islog: ax.set_xscale('log')
 
-        #ax.ticklabel_format(useOffset=False,axis='x')
-        #ax.ticklabel_format(useOffset=False,axis='y')
-
         if self.lats is not None:      ax.set_xticks(np.arange(-90,91,15)) ; ax.set_xbound(lower=self.lats, upper=self.late)
         elif self.lons is not None:    ax.set_xticks(np.arange(-360,361,30)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
         elif self.locts is not None:   ax.set_xticks(np.arange(0,26,2)) ; ax.set_xbound(lower=self.locts, upper=self.locte)
+        elif self.xdates is not None:  ax.set_xticks(np.arange(0,361,30)) ; ax.set_xbound(lower=self.xdates, upper=self.xdatee)
+
+        ## does not work
+        #ax.ticklabel_format(useOffset=False,axis='x')
+        #ax.ticklabel_format(useOffset=False,axis='y')
 
         ax.grid(True, linestyle=':', color='grey')
 
       self.gettitle()
-      fig.text(0.5, 0.95, self.title, ha='center')
+      fig.text(0.5, 0.95, self.title, ha='center', transform=fig.gca().transAxes, fontweight='bold')
       fig.text(0.5, 0.01, self.ack, ha='center')
       canvas = FigureCanvasAgg(fig)
       # The size * the dpi gives the final image size
@@ -768,34 +842,60 @@ class mcd():
       self.loct = umst #fixedlt false for this case
       self.lon = save1 ; self.xz = save2 ; self.loct = save3 ; self.lat = save4
 
-    def hovmoller(self,ndtime=25,ndcoord=20,typex="lat"):
+    def hovmoller(self,ndcoord=20,typex="lat",typey="loct"):
     ### retrieve a time/other coordinate slice
-      save1 = self.lat ; save2 = self.xz ; save3 = self.loct ; save4 = self.lon
+      save1 = self.lat ; save2 = self.xz ; save3 = self.loct ; save4 = self.lon ; save5 = self.xdate
+      # set up time axis
+      ndtime=25
+      if typey == "loct":
+          labeltime = "Local time (Martian hour)"
+          zestart,zeend = 0.,24.
+          zestarti,zeendi = self.locts,self.locte
+          zeyaxis = True
+      elif typey == "ls":
+          labeltime = "Areocentric longitude (degrees)"    
+          zestart,zeend = 0.,360.
+          zestarti,zeendi = self.xdates,self.xdatee
+          zeyaxis = False
+      # hovmoller with ls is more standard with ls as horizontal axis
+      if typey == "ls" or typex == "alt":
+          ndx,ndy = ndtime,ndcoord
+      else:
+          ndx,ndy = ndcoord,ndtime
+      # set up spatial axis
       if typex == "lat": 
-          ndx = ndcoord ; self.xlabel = "North latitude (degrees)" 
-          ndy = ndtime ; self.ylabel = "Local time (Martian hour)"
+          self.xlabel = "North latitude (degrees)" 
+          self.ylabel = labeltime
+          if typey == "ls": self.xlabel,self.ylabel = self.ylabel,self.xlabel
           self.prepare(ndx=ndx,ndy=ndy)
-          self.ininterv(-90.,90.,ndx,start=self.lats,end=self.late)
-          self.ininterv(0.,24.,ndy,start=self.locts,end=self.locte,yaxis=True)
+          self.ininterv(-90.,90.,ndcoord,start=self.lats,end=self.late,yaxis=(not zeyaxis))
+          self.ininterv(zestart,zeend,ndtime,start=zestarti,end=zeendi,yaxis=zeyaxis)
       elif typex == "lon":
-          ndx = ndcoord ; self.xlabel = "East longitude (degrees)"
-          ndy = ndtime ; self.ylabel = "Local time (Martian hour)"
+          self.xlabel = "East longitude (degrees)"
+          self.ylabel = labeltime
+          if typey == "ls": self.xlabel,self.ylabel = self.ylabel,self.xlabel
           self.prepare(ndx=ndx,ndy=ndy)
-          self.ininterv(-180.,180.,ndx,start=self.lons,end=self.lone)
-          self.ininterv(0.,24.,ndy,start=self.locts,end=self.locte,yaxis=True)
+          self.ininterv(-180.,180.,ndcoord,start=self.lons,end=self.lone,yaxis=(not zeyaxis))
+          self.ininterv(zestart,zeend,ndtime,start=zestarti,end=zeendi,yaxis=zeyaxis)
       elif typex == "alt":
-          ndy = ndcoord ; self.vertlabel() ; self.ylabel = self.xlabel
-          ndx = ndtime ; self.xlabel = "Local time (Martian hour)"
+          self.vertlabel() ; self.ylabel = self.xlabel
+          self.xlabel = labeltime
           self.prepare(ndx=ndx,ndy=ndy)
           self.vertaxis(ndy,yaxis=True)
-          self.ininterv(0.,24.,ndx,start=self.locts,end=self.locte)
+          self.ininterv(zestart,zeend,ndx,start=zestarti,end=zeendi)
       for i in range(ndx):
        for j in range(ndy):
-         if typex == "lat":   self.lat = self.xcoord[i] ; self.loct = self.ycoord[j]
-         elif typex == "lon": self.lon = self.xcoord[i] ; self.loct = self.ycoord[j]
-         elif typex == "alt": self.xz = self.ycoord[j] ; self.loct = self.xcoord[i]
+         tup = self.xcoord[i],self.ycoord[j]
+         # fill in the spatial and time axis
+         if typex == "lat" and typey == "loct": self.lat,self.loct  = tup
+         if typex == "lon" and typey == "loct": self.lon,self.loct  = tup
+         if typex == "alt" and typey == "loct": self.loct,self.xz   = tup
+         if typex == "lat" and typey == "ls":   self.xdate,self.lat = tup
+         if typex == "lon" and typey == "ls":   self.xdate,self.lon = tup
+         if typex == "alt" and typey == "ls":   self.xdate,self.xz  = tup
+         # query field
          self.update() ; self.put2d(i,j)
-      self.lat = save1 ; self.xz = save2 ; self.loct = save3 ; self.lon = save4
+      self.lat = save1 ; self.xz = save2 ; self.loct = save3 ; self.lon = save4 ; self.xdate = save5
 
     def put2d(self,i,j):
     ## fill in subscript i,j in output arrays
@@ -851,7 +951,16 @@ class mcd():
       from matplotlib.backends.backend_agg import FigureCanvasAgg
       from matplotlib.cm import get_cmap
       from matplotlib import rcParams 
-      #from mpl_toolkits.basemap import Basemap # does not work
+      import matplotlib.pyplot as plt
+      ####
+      isproj = (self.proj is not None)
+      if isproj:
+        from mpl_toolkits.basemap import Basemap
+      ####
+      if (self.trans > 0.): isback = True
+      else: isback = False
+      if (self.trans > 0.99): self.iscontour = True
+      ####
 
       try:
         from Scientific.IO import NetCDF
@@ -866,12 +975,7 @@ class mcd():
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
 
-      howmanyplots = len(tabtodo)
-      if howmanyplots == 1: fig = Figure(figsize=(16,8)) 
-      elif howmanyplots == 2: fig = Figure(figsize=(8,8)) 
-      elif howmanyplots == 3: fig = Figure(figsize=(8,16)) 
-      elif howmanyplots == 4: fig = Figure(figsize=(16,8)) 
-
+      fig = mcdcomp.setfig(len(tabtodo),proj=self.proj)
       subv,subh = mcdcomp.definesubplot( len(tabtodo) , fig )
 
       for i in range(len(tabtodo)):
@@ -882,97 +986,157 @@ class mcd():
         (field, fieldlab) = self.definefield(choice)
         if incwind: (windx, fieldlabwx) = self.definefield("u") ; (windy, fieldlabwy) = self.definefield("v")
 
-        proj="moll" ; colorb= self.colorm ; ndiv=20 ; zeback="molabw" ; trans=1.0 #0.6
+        ndiv = 40
         vecx=None ; vecy=None ; stride=2
-        lon = self.xcoord
-        lat = self.ycoord
-        
-        #[lon2d,lat2d] = np.meshgrid(lon,lat)
-        ##### define projection and background. define x and y given the projection
-        ##[wlon,wlat] = mcdcomp.latinterv()
-        ##yeahm = mcdcomp.define_proj(proj,wlon,wlat,back=zeback,blat=None,blon=None)
-        ##x, y = yeahm(lon2d, lat2d)
-        #map = Basemap(projection='ortho',lat_0=45,lon_0=-100)
-        #x, y = map(lon2d, lat2d)
+        lon = self.xcoord ; lat = self.ycoord
+     
+        if isproj: 
+          ##
+          if self.plat is None: self.plat = 0.5*(self.lats+self.late)
+          if self.plon is None: self.plon = 0.5*(self.lons+self.lone)
+          ##
+          if self.proj == "cyl": yeah = Basemap(projection=self.proj,\
+                                                llcrnrlat=self.lats,urcrnrlat=self.late,\
+                                                llcrnrlon=self.lons,urcrnrlon=self.lone,\
+                                                ax=yeah,resolution=None)
+          elif self.proj == "laea": yeah = Basemap(projection=self.proj,ax=yeah,resolution=None,\
+                                                   lon_0=self.plon,lat_0=self.plat,\
+                                                   llcrnrlat=self.lats,urcrnrlat=self.late,\
+                                                   llcrnrlon=self.lons,urcrnrlon=self.lone)
+          elif self.proj == "npstere": yeah = Basemap(projection=self.proj,boundinglat=self.plat,lon_0=self.plon,resolution=None,ax=yeah)
+          elif self.proj == "spstere": yeah = Basemap(projection=self.proj,boundinglat=self.plat,lon_0=self.plon,resolution=None,ax=yeah)
+          elif self.proj == "ortho": yeah = Basemap(projection=self.proj,lat_0=self.plat,lon_0=self.plon,resolution=None,ax=yeah)
+          elif self.proj == "robin": yeah = Basemap(projection=self.proj,lon_0=0.,resolution=None,ax=yeah)
+          ## NB: resolution=None is here to avoid loading coastlines which caused problems with some (plat,plon) couples
+          ### background
+          if isback:
+            img="/home/marshttp/www-mars/mcd_python/MarsMap_2500x1250.jpg"
+            yeah.warpimage(img,scale=0.75)
+          mertab,partab = np.r_[-180.:180.:30.],np.r_[-90.:90.:15.]
+          merlab,parlab = [0,0,0,1],[1,0,0,0]
+          #format = '%.1f'
 
-        #### TEMP
-        x = lon ; y = lat
+          yeah.drawmeridians(mertab,color="grey",labels=merlab)
+          yeah.drawparallels(partab,color="grey",labels=parlab)
+          [lon2d,lat2d] = np.meshgrid(lon,lat)
+          x, y = yeah(lon2d, lat2d)
+        else:
+          x = lon ; y = lat
 
         ## define field. bound field.
         what_I_plot = np.transpose(field)
-        zevmin, zevmax = mcdcomp.calculate_bounds(what_I_plot,vmin=self.min2d,vmax=self.max2d)  
-        what_I_plot = mcdcomp.bounds(what_I_plot,zevmin,zevmax)
+        zevmin,zevmax,limtype = mcdcomp.setbounds(what_I_plot,vmin=self.min2d,vmax=self.max2d)
         ## define contour field levels. define color palette
         ticks = ndiv + 1
         zelevels = np.linspace(zevmin,zevmax,ticks)
-        palette = get_cmap(name=colorb)
+        palette = get_cmap(name=self.colorm)
 
-        try:
-            # You can set negative contours to be solid instead of dashed:
-            rcParams['contour.negative_linestyle'] = 'solid'
-            ## contours topo
-            zelevc = np.linspace(-9.,20.,11)
-            yeah.contour( xc, yc, fieldc, zelevc, colors='black',linewidths = 0.4)
-            yeah.contour( np.array(xc) + 360., yc, fieldc, zelevc, colors='black',linewidths = 0.4)
-            yeah.contour( np.array(xc) - 360., yc, fieldc, zelevc, colors='black',linewidths = 0.4)
-        except:
-            pass
+        ## topography contours
+        rcParams['contour.negative_linestyle'] = 'solid' # negative contours solid instead of dashed
+        zelevc = np.linspace(-9.,20.,11,0.)
+        if isproj:
+           [xc2,yc2] = np.meshgrid(xc,yc)
+           xc3,yc3 = yeah(xc2,yc2)
+           yeah.contour( xc3, yc3, fieldc, zelevc, colors='black',linewidths = 0.4 )
+        else:
+           yeah.contour( np.array(xc) + 360., yc, fieldc, zelevc, colors='black',linewidths = 0.4)
+           yeah.contour( np.array(xc) - 360., yc, fieldc, zelevc, colors='black',linewidths = 0.4)
 
         # contour field
-        c = yeah.contourf( x, y, what_I_plot, zelevels, cmap = palette, alpha = trans )
-        clb = Figure.colorbar(fig,c,orientation='vertical',format=self.fmt,ticks=np.linspace(zevmin,zevmax,num=min([ticks/2+1,21])))
-        clb.set_label(fieldlab)
+        if self.iscontour: c = yeah.contour( x, y, what_I_plot, zelevels, cmap = palette )
+        else: c = yeah.contourf( x, y, what_I_plot, zelevels, cmap = palette, alpha = 1.-self.trans, extend=limtype )
+
+        # colorbar
+        if not isproj:               orientation='vertical'   ; frac = 0.15  ; pad = 0.04 ; lu = 0.5
+        elif self.proj in ['moll']:  orientation="horizontal" ; frac = 0.08  ; pad = 0.03 ; lu = 1.0
+        elif self.proj in ['robin']: orientation="horizontal" ; frac = 0.07  ; pad = 0.1  ; lu = 1.0
+        elif self.proj in ['cyl']:   orientation="vertical"   ; frac = 0.023 ; pad = 0.03 ; lu = 0.5
+        else:                        orientation='vertical'   ; frac = 0.05  ; pad = 0.03 ; lu = 0.5
+        if np.abs(zevmax) == 1e-35: zevmax=0.
+        if np.abs(zevmin) == 1e-35: zevmin=0.
+        zelevpal = np.linspace(zevmin,zevmax,num=min([ticks/2+1,21]))
+        clb = Figure.colorbar(fig,c,orientation=orientation,format=self.fmt,ticks=zelevpal,\
+             fraction=frac,pad=pad,spacing='proportional')
+        #clb.set_label(fieldlab)
+
+        # wind vectors
         if incwind:
-          [x2d,y2d] = np.meshgrid(x,y)
-          yeah.quiver(x2d,y2d,np.transpose(windx),np.transpose(windy))
+          if isproj: x2d,y2d = x,y
+          else: [x2d,y2d] = np.meshgrid(lon,lat)
+          wcolor = str(self.trans) # trans=0 black, trans=100 white
+          yeah.quiver(x2d,y2d,np.transpose(windx),np.transpose(windy),color=wcolor)
 
-        ax = fig.gca() ; ax.set_ylabel("Latitude") ; ax.set_xlabel("Longitude")
+        # add a point (TBD: text, use ax.annotate)
+        if (self.lonpoint is not None) and (self.latpoint is not None):
+          xpt,ypt = yeah(self.lonpoint,self.latpoint) # compute the native map projection coordinates
+          yeah.plot(xpt,ypt,'go',markersize=8) # plot filled circle at the location
 
-        # make intervals 
-        self.makeinterv()
-        ax.set_xticks(np.arange(-360,361,self.loninterv)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
-        ax.set_yticks(np.arange(-90,91,self.latinterv)) ; ax.set_ybound(lower=self.lats, upper=self.late)
+        # operation on axis: title, labels, ticks, etc.
+        ax = fig.gca()
+        rcParams['axes.titlesize'] = rcParams['font.size']
+        ax.set_title(fieldlab)
+        if not isproj:
+          ax.set_ylabel("Latitude") ; ax.set_xlabel("Longitude")
+          # make intervals 
+          self.makeinterv()
+          ax.set_xticks(np.arange(-360,361,self.loninterv)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
+          ax.set_yticks(np.arange(-90,91,self.latinterv)) ; ax.set_ybound(lower=self.lats, upper=self.late)
+
+      ## titles and final production
       self.gettitle()
-      fig.text(0.5, 0.95, self.title, ha='center')
+      #ax.set_title(self.title,x=0.5,y=1.05)
+      #ax.set_xlabel('\n'+self.ack,x=0.5,y=0.05)
+
+      fig.text(0.5, 0.95, self.title, ha='center', transform=fig.gca().transAxes, fontweight='bold')
       fig.text(0.5, 0.01, self.ack, ha='center')
       canvas = FigureCanvasAgg(fig)
       # The size * the dpi gives the final image size
       #   a4"x4" image * 80 dpi ==> 320x320 pixel image
-      canvas.print_figure(figname, dpi=self.dpi)
+      canvas.print_figure(figname, dpi=self.dpi) 
+             #, bbox_inches='tight') removes title. and ax.set_title cannot set a global title for multiplots.
+
+
 
     def htmlplot2d(self,tabtodo,figname="temp.png"):
     ### complete 2D figure with possible multiplots
     ### added in 10/2012 for online MCD
     ### see http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
       import mcdcomp as mcdcomp
+      from matplotlib import rcParams
       from matplotlib.figure import Figure
       from matplotlib.backends.backend_agg import FigureCanvasAgg
       from matplotlib.cm import get_cmap
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
 
-      howmanyplots = len(tabtodo)
-      if howmanyplots == 1: fig = Figure(figsize=(16,8))
-      elif howmanyplots == 2: fig = Figure(figsize=(8,8))
-      elif howmanyplots == 3: fig = Figure(figsize=(8,16))
-      elif howmanyplots == 4: fig = Figure(figsize=(16,8))
-
+      fig = mcdcomp.setfig(len(tabtodo))
       subv,subh = mcdcomp.definesubplot( len(tabtodo) , fig )
 
       for i in range(len(tabtodo)):
         yeah = fig.add_subplot(subv,subh,i+1)
         choice = tabtodo[i]
 
+        # explore all types of 2D plots
+        # -- retrieve kind of time axis
+        if self.locts is not None: zetypey = "loct"
+        elif self.xdates is not None: zetypey = "ls"
+        else: zetypey = None
+        # -- if longitude is free dimension
         if self.lons is not None:    
-           if self.locts is None:  self.secalt(ndx=64,ndy=35,typex="lon")
-           else:                   self.hovmoller(ndcoord=64,typex="lon")
+           if zetypey is None:
+             self.secalt(ndx=64,ndy=35,typex="lon")
+           else:
+             self.hovmoller(ndcoord=64,typex="lon",typey=zetypey)
         elif self.lats is not None:  
-           if self.locts is None:  
-               if self.zonmean:   self.zonalmean()
-               else:         self.secalt(ndx=48,ndy=35,typex="lat")
-           else:                   self.hovmoller(ndcoord=48,typex="lat")
+           if zetypey is None:  
+               if self.zonmean:    
+                 self.zonalmean()
+               else:               
+                 self.secalt(ndx=48,ndy=35,typex="lat")
+           else:                   
+             self.hovmoller(ndcoord=48,typex="lat",typey=zetypey)
         else:
-           self.hovmoller(ndcoord=35,typex="alt")
+           self.hovmoller(ndcoord=35,typex="alt",typey=zetypey)
 
         (field, fieldlab) = self.definefield(choice)
 
@@ -980,25 +1144,40 @@ class mcd():
 
         ## define field. bound field.
         what_I_plot = np.transpose(field)
-        zevmin, zevmax = mcdcomp.calculate_bounds(what_I_plot,vmin=self.min2d,vmax=self.max2d)  
-        what_I_plot = mcdcomp.bounds(what_I_plot,zevmin,zevmax)
+        zevmin,zevmax,limtype = mcdcomp.setbounds(what_I_plot,vmin=self.min2d,vmax=self.max2d)  
         ## define contour field levels. define color palette
         ticks = ndiv + 1
         zelevels = np.linspace(zevmin,zevmax,ticks)
         palette = get_cmap(name=colorb)
         # contour field
-        c = yeah.contourf( self.xcoord, self.ycoord, what_I_plot, zelevels, cmap = palette )
+        c = yeah.contourf( self.xcoord, self.ycoord, what_I_plot, zelevels, cmap = palette, extend=limtype )
+        if np.abs(zevmax) == 1e-35: zevmax=0.
+        if np.abs(zevmin) == 1e-35: zevmin=0.
         clb = Figure.colorbar(fig,c,orientation='vertical',format=self.fmt,ticks=np.linspace(zevmin,zevmax,num=min([ticks/2+1,21])))
-        clb.set_label(fieldlab)
+        #clb.set_label(fieldlab)
         ax = fig.gca() ; ax.set_ylabel(self.ylabel) ; ax.set_xlabel(self.xlabel)
+        rcParams['axes.titlesize'] = rcParams['font.size']
+        ax.set_title(fieldlab)
 
         self.makeinterv()
-        if self.lons is not None:   ax.set_xticks(np.arange(-360,361,self.loninterv)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
-        elif self.lats is not None: ax.set_xticks(np.arange(-90,91,self.latinterv)) ; ax.set_xbound(lower=self.lats, upper=self.late)
+        if self.lons is not None:
+          if self.xdates is not None:
+            ax.set_yticks(np.arange(-360,361,self.loninterv)) ; ax.set_ybound(lower=self.lons, upper=self.lone)
+          else:
+            ax.set_xticks(np.arange(-360,361,self.loninterv)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
+        elif self.lats is not None: 
+          if self.xdates is not None:
+            ax.set_yticks(np.arange(-90,91,self.latinterv)) ; ax.set_ybound(lower=self.lats, upper=self.late)
+          else:
+            ax.set_xticks(np.arange(-90,91,self.latinterv)) ; ax.set_xbound(lower=self.lats, upper=self.late)
 
         if self.locts is not None: 
-            if self.xzs is not None: ax.set_xticks(np.arange(0,26,2)) ; ax.set_xbound(lower=self.locts, upper=self.locte)
-            else:                    ax.set_yticks(np.arange(0,26,2)) ; ax.set_ybound(lower=self.locts, upper=self.locte)
+          if self.xzs is not None: 
+            ax.set_xticks(np.arange(0,26,2)) ; ax.set_xbound(lower=self.locts, upper=self.locte)
+          else:
+            ax.set_yticks(np.arange(0,26,2)) ; ax.set_ybound(lower=self.locts, upper=self.locte)
+        elif self.xdates is not None:
+            ax.set_xticks(np.arange(0,361,30)) ; ax.set_xbound(lower=self.xdates, upper=self.xdatee)
 
         if self.zkey == 4 and self.xzs is not None: 
             ax.set_yscale('log') ; ax.set_ylim(ax.get_ylim()[::-1])
@@ -1007,7 +1186,7 @@ class mcd():
             ax.set_ybound(lower=self.xzs, upper=self.xze)
 
       self.gettitle()
-      fig.text(0.5, 0.95, self.title, ha='center')
+      fig.text(0.5, 0.95, self.title, ha='center', transform=fig.gca().transAxes, fontweight='bold')
       fig.text(0.5, 0.01, self.ack, ha='center')
       canvas = FigureCanvasAgg(fig)
       # The size * the dpi gives the final image size

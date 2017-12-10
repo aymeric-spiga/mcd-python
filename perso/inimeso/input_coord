@@ -1,3 +1,36 @@
+-125.75 lon
+68.22   lat
+122.    ls
+23.     lct
+25      ztop
+100.    nz
+8       dust_scenario
+
+c                             1 = Climatology ave solar
+c                             2 = Climatology min solar
+c                             3 = Climatology max solar
+c                             4 = dust storm tau=5 (dark dust) min solar           
+c                             5 = dust storm tau=5 (dark dust) ave solar           
+c                             6 = dust storm tau=5 (dark dust) max solar           
+c                             7 = warm scenario - dusty, max solar        
+c                             8 = cold scenario - low dust, min solar
+c                            24 = Mars Year 24, with associated solar EUV
+c                            25 = Mars Year 25, with associated solar EUV
+c                            26 = Mars Year 26, with associated solar EUV
+c                            27 = Mars Year 27, with associated solar EUV
+c                            28 = Mars Year 28, with associated solar EUV
+c                            29 = Mars Year 29, with associated solar EUV
+c                            30 = Mars Year 30, with associated solar EUV
+c                            31 = Mars Year 31, with associated solar EUV
+
+
+136.0   lon
+4.4     lat
+295.0   ls
+7.      lct
+20      ztop
+100.    nz
+
 326.0  lon
 -26.1  lat
 348.   ls

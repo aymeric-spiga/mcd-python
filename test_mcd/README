@@ -18,4 +18,7 @@ how one can call the mcd from within a python script. When run it requires
 some input from the user (hence the "test_mcd.def" file, for those who prefer
 to redirect input from a file rather than type as the program proceeds).
 
-  
+WARNING:
+========
+Either set the link MCD_DATA in this folder
+Or change the dset variable in the scripts  

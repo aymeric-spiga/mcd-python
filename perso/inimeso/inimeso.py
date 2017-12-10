@@ -7,7 +7,8 @@ from string import split ; import numpy as np ; import matplotlib.pyplot as mpl
 from mcd import mcd
 
 ### MCD INSTANCE and SETTINGS (actually, default. but one never knows)
-query = mcd() ; query.zkey = 3 ; query.dust = 2 ; query.hrkey = 1
+query = mcd() ; query.zkey = 3 ; query.hrkey = 1
+query.dust = 2 #29
 
 ### GET COORDINATES
 lines = open("input_coord", "r").readlines()

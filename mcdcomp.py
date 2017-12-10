@@ -1,3 +1,60 @@
+## set colorbar-type and value limits
+def setbounds(field,vmin=None,vmax=None):
+    import numpy as np
+    limtype = "neither"
+    w = np.where(np.isnan(field) == False)
+    fieldclean = field[w]
+    if vmin is None and vmax is None:
+      vmin = np.min(fieldclean) - 1.e-35 # epsilon to avoid blank spaces
+      vmax = np.max(fieldclean) + 1.e-35 # epsilon to avoid blank spaces
+    elif vmin is None:        
+      vmin = np.min(fieldclean)
+      if vmax < np.max(fieldclean): 
+        limtype = "max"
+    elif vmax is None:
+      vmax = np.max(fieldclean)
+      if vmin > np.min(fieldclean): 
+        limtype = "min"
+    else:
+      mintoosmall = vmin < np.min(fieldclean)
+      maxtoohigh = vmax > np.max(fieldclean)
+      if mintoosmall and maxtoohigh:
+        limtype = "neither"
+      elif mintoosmall:
+        limtype = "max"
+      elif maxtoohigh:
+        limtype = "min"
+      else:
+        limtype = "both"
+    return vmin,vmax,limtype
+
+## set size of figure for optimal rendering
+def setfig(howmanyplots, proj=None):
+    from matplotlib.figure import Figure
+    ##
+    if proj is None:
+      squared = False
+    else:
+      squared = proj in ["npstere","spstere","ortho"]
+    ##
+    if howmanyplots == 1:
+      if squared: fig = Figure(figsize=(10,10))
+      else:       fig = Figure(figsize=(16,8))
+    elif howmanyplots == 2:
+      if squared: fig = Figure(figsize=(7,14))
+      else:       fig = Figure(figsize=(10,12))
+    elif howmanyplots == 3:
+      if squared: fig = Figure(figsize=(7,21))
+      else:       fig = Figure(figsize=(8,16))
+    elif howmanyplots == 4:
+      if squared: fig = Figure(figsize=(10,10))
+      else:       fig = Figure(figsize=(24,12))
+    return fig
+
+
+################################################################
+################################################################
+
 
 ## Those are additional functions
 ## Useful only for plots with mcd.py
@@ -85,6 +142,7 @@ def whatkindfile (nc):
 def definesubplot ( numplot, fig, ipreferline=False):
     from matplotlib.pyplot import rcParams
     rcParams['font.size'] = 12. ## default (important for multiple calls)
+    fc = 1.33
     if numplot <= 0:
         subv = 99999
         subh = 99999
@@ -94,47 +152,47 @@ def definesubplot ( numplot, fig, ipreferline=False):
     elif numplot == 2:
         subv = 2 #1 #2
         subh = 1 #2 #1
-        fig.subplots_adjust(wspace = 0.35)
-        fig.subplots_adjust(hspace = 0.3)
+        fig.subplots_adjust(wspace = 0.35*fc)
+        fig.subplots_adjust(hspace = 0.3*fc)
         #rcParams['font.size'] = int( rcParams['font.size'] * 3. / 4. )
     elif numplot == 3:
         subv = 3
         subh = 1
-        fig.subplots_adjust(hspace = 0.25)
-        fig.subplots_adjust(wspace = 0.35)
-        if ipreferline: subv = 1 ; subh = 3 ; fig.subplots_adjust(wspace = 0.35)
+        fig.subplots_adjust(hspace = 0.25*fc)
+        fig.subplots_adjust(wspace = 0.35*fc)
+        if ipreferline: subv = 1 ; subh = 3 ; fig.subplots_adjust(wspace = 0.35*fc)
         #rcParams['font.size'] = int( rcParams['font.size'] * 3. / 4. )
     elif numplot == 4:
         subv = 2
         subh = 2
         #fig.subplots_adjust(wspace = 0.4, hspace = 0.6)
-        fig.subplots_adjust(wspace = 0.25, hspace = 0.3)
+        fig.subplots_adjust(wspace = 0.25*fc, hspace = 0.3*fc)
         #rcParams['font.size'] = int( rcParams['font.size'] * 3. / 4. )
     elif numplot <= 6:
         subv = 2
         subh = 3
         #fig.subplots_adjust(wspace = 0.4, hspace = 0.0)
-        fig.subplots_adjust(wspace = 0.5, hspace = 0.3)
+        fig.subplots_adjust(wspace = 0.5*fc, hspace = 0.3*fc)
         rcParams['font.size'] = int( rcParams['font.size'] * 1. / 2. )
     elif numplot <= 8:
         subv = 2
         subh = 4
-        fig.subplots_adjust(wspace = 0.3, hspace = 0.3)
+        fig.subplots_adjust(wspace = 0.3*fc, hspace = 0.3*fc)
         rcParams['font.size'] = int( rcParams['font.size'] * 1. / 2. )
     elif numplot <= 9:
         subv = 3
         subh = 3
-        fig.subplots_adjust(wspace = 0.3, hspace = 0.3)
+        fig.subplots_adjust(wspace = 0.3*fc, hspace = 0.3*fc)
         rcParams['font.size'] = int( rcParams['font.size'] * 1. / 2. )
     elif numplot <= 12:
         subv = 3
         subh = 4
-        fig.subplots_adjust(wspace = 0, hspace = 0.1)
+        fig.subplots_adjust(wspace = 0, hspace = 0.1*fc)
         rcParams['font.size'] = int( rcParams['font.size'] * 1. / 2. )
     elif numplot <= 16:
         subv = 4
         subh = 4
-        fig.subplots_adjust(wspace = 0.3, hspace = 0.3)
+        fig.subplots_adjust(wspace = 0.3*fc, hspace = 0.3*fc)
         rcParams['font.size'] = int( rcParams['font.size'] * 1. / 2. )
     else:
         print "number of plot supported: 1 to 16"
@@ -403,40 +461,53 @@ def define_proj (char,wlon,wlat,back=None,blat=None,blon=None):
             #    else:                                              pass             ## else:              draw None
     return m
 
-## Author: AS
-def calculate_bounds(field,vmin=None,vmax=None):
-    import numpy as np
-    ind = np.where(field < 9e+35)
-    fieldcalc = field[ ind ] # la syntaxe compacte ne marche si field est un tuple
-    ###
-    dev = np.std(fieldcalc)*3.0
-    ###
-    if vmin is None:  zevmin = mean(fieldcalc) - dev
-    else:             zevmin = vmin
-    ###
-    if vmax is None:  zevmax = mean(fieldcalc) + dev
-    else:             zevmax = vmax
-    if vmin == vmax:
-                      zevmin = mean(fieldcalc) - dev  ### for continuity
-                      zevmax = mean(fieldcalc) + dev  ### for continuity            
-    ###
-    if zevmin < min(fieldcalc): zevmin = min(fieldcalc)
-    if zevmax > max(fieldcalc): zevmax = max(fieldcalc)
-    #if zevmin < 0. and min(fieldcalc) > 0.: zevmin = 0.
-    #print "BOUNDS field ", min(fieldcalc), max(fieldcalc), " //// adopted", zevmin, zevmax
-    return zevmin, zevmax
+### Author: AS
+#def calculate_bounds(field,vmin=None,vmax=None):
+#    import numpy as np
+#    ind = np.where(field < 9e+35)
+#    fieldcalc = field[ ind ] # la syntaxe compacte ne marche si field est un tuple
+#    ###
+#    dev = np.std(fieldcalc)*3.0
+#    ###
+#    if vmin is None:  zevmin = mean(fieldcalc) - dev
+#    else:             zevmin = vmin
+#    ###
+#    if vmax is None:  zevmax = mean(fieldcalc) + dev
+#    else:             zevmax = vmax
+#    if vmin == vmax:
+#                      zevmin = mean(fieldcalc) - dev  ### for continuity
+#                      zevmax = mean(fieldcalc) + dev  ### for continuity            
+#    ###
+#    if zevmin < min(fieldcalc): zevmin = min(fieldcalc)
+#    if zevmax > max(fieldcalc): zevmax = max(fieldcalc)
+#    ##if zevmin < 0. and min(fieldcalc) > 0.: zevmin = 0.
+#    ##print "BOUNDS field ", min(fieldcalc), max(fieldcalc), " //// adopted", zevmin, zevmax
+#    return zevmin, zevmax
 
-## Author: AS
-def bounds(what_I_plot,zevmin,zevmax):
-    ### might be convenient to add the missing value in arguments
-    #what_I_plot[ what_I_plot < zevmin ] = zevmin#*(1. + 1.e-7)
-    if zevmin < 0: what_I_plot[ what_I_plot < zevmin*(1. - 1.e-7) ] = zevmin*(1. - 1.e-7)
-    else:          what_I_plot[ what_I_plot < zevmin*(1. + 1.e-7) ] = zevmin*(1. + 1.e-7)
-    #print "NEW MIN ", min(what_I_plot)
-    what_I_plot[ what_I_plot > 9e+35  ] = -9e+35
-    what_I_plot[ what_I_plot > zevmax ] = zevmax*(1. - 1.e-7)
-    #print "NEW MAX ", max(what_I_plot)
-    return what_I_plot
+### Author: AS
+#def bounds(what_I_plot,zevmin,zevmax):
+#    ### might be convenient to add the missing value in arguments
+#    #what_I_plot[ what_I_plot < zevmin ] = zevmin#*(1. + 1.e-7)
+#    if zevmin < 0: what_I_plot[ what_I_plot < zevmin*(1. - 1.e-7) ] = zevmin*(1. - 1.e-7)
+#    else:          what_I_plot[ what_I_plot < zevmin*(1. + 1.e-7) ] = zevmin*(1. + 1.e-7)
+#    #print "NEW MIN ", min(what_I_plot)
+#    what_I_plot[ what_I_plot > 9e+35  ] = -9e+35
+#    what_I_plot[ what_I_plot > zevmax ] = zevmax*(1. - 1.e-7)
+#    #print "NEW MAX ", max(what_I_plot)
+#    return what_I_plot
+
+## a function to solve the problem with blank bounds !
+## -------------------------------
+#def bounds(what_I_plot,zevmin,zevmax,miss=9e+35):
+#    import numpy as np
+#    small_enough = 1.e-7
+#    if zevmin < 0: what_I_plot[ what_I_plot < zevmin*(1.-small_enough) ] = zevmin*(1.-small_enough)
+#    else:          what_I_plot[ what_I_plot < zevmin*(1.+small_enough) ] = zevmin*(1.+small_enough)
+#    what_I_plot[ what_I_plot > miss  ] = -miss
+#    what_I_plot[ what_I_plot > zevmax ] = zevmax*(1.-small_enough)
+#    ## test
+#    what_I_plot[ np.abs(what_I_plot) < small_enough ] = small_enough
+#    return what_I_plot
 
 ## Author: AS
 def nolow(what_I_plot):
