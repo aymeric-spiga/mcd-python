@@ -17,24 +17,20 @@
 
 ## server use -- version 5
 NETCDF=/home/marshttp/NETCDF/netcdf64-4.0.1_gfortran_fPIC/
-#wheremcd=/home/marshttp/MCD_v5.1/mcd/
-#num="51"
-
 wheremcd=/home/marshttp/MCD_v5.2/mcd/
 num="52"
-
 wheremcd="/home/marshttp/MCD5.3/mcd/"
 num="53"
 
-
-### local use -- version 5
-#NETCDF=/home/aymeric/Science/NETCDF/netcdf64-4.0.1_gfortran
-#wheremcd=./mcd
-#num="5"
-
 ### local use -- version 4
+#NETCDF=/home/aymeric/Science/NETCDF/netcdf64-4.0.1_gfortran
 #wheremcd=../MCD_v4.3/mcd/
 #num=""
+
+### local use -- version 5
+NETCDF=../mcd-python/netcdf/gfortran_netcdf-4.0.1/
+wheremcd=../MCD_v5.2/mcd/
+num="52"
 
 ######################################################################################
 ######################################################################################

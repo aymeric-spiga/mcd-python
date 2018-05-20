@@ -1,28 +1,12 @@
 #! /bin/bash
 
+ze_netcdf=netcdf-4.0.1
+#ze_netcdf=netcdf-3.6.1
 
-##wget http://www.lmd.jussieu.fr/~hourdin/PATCH_LMDZ4OR_G95/netcdf-3.6.1.tar.gz
-##gunzip netcdf-3.6.1.tar.gz
-#tar xvf netcdf-3.6.1.tar
-#cd netcdf-3.6.1
-
-#cp /donnees/emlmd/Downloads/Software/netcdf-4.0.1.tar.gz .
-#gunzip netcdf-4.0.1.tar.gz
-tar xvf netcdf-4.0.1.tar
-cd netcdf-4.0.1
-
-#export CC=gcc 
-#export CXX=g++ 
-#export CPP='gcc -E' 
-#export FC=gfortran 
-#export F77=gfortran 
-#export F90=gfortran 
-#export CFLAGS='-O2 -DpgiFortran' 
-#export CXXFLAGS='-O2 -DpgiFortran' 
-#export CPPFLAGS='-DpgiFortran' 
-#export FFLAGS='-O2 -fno-second-underscore' 
-#export FCFLAGS='-O2 -fno-second-underscore' 
-#export F90FLAGS='-O2 -fno-second-underscore'
+#wget ftp://ftp.unidata.ucar.edu/pub/netcdf/$ze_netcdf.tar.gz
+wget ftp://ftp.unidata.ucar.edu/pub/netcdf/old/$ze_netcdf.tar.gz
+tar xzvf $ze_netcdf.tar.gz
+\rm $ze_netcdf.tar.gz
 
 export FC=gfortran
 export FFLAGS=" -O2 -fPIC"
@@ -34,15 +18,15 @@ export CFLAGS="-O2 -fPIC"
 export CXX=g++
 export CXXFLAGS="-O2 -fPIC"
 
-mkdir /home/marshttp/NETCDF/netcdf64-4.0.1_gfortran_fPIC
-./configure --prefix=/home/marshttp/NETCDF/netcdf64-4.0.1_gfortran_fPIC #> configure.log 2>&1
-make #> make.log 2>&1
-make test #> make_test.log 2>&1
-make install #> make_install.log 2>&1
+mv $ze_netcdf gfortran_$ze_netcdf
+cd gfortran_$ze_netcdf
+PREFIX=$PWD
+if [[ "$ze_netcdf" == "netcdf-3.6.1" ]]
+then
+      cd src
+fi
 
-#cd src
-## Compilation
-#./configure
-#make check
-#make install
-
+./configure --prefix=${PREFIX} #--disable-cxx
+make > make.log 2>&1
+make test > make.log 2>&1
+make install > make.log 2>&1
