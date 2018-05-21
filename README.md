@@ -39,3 +39,18 @@ The installation below relies on `f2py` utility, which is part of the `numpy` pa
 
  4. Run `compile_fmcd.sh` and check for the created `.so` file (its size should be about 1 Mo)
 
+----
+
+**Quick test**
+
+~~~
+quicktest.py
+~~~
+
+Next step is to try and learn about the use of `mcd` Python library with the `tutorial` folder.
+
+A more advanced example (direct use of `fmcd` compiled with `f2py`) is provided in the `test_mcd` folder.
+
+
+
+ 
