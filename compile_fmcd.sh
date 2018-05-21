@@ -42,10 +42,10 @@ touch fmcd$num.log
 
 ### COPY/PREPARE SOURCES
 ### perform changes that makes f2py not to fail
-sed s/"\!\!'"/"'"/g $wheremcd/call_mcd.F         | sed s/"\!'"/"'"/g | sed s/"\!"/"\n\!"/g > tmp.call_mcd.F
-sed s/"\!\!'"/"'"/g $wheremcd/julian.F           | sed s/"\!'"/"'"/g | sed s/"\!"/"\n\!"/g > tmp.julian.F
-sed s/"\!\!'"/"'"/g $wheremcd/heights.F          | sed s/"\!'"/"'"/g | sed s/"\!"/"\n\!"/g > tmp.heights.F
-sed s/"\!\!'"/"'"/g $wheremcd/constants_mcd.inc  | sed s/"\!'"/"'"/g | sed s/"\!"/"\n\!"/g > constants_mcd.inc
+sed s/"\!\!'"/"'"/g $wheremcd/call_mcd.F         | sed s/"\!'"/"'"/g | sed -e 's/!/\'$'\n!/g' > tmp.call_mcd.F
+sed s/"\!\!'"/"'"/g $wheremcd/julian.F           | sed s/"\!'"/"'"/g | sed -e 's/!/\'$'\n!/g' > tmp.julian.F
+sed s/"\!\!'"/"'"/g $wheremcd/heights.F          | sed s/"\!'"/"'"/g | sed -e 's/!/\'$'\n!/g' > tmp.heights.F
+sed s/"\!\!'"/"'"/g $wheremcd/constants_mcd.inc  | sed s/"\!'"/"'"/g | sed -e 's/!/\'$'\n!/g' > constants_mcd.inc
 
 ### BUILD THROUGH f2py WHAT IS NECESSARY TO CREATE THE PYTHON FUNCTIONS
 touch fmcd$num.pyf
