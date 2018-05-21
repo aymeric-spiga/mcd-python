@@ -1,0 +1,4 @@
+        usercode '''
+          PyDict_SetItem(d,PyString_FromString("dataloc"),PyString_FromString(dataloc));
+          PyDict_SetItem(d,PyString_FromString("dataver"),PyString_FromString(dataver));
+        '''

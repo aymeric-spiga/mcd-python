@@ -15,37 +15,29 @@
 ###
 ######################################################################################
 
-## server use -- version 5
-NETCDF=/home/marshttp/NETCDF/netcdf64-4.0.1_gfortran_fPIC/
-wheremcd=/home/marshttp/MCD_v5.2/mcd/
-num="52"
-wheremcd="/home/marshttp/MCD5.3/mcd/"
-num="53"
-
-### local use -- version 4
-#NETCDF=/home/aymeric/Science/NETCDF/netcdf64-4.0.1_gfortran
-#wheremcd=../MCD_v4.3/mcd/
-#num=""
-
-### local use -- version 5
 NETCDF=../mcd-python/netcdf/gfortran_netcdf-4.0.1/
-wheremcd=../MCD_v5.2/mcd/
-num="52"
+wheremcd=../MCD_v5.2/
+version="5.2"
+
+#NETCDF=/home/marshttp/NETCDF/netcdf64-4.0.1_gfortran_fPIC/
+#wheremcd="/home/marshttp/MCD5.3/"
+#version="5.3"
 
 ######################################################################################
 ######################################################################################
 ######################################################################################
 
 ### LOG FILE
+num=""
 touch fmcd$num.log
 \rm fmcd$num.log
 
 ### COPY/PREPARE SOURCES
 ### perform changes that makes f2py not to fail
-sed s/"\!\!'"/"'"/g $wheremcd/call_mcd.F         | sed s/"\!'"/"'"/g | sed -e 's/!/\'$'\n!/g' > tmp.call_mcd.F
-sed s/"\!\!'"/"'"/g $wheremcd/julian.F           | sed s/"\!'"/"'"/g | sed -e 's/!/\'$'\n!/g' > tmp.julian.F
-sed s/"\!\!'"/"'"/g $wheremcd/heights.F          | sed s/"\!'"/"'"/g | sed -e 's/!/\'$'\n!/g' > tmp.heights.F
-sed s/"\!\!'"/"'"/g $wheremcd/constants_mcd.inc  | sed s/"\!'"/"'"/g | sed -e 's/!/\'$'\n!/g' > constants_mcd.inc
+sed s/"\!\!'"/"'"/g $wheremcd/mcd/call_mcd.F         | sed s/"\!'"/"'"/g | sed -e 's/!/\'$'\n!/g' > tmp.call_mcd.F
+sed s/"\!\!'"/"'"/g $wheremcd/mcd/julian.F           | sed s/"\!'"/"'"/g | sed -e 's/!/\'$'\n!/g' > tmp.julian.F
+sed s/"\!\!'"/"'"/g $wheremcd/mcd/heights.F          | sed s/"\!'"/"'"/g | sed -e 's/!/\'$'\n!/g' > tmp.heights.F
+sed s/"\!\!'"/"'"/g $wheremcd/mcd/constants_mcd.inc  | sed s/"\!'"/"'"/g | sed -e 's/!/\'$'\n!/g' > constants_mcd.inc
 
 ### BUILD THROUGH f2py WHAT IS NECESSARY TO CREATE THE PYTHON FUNCTIONS
 touch fmcd$num.pyf
@@ -64,6 +56,15 @@ sed s/"real :: seedout"/"real, intent(out) :: seedout"/g | \
 sed s/"integer :: ier"/"integer, intent(out) :: ier"/g > fmcd$num.pyf.modif
 mv fmcd$num.pyf.modif fmcd$num.pyf
 
+### CUSTOMIZE fmcd.pyf TO ADD BUILT-IN INFO ABOUT VERSION and DATA LINKS
+datalink=`cd $wheremcd; pwd`"/data/"
+echo "    usercode '''" > patchtmp.txt
+echo '      char dataloc[] = "'$datalink'";' >> patchtmp.txt
+echo '      char dataver[] = "'$version'";' >> patchtmp.txt
+echo "    '''" >> patchtmp.txt
+sed '/python module fmcd ! in/r patchtmp.txt' fmcd$num.pyf > tmp ; mv tmp fmcd$num.pyf
+sed '/interface  ! in :fmcd/r patch.txt' fmcd$num.pyf > tmp ; mv tmp fmcd$num.pyf
+
 ### BUILD
 f2py -c fmcd$num.pyf tmp.call_mcd.F tmp.julian.F tmp.heights.F --fcompiler=gnu95 \
   -L$NETCDF/lib -lnetcdf \
@@ -73,5 +74,6 @@ f2py -c fmcd$num.pyf tmp.call_mcd.F tmp.julian.F tmp.heights.F --fcompiler=gnu95
   --verbose \
   > fmcd$num.log 2>&1
 
-### CLEAN THE PLACE
+#### CLEAN THE PLACE
 \rm tmp.call_mcd.F tmp.julian.F tmp.heights.F constants_mcd.inc
+\rm patchtmp.txt

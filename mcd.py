@@ -6,8 +6,14 @@
 ### (see mcdtest.py for examples of use)         ###
 ####################################################
 
+###
+from fmcd import call_mcd # MCD compiled with f2py
+from fmcd import dataloc  # location of MCD data file
+from fmcd import dataver  # compiled version of MCD 
+###
 import numpy as np
 import matplotlib.pyplot as mpl
+###
 
 def errormess(text,printvar=None):
     print text
@@ -29,10 +35,9 @@ class mcd():
     def __init__(self):
     # default settings
         ## 0. general stuff
-        self.name      = "MCD v4.3"
+        self.name      = "MCD_v"+dataver # this is coming from fmcd
+        self.dset      = dataloc # this is coming from fmcd
         self.ack       = "Mars Climate Database (c) LMD/OU/IAA/ESA/CNES"
-        #self.dset      = '/home/aymeric/Science/MCD_v4.3/data/'
-        self.dset      = '/home/marshttp/MCD_v4.3/data/'
         ## 1. spatio-temporal coordinates
         self.lat       = 0.
         self.lats      = None
@@ -60,10 +65,16 @@ class mcd():
         self.datekey   = 1  # 0 = "Earth time": xdate is given in Julian days (localtime must be set to zero)
                             # 1 = "Mars date": xdate is the value of Ls
         ## 2. climatological options
-        self.dust      = 2  #our best guess MY24 scenario, with solar average conditions
+        if "v5" in self.name:
+            self.dust      = 1 # climatological average scenario
+        else:
+            self.dust      = 2  #our best guess MY24 scenario, with solar average conditions
         self.hrkey     = 1  #set high resolution mode on (hrkey=0 to set high resolution off)
         ## 3. additional settings for advanced use
-        self.extvarkey = 1  #extra output variables (1: yes, 0: no)
+        if "v5" in self.name:
+            self.extvarkey = np.ones(100) # now a table in MCD version 5
+        else:
+            self.extvarkey = 1  #extra output variables (1: yes, 0: no)
         self.perturkey = 0  #integer perturkey ! perturbation type (0: none)
         self.seedin    = 1  #random number generator seed (unused if perturkey=0)
         self.gwlength  = 0. #gravity Wave wavelength (unused if perturkey=0)
@@ -93,11 +104,6 @@ class mcd():
         self.plon = 0.0
         self.latpoint = None
         self.lonpoint = None
-
-    def toversion5(self,version="5.1"):
-        self.name      = "MCD v"+version
-        self.dset      = '/home/marshttp/MCD_v'+version+'/data/'
-        self.extvarkey = np.ones(100)
 
     def viking1(self): self.name = "Viking 1 site. MCD v4.3 output" ; self.lat = 22.48 ; self.lon = -49.97 ; self.xdate = 97.
     def viking2(self): self.name = "Viking 2 site. MCD v4.3 output" ; self.lat = 47.97 ; self.lon = -225.74 ; self.xdate = 117.6
@@ -417,11 +423,7 @@ class mcd():
             if self.locts == self.locte: self.locte = self.locts + 24
         ## ensure that local time = 0 when using Earth dates
         if self.datekey == 0: self.loct = 0.
-        ## now MCD request
-        if "v5.1" in self.name: from fmcd51 import call_mcd
-        elif "v5.2" in self.name: from fmcd52 import call_mcd
-        elif "v5.3" in self.name: from fmcd53 import call_mcd
-        else: from fmcd import call_mcd
+        ### now MCD request
         (self.pres, self.dens, self.temp, self.zonwind, self.merwind, \
          self.meanvar, self.extvar, self.seedout, self.ierr) \
          = \
@@ -448,9 +450,6 @@ class mcd():
         strloct = str(self.loct)+str(self.locts)+str(self.locte)
         strdate = str(self.datekey)+str(self.xdate)+str(self.xdates)+str(self.xdatee)
         name = str(self.zkey)+strxz+strlon+strlat+str(self.hrkey)+strdate+strloct+str(self.dust)
-        if "v5.1" in self.name: name = "v51_" + name
-        elif "v5.2" in self.name: name = "v52_" + name
-        elif "v5.3" in self.name: name = "v53_" + name
         return name
 
     def printcoord(self):
