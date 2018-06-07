@@ -917,8 +917,8 @@ class mcd():
           fieldlab = "Horizontal wind speed (m/s)"
       else:    
           (field, fieldlab) = self.definefield(choice)
-      if incwind:   mcdcomp.maplatlon(self.xcoord,self.ycoord,field,title=fieldlab,proj=proj,vecx=windx,vecy=windy) #,stride=1)
-      else:         mcdcomp.maplatlon(self.xcoord,self.ycoord,field,title=fieldlab,proj=proj)
+      if incwind:   mcdcomp.maplatlon(self.xcoord,self.ycoord,field,title=fieldlab,proj=proj,vecx=windx,vecy=windy,vmin=self.min2d,vmax=self.max2d) #,stride=1)
+      else:         mcdcomp.maplatlon(self.xcoord,self.ycoord,field,title=fieldlab,proj=proj,vmin=self.min2d,vmax=self.max2d)
       mpl.figtext(0.5, 0.0, self.ack, ha='center')
 
     def map2d(self,tabtodo,incwind=False,proj="cyl"):
