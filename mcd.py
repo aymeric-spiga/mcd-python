@@ -941,7 +941,7 @@ class mcd():
         if (abs(self.lone-self.lons) < 135.): self.loninterv = 15.
         if (abs(self.lone-self.lons) < 15.): self.loninterv = 1.
 
-    def htmlmap2d(self,tabtodo,incwind=False,figname="temp.png",back="zMOL"):
+    def htmlmap2d(self,tabtodo,incwind=False,figname="temp.png"):
     ### complete 2D figure with possible multiplots
     ### added in 09/2012 for online MCD
     ### see http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
@@ -962,14 +962,18 @@ class mcd():
       ####
 
       try:
-        from Scientific.IO import NetCDF
-        filename = "/home/marshttp/surface.nc"
-        zefile = NetCDF.NetCDFFile(filename, 'r') 
-        fieldc = zefile.variables[back]
-        yc = zefile.variables['latitude']
-        xc = zefile.variables['longitude']
+        from scipy.io import netcdf
+        filename = dataloc+"/mola32.nc" ; back = "alt"
+        zefile = netcdf.netcdf_file(filename, 'r') 
+        print zefile
+        fieldc = zefile.variables[back][::32,::32]/1000.
+        yc = zefile.variables['latitude'][::32]
+        xc = zefile.variables['longitude'][::32]
+        zefile.close()
+        havetopo = True
       except:
         print "Trouble with netCDF or surface.nc file. Continue without topo lines."
+        havetopo = False
 
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
@@ -1032,14 +1036,15 @@ class mcd():
 
         ## topography contours
         rcParams['contour.negative_linestyle'] = 'solid' # negative contours solid instead of dashed
-        zelevc = np.linspace(-9.,20.,11,0.)
+        zelevc = np.linspace(-9.,20.,11.,0.)
         if isproj:
            [xc2,yc2] = np.meshgrid(xc,yc)
            xc3,yc3 = yeah(xc2,yc2)
            yeah.contour( xc3, yc3, fieldc, zelevc, colors='black',linewidths = 0.4 )
         else:
-           yeah.contour( np.array(xc) + 360., yc, fieldc, zelevc, colors='black',linewidths = 0.4)
-           yeah.contour( np.array(xc) - 360., yc, fieldc, zelevc, colors='black',linewidths = 0.4)
+           if havetopo:
+             yeah.contour( np.array(xc)       , yc, fieldc, zelevc, colors='black',linewidths = 0.4)
+             yeah.contour( np.array(xc) - 360., yc, fieldc, zelevc, colors='black',linewidths = 0.4)
 
         # contour field
         if self.iscontour: c = yeah.contour( x, y, what_I_plot, zelevels, cmap = palette )
@@ -1080,6 +1085,7 @@ class mcd():
           self.makeinterv()
           ax.set_xticks(np.arange(-360,361,self.loninterv)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
           ax.set_yticks(np.arange(-90,91,self.latinterv)) ; ax.set_ybound(lower=self.lats, upper=self.late)
+          ax.set_xlim(xmin=-180.,xmax=180.)
 
       ## titles and final production
       self.gettitle()
