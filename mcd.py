@@ -97,7 +97,7 @@ class mcd():
         self.max2d = None
         self.dpi = 80.
         self.islog = False
-        self.proj = False
+        self.proj = None
         self.trans = 0.0
         self.iscontour = False
         self.plat = 0.0
