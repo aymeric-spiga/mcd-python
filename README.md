@@ -41,6 +41,12 @@ The installation below relies on `f2py` utility, which is part of the `numpy` pa
 
 ----
 
+**Download Mars topography file for 2D maps**
+
+[click here](http://www.lmd.jussieu.fr/~lmdz/planets/mars/datadir/surface.nc)
+
+----
+
 **Quick test**
 
 ~~~
