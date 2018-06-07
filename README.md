@@ -41,6 +41,12 @@ The installation below relies on `f2py` utility, which is part of the `numpy` pa
 
 ----
 
+**Download Mars topography file for 2D maps**
+
+[click here](http://www.lmd.jussieu.fr/~lmdz/planets/mars/datadir/surface.nc)
+
+----
+
 **Quick test**
 
 ~~~
@@ -50,6 +56,21 @@ quicktest.py
 Next step is to try and learn about the use of `mcd` Python library with the `tutorial` folder.
 
 A more advanced example (direct use of `fmcd` compiled with `f2py`) is provided in the `test_mcd` folder.
+
+----
+
+**Python 3**
+
+*Solution suggested by Aaron Berliner*
+
+This can be done using the 2to3 package and the reindent
+
+    Run 2to3 -v -n -W -f all mcd.py
+    Run 2to3 -v -n -W -f all mcdcomp.py
+    Run reindent mcd.py
+    Run reindent mcdcomp.py
+
+Then upgrade to the appropriate basemap in python3.
 
 
 
