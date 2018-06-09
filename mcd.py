@@ -1041,6 +1041,9 @@ class mcd():
            [xc2,yc2] = np.meshgrid(xc,yc)
            xc3,yc3 = yeah(xc2,yc2)
            yeah.contour( xc3, yc3, fieldc, zelevc, colors='black',linewidths = 0.4 )
+           [xc2,yc2] = np.meshgrid(np.array(xc)-360.,yc)
+           xc3,yc3 = yeah(xc2,yc2)
+           yeah.contour( xc3, yc3, fieldc, zelevc, colors='black',linewidths = 0.4 )
         else:
            if havetopo:
              yeah.contour( np.array(xc)       , yc, fieldc, zelevc, colors='black',linewidths = 0.4)
