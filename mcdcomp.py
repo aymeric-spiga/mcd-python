@@ -627,7 +627,7 @@ def latinterv (area="Whole"):
 ## Author : AS
 def maplatlon( lon,lat,field,\
                proj="cyl",colorb="jet",ndiv=10,zeback=None,trans=0.6,title="",\
-               vecx=None,vecy=None,stride=2 ):
+               vecx=None,vecy=None,stride=2,vmin=None,vmax=None):
     ### an easy way to map a field over lat/lon grid
     import numpy as np
     import matplotlib.pyplot as mpl
@@ -644,8 +644,7 @@ def maplatlon( lon,lat,field,\
     x, y = m(lon2d, lat2d)
     ## define field. bound field.
     what_I_plot = np.transpose(field)
-    zevmin, zevmax = calculate_bounds(what_I_plot)  ## vmin=min(what_I_plot_frame), vmax=max(what_I_plot_frame))
-    what_I_plot = bounds(what_I_plot,zevmin,zevmax)
+    zevmin,zevmax,limtype = setbounds(what_I_plot,vmin=vmin,vmax=vmax)
     ## define contour field levels. define color palette
     ticks = ndiv + 1
     zelevels = np.linspace(zevmin,zevmax,ticks)
