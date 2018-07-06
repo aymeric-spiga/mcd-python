@@ -965,7 +965,6 @@ class mcd():
         from scipy.io import netcdf
         filename = dataloc+"/mola32.nc" ; back = "alt"
         zefile = netcdf.netcdf_file(filename, 'r') 
-        print zefile
         fieldc = zefile.variables[back][::32,::32]/1000.
         yc = zefile.variables['latitude'][::32]
         xc = zefile.variables['longitude'][::32]
