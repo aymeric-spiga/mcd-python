@@ -283,6 +283,9 @@ class mcd():
         elif num == "h": num = 13
         elif num == "ps": num = 19
         elif num == "tau": num = 36
+        elif num == "R": 
+            if "v5" in self.name:  num = 53 
+            else:                  num = 49
         elif num == "mtot": 
             if "v5" in self.name:  num = 41 
             else:                  num = 40
@@ -296,6 +299,7 @@ class mcd():
             if "v5" in self.name:  num = 44
             else:                  num = 43
         elif num == "cp": num = 8
+        elif num == "gamma": num = 9
         elif num == "rho_ddv": num = 10
         elif num == "ps_ddv": num = 22
         elif num == "p_ddv": num = 21
