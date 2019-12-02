@@ -34,8 +34,8 @@ sounding.write( "%10.2f%12.2f%12.2f\n" % (query.pres/100.,query.temp*(610./query
 more.write( "%10.2f%10.2f" % (query.extvar[1],query.extvar[14]) ) ; more.close()
 
 ### GET and WRITE VERTICAL PROFILE
-closesurf = [0.1,5,10,20,50,100]
-#closesurf = [0.1,0.5,1,2,5,10,20,50,100]
+#closesurf = [0.1,5,10,20,50,100]
+closesurf = [0.1,0.5,1,2,5,10,20,50,100]
 query.profile( tabperso = np.append(closesurf,np.linspace(200.,float(split(lines[4])[0])*1000.,float(split(lines[5])[0]))) )
 for iz in range(len(query.prestab)):
 
