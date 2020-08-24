@@ -20,7 +20,7 @@ wheremcd=../MCD_v5.2/
 version="5.2"
 
 NETCDF=/home/marshttp/NETCDF/netcdf64-4.0.1_gfortran_fPIC/
-wheremcd="/home/marshttp/MCD5.3/"
+wheremcd="/home/marshttp/MCD_5.3/"
 version="5.3"
 
 ######################################################################################
