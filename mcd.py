@@ -896,21 +896,27 @@ class mcd():
         # fill in correct values for query
         self.filldim(self.xcoord[i],self.ycoord[j],typex,typey)     
         ####
-        meanpres = 0. ; meandens = 0. ; meantemp = 0. ; meanzonwind = 0. ; meanmerwind = 0. ; meanmeanvar = np.zeros(5) ; meanextvar = np.zeros(100)        
-        # zonal averaging with forcing of local time
-        for m in range(ndmean):
-           self.lon = coordmean[m]
-           self.loct = (umst + self.lon/15.) % 24 #fixedlt false for this case
-           self.update() 
-           meanpres = meanpres + self.pres/float(ndmean) ; meandens = meandens + self.dens/float(ndmean) ; meantemp = meantemp + self.temp/float(ndmean)
-           meanzonwind = meanzonwind + self.zonwind/float(ndmean) ; meanmerwind = meanmerwind + self.merwind/float(ndmean)
-           meanmeanvar = meanmeanvar + self.meanvar/float(ndmean) ; meanextvar = meanextvar + self.extvar/float(ndmean)
-        self.pres=meanpres ; self.dens=meandens ; self.temp=meantemp ; self.zonwind=meanzonwind ; self.merwind=meanmerwind
-        self.meanvar=meanmeanvar ; self.extvar=meanextvar
+        self.meanperform(coordmean,umst=umst) ## and we could even make something more generic...
+        ####
         self.put2d(i,j)
       ### reinstall init state
       self.loct = umst #fixedlt false for this case
       self.lon = save1 ; self.xz = save2 ; self.loct = save3 ; self.lat = save4 ; self.xdate = save5
+
+    def meanperform(self,coordmean,meanstyle="zonal",umst=None):
+      ndmean = coordmean.size
+      meanpres = 0. ; meandens = 0. ; meantemp = 0. ; meanzonwind = 0. ; meanmerwind = 0. ; meanmeanvar = np.zeros(5) ; meanextvar = np.zeros(100)        
+      for ccc in coordmean:
+        if meanstyle == "zonal":
+          # zonal averaging with forcing of local time
+          self.lon = ccc
+          self.loct = (umst + self.lon/15.) % 24 #fixedlt false for this case
+        self.update() 
+        meanpres = meanpres + self.pres/float(ndmean) ; meandens = meandens + self.dens/float(ndmean) ; meantemp = meantemp + self.temp/float(ndmean)
+        meanzonwind = meanzonwind + self.zonwind/float(ndmean) ; meanmerwind = meanmerwind + self.merwind/float(ndmean)
+        meanmeanvar = meanmeanvar + self.meanvar/float(ndmean) ; meanextvar = meanextvar + self.extvar/float(ndmean)
+      self.pres=meanpres ; self.dens=meandens ; self.temp=meantemp ; self.zonwind=meanzonwind ; self.merwind=meanmerwind
+      self.meanvar=meanmeanvar ; self.extvar=meanextvar
 
     def hovmoller(self,typex="lat",typey="loct"):
     ### retrieve a time/other coordinate slice
