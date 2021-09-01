@@ -855,14 +855,21 @@ class mcd():
         if "loct" in ttt[0]: self.loct  = ttt[1]
         if "ls"   in ttt[0]: self.xdate = ttt[1]
 
+    def meandim(ndmean=32,typem="lon"):
+    ### define averaging dimension
+      if typem == "lon":
+        sav = self.xcoord #using xcoord as an intermediate
+        self.ininterv(-180.,180.,ndmean)
+        coordmean = self.xcoord
+        self.xcoord = sav
+
     def zonalmean(self,ndx=dfmer,ndmean=32,typey="alt",typex = "lat"):
     ### retrieve a zonalmean lat/altitude or ls/lat slice
       # initialize
       self.fixedlt = False
       save1 = self.lon ; save2 = self.xz ; save3 = self.loct ; save4 = self.lat ; save5 = self.xdate
-      # define zonal averaging dimension, using self.xcoord as an intermediate
-      self.ininterv(-180.,180.,ndmean) 
-      coordmean = self.xcoord
+      # define zonal averaging dimension
+      self.meandim(ndmean=ndmean,typem="lon")
       # define spatial dimension in possible cases
       datype = typex+typey
       if datype == "latalt":  # zonal-mean latitude/altitude plot
