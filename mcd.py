@@ -21,6 +21,12 @@ dfmer = 19 # meridional dimension
 dfver = 20 # vertical dimension
 dflct = 13 # local time dimension
 dfsea = 25 # solar long dimension
+## default names
+lslab = "Areocentric longitude (degrees)"
+latlab = "North latitude (degrees)"
+lonlab = "East longitude (degrees)"
+ltlab = "Local time (Martian hour)"
+#NB: vertical labels are treated by .vertlabel()
 
 def errormess(text,printvar=None):
     print text
@@ -606,7 +612,7 @@ class mcd():
     ### retrieve a local time slice
       self.fixedlt = True  ## local time is real local time
       save = self.loct
-      self.xlabel = "Local time (Martian hour)"
+      self.xlabel = ltlab
       self.prepare(ndx=nd) ; self.ininterv(0.,24.,nd,start=self.locts,end=self.locte) 
       for i in range(nd): self.loct = self.xcoord[i] ; self.update() ; self.put1d(i)
       self.loct = save
@@ -614,7 +620,7 @@ class mcd():
     def zonal(self,nd=dfzon):
     ### retrieve a longitude slice
       save = self.lon
-      self.xlabel = "East longitude (degrees)"
+      self.xlabel = lonlab
       self.prepare(ndx=nd) ; self.ininterv(-180.,180.,nd,start=self.lons,end=self.lone)
       if not self.fixedlt: umst = self.loct
       for i in range(nd): 
@@ -627,7 +633,7 @@ class mcd():
     ### retrieve a latitude slice
       self.fixedlt = True  ## local time is real local time
       save = self.lat
-      self.xlabel = "North latitude (degrees)"
+      self.xlabel = latlab
       self.prepare(ndx=nd) ; self.ininterv(-90.,90.,nd,start=self.lats,end=self.late)
       for i in range(nd): self.lat = self.xcoord[i] ; self.update() ; self.put1d(i)
       self.lat = save
@@ -648,7 +654,7 @@ class mcd():
     def seasonal(self,nd=dfsea):
     ### retrieve a seasonal slice
       save = self.xdate
-      self.xlabel = "Areocentric longitude (degrees)"
+      self.xlabel = lslab
       self.prepare(ndx=nd) ; self.ininterv(0.,360.,nd,start=self.xdates,end=self.xdatee)
       for i in range(nd): self.xdate = self.xcoord[i] ; self.update() ; self.put1d(i)
       self.xdate = save
@@ -787,7 +793,7 @@ class mcd():
     ### retrieve a latitude/longitude slice
     ### default is: local time is not fixed. user-defined local time is at longitude 0.
       save1 = self.lon ; save2 = self.lat ; save3 = self.loct
-      self.xlabel = "East longitude (degrees)" ; self.ylabel = "North latitude (degrees)"
+      self.xlabel = lonlab ; self.ylabel = latlab
       self.prepare(ndx=ndx,ndy=ndy)
       self.ininterv(-180.,180.,ndx,start=self.lons,end=self.lone)
       self.ininterv(-90.,  90.,ndy,start=self.lats,end=self.late,yaxis=True)
@@ -807,10 +813,10 @@ class mcd():
       self.vertlabel() ; self.ylabel = self.xlabel
       self.vertaxis(ndy,yaxis=True)
       if "lat" in typex:
-          self.xlabel = "North latitude (degrees)"
+          self.xlabel = latlab
           self.ininterv(-90.,90.,ndx,start=self.lats,end=self.late)
       elif typex == "lon":
-          self.xlabel = "East longitude (degrees)"
+          self.xlabel = lonlab
           self.ininterv(-180.,180.,ndx,start=self.lons,end=self.lone)
       if not self.fixedlt: umst = self.loct
       for i in range(ndx):
@@ -861,13 +867,13 @@ class mcd():
       save1 = self.lat ; save2 = self.xz ; save3 = self.loct ; save4 = self.lon ; save5 = self.xdate
       # set up time axis
       if typey == "loct":
-          labeltime = "Local time (Martian hour)"
+          labeltime = ltlab
           ndtime = dflct
           zestart,zeend = 0.,24.
           zestarti,zeendi = self.locts,self.locte
           zeyaxis = True
       elif typey == "ls":
-          labeltime = "Areocentric longitude (degrees)" 
+          labeltime = lslab
           ndtime = dfsea   
           zestart,zeend = 0.,360.
           zestarti,zeendi = self.xdates,self.xdatee
@@ -886,14 +892,14 @@ class mcd():
           ndx,ndy = ndcoord,ndtime
       # set up spatial axis (arrays and plots)
       if typex == "lat": 
-          self.xlabel = "North latitude (degrees)" 
+          self.xlabel = latlab 
           self.ylabel = labeltime
           if typey == "ls": self.xlabel,self.ylabel = self.ylabel,self.xlabel
           self.prepare(ndx=ndx,ndy=ndy)
           self.ininterv(-90.,90.,ndcoord,start=self.lats,end=self.late,yaxis=(not zeyaxis))
           self.ininterv(zestart,zeend,ndtime,start=zestarti,end=zeendi,yaxis=zeyaxis)
       elif typex == "lon":
-          self.xlabel = "East longitude (degrees)"
+          self.xlabel = lonlab
           self.ylabel = labeltime
           if typey == "ls": self.xlabel,self.ylabel = self.ylabel,self.xlabel
           self.prepare(ndx=ndx,ndy=ndy)
