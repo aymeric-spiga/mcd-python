@@ -839,7 +839,7 @@ class mcd():
         if "loct" in ttt[0]: self.loct  = ttt[1]
         if "ls"   in ttt[0]: self.xdate = ttt[1]
 
-    def zonalmean(self,ndx=dfmer,ndmean=4,typey="alt",typex = "lat"): #32
+    def zonalmean(self,ndx=dfmer,ndmean=32,typey="alt",typex = "lat"):
     ### retrieve a zonalmean lat/altitude or ls/lat slice
       # initialize
       self.fixedlt = False
