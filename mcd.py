@@ -829,24 +829,58 @@ class mcd():
       if not self.fixedlt: self.loct = umst
       self.lon = save1 ; self.xz = save2 ; self.loct = save3 ; self.lat = save4
 
-    def zonalmean(self,ndx=dfzon,ndy=dfver,ndmean=32):
-    ### retrieve a zonalmean lat/altitude slice
+    def filldim(self,xx,yy,typex,typey):
+      # fill in individual values in axis
+      tab = [[typex,xx],[typey,yy]]
+      for ttt in tab:
+        if "lat"  in ttt[0]: self.lat   = ttt[1]
+        if "lon"  in ttt[0]: self.lon   = ttt[1]
+        if "alt"  in ttt[0]: self.xz    = ttt[1]
+        if "loct" in ttt[0]: self.loct  = ttt[1]
+        if "ls"   in ttt[0]: self.xdate = ttt[1]
+
+    def zonalmean(self,ndx=dfmer,ndmean=4,typey="alt",typex = "lat"): #32
+    ### retrieve a zonalmean lat/altitude or ls/lat slice
+      # initialize
       self.fixedlt = False
-      save1 = self.lon ; save2 = self.xz ; save3 = self.loct ; save4 = self.lat
-      self.prepare(ndx=ndx,ndy=ndy)
-      self.vertlabel() ; self.ylabel = self.xlabel
-      self.vertaxis(ndy,yaxis=True)
-      # define first zonal averaging dimension
-      self.ininterv(-180.,180.,ndmean)
+      save1 = self.lon ; save2 = self.xz ; save3 = self.loct ; save4 = self.lat ; save5 = self.xdate
+      # define zonal averaging dimension, using self.xcoord as an intermediate
+      self.ininterv(-180.,180.,ndmean) 
       coordmean = self.xcoord
-      # define then the actual xcoordinate
-      self.xlabel = "North latitude (degrees)"
-      self.ininterv(-90.,90.,ndx,start=self.lats,end=self.late)
+      # define spatial dimension in possible cases
+      datype = typex+typey
+      if datype == "latalt":  # zonal-mean latitude/altitude plot
+        ndx = dfmer ; ndy = dfver     
+      elif datype == "lslat": # ls/lat MAWD/TES-like plot
+        ndx = dfsea ; ndy = dfmer
+      else:
+        errormess("not supported",printvar=typey)
+      # prepare arrays with correct dimensions for plots (i.e. no longitude)
+      # ... this also creates self.xcoord and self.ycoord but this is modified later with ininterv
+      self.prepare(ndx=ndx,ndy=ndy)
+      # now prepare axis specifics. could be probably more elegant.
+      # - treat specifics of altitude vertical axis, if applicable
+      if typey == "alt":
+        self.vertlabel() ; self.ylabel = self.xlabel
+        self.vertaxis(ndy,yaxis=True) # modifies self.ycoord
+      # - treat specifics of ls axis, if applicable
+      if typex == "ls":
+        self.xlabel = lslab
+        self.ininterv(0.,360.,ndx,start=self.xdates,end=self.xdatee)
+      # - treat specifics if lat axis, if applicable
+      if typex == "lat": 
+        self.xlabel = latlab
+        self.ininterv(-90.,90.,ndx,start=self.lats,end=self.late) # modifies self.xcoord  
+      if typey == "lat":
+        self.ylabel = latlab
+        self.ininterv(-90.,90.,ndy,start=self.lats,end=self.late,yaxis=True) # modifies self.ycoord                
+      # now the LOOP on 1) x coordinate 2) y coordinate 3) average coordinate
       umst = self.loct #fixedlt false for this case
       for i in range(ndx):
-       self.lat = self.xcoord[i]
        for j in range(ndy):
-        self.xz = self.ycoord[j]
+        # fill in correct values for query
+        self.filldim(self.xcoord[i],self.ycoord[j],typex,typey)     
+        ####
         meanpres = 0. ; meandens = 0. ; meantemp = 0. ; meanzonwind = 0. ; meanmerwind = 0. ; meanmeanvar = np.zeros(5) ; meanextvar = np.zeros(100)        
         # zonal averaging with forcing of local time
         for m in range(ndmean):
@@ -859,8 +893,9 @@ class mcd():
         self.pres=meanpres ; self.dens=meandens ; self.temp=meantemp ; self.zonwind=meanzonwind ; self.merwind=meanmerwind
         self.meanvar=meanmeanvar ; self.extvar=meanextvar
         self.put2d(i,j)
+      ### reinstall init state
       self.loct = umst #fixedlt false for this case
-      self.lon = save1 ; self.xz = save2 ; self.loct = save3 ; self.lat = save4
+      self.lon = save1 ; self.xz = save2 ; self.loct = save3 ; self.lat = save4 ; self.xdate = save5
 
     def hovmoller(self,typex="lat",typey="loct"):
     ### retrieve a time/other coordinate slice
@@ -911,16 +946,16 @@ class mcd():
           self.prepare(ndx=ndx,ndy=ndy)
           self.vertaxis(ndy,yaxis=True)
           self.ininterv(zestart,zeend,ndx,start=zestarti,end=zeendi)
+      ## TBD: solve this inconsistency by simply working out the axis by dimension
+      ## ... instead of swapping those in the case with Ls being on typey
+      ## ... what is below is a quick fix
+      if typey == "ls": 
+        typey = typex ; typex = "ls"
+      ##
       for i in range(ndx):
        for j in range(ndy):
-         tup = self.xcoord[i],self.ycoord[j]
-         # fill in the spatial and time axis
-         if typex == "lat" and typey == "loct": self.lat,self.loct  = tup
-         if typex == "lon" and typey == "loct": self.lon,self.loct  = tup
-         if typex == "alt" and typey == "loct": self.loct,self.xz   = tup
-         if typex == "lat" and typey == "ls":   self.xdate,self.lat = tup
-         if typex == "lon" and typey == "ls":   self.xdate,self.lon = tup
-         if typex == "alt" and typey == "ls":   self.xdate,self.xz  = tup
+         # fill in correct values for query
+         self.filldim(self.xcoord[i],self.ycoord[j],typex,typey)
          # query field
          self.update() ; self.put2d(i,j)
       self.lat = save1 ; self.xz = save2 ; self.loct = save3 ; self.lon = save4 ; self.xdate = save5
@@ -1166,11 +1201,14 @@ class mcd():
         elif self.lats is not None:  
            if zetypey is None:  
                if self.zonmean:    
-                 self.zonalmean()
+                 self.zonalmean(typex="lat",typey="alt")
                else:               
                  self.secalt(ndx=48,ndy=35,typex="lat")
-           else:                   
-             self.hovmoller(typex="lat",typey=zetypey)
+           else:    
+               if self.zonmean:
+                 self.zonalmean(typex="ls",typey="lat")
+               else:               
+                 self.hovmoller(typex="lat",typey=zetypey)
         else:
            self.hovmoller(typex="alt",typey=zetypey)
 
