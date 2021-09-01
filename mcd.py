@@ -148,7 +148,7 @@ class mcd():
           self.title = self.title + " JD " + str(self.xdate) + "."
         if not oneline: self.title = self.title + "\n"
         if self.lats is None:  self.title = self.title + " Latitude " + str(self.lat) + "N"
-        if self.zonmean and self.lats is not None and self.xzs is not None: 
+        if self.zonmean and (self.lats is not None and self.xzs is not None) or (self.lats is not None and self.xdates is not None): 
             self.title = self.title + "Zonal mean over all longitudes."
         elif self.lons is None: 
             self.title = self.title + " Longitude " + str(self.lon) + "E"
