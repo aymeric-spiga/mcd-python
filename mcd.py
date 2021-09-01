@@ -16,10 +16,10 @@ import matplotlib.pyplot as mpl
 ###
 
 ## default number of points for each dimension
-dfzon = 37 # zonal dimension
-dfmer = 19 # meridional dimension
-dfver = 20 # vertical dimension
-dflct = 13 # local time dimension
+dfzon = 64 #37 # zonal dimension
+dfmer = 48 #19 # meridional dimension
+dfver = 35 #20 # vertical dimension
+dflct = 25 #13 # local time dimension
 dfsea = 25 # solar long dimension
 ## default names
 lslab = "Areocentric longitude (degrees)"
