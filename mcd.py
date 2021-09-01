@@ -790,61 +790,61 @@ class mcd():
 ### 2D analysis ###
 ###################
 
-    def latlon(self,ndx=dfzon,ndy=dfmer):
-    ### retrieve a latitude/longitude slice
-    ### default is: local time is not fixed. user-defined local time is at longitude 0.
-      typey = "lat" ; typex = "lon"
-      save1 = self.lon ; save2 = self.lat ; save3 = self.loct
-      self.prepare(ndx=ndx,ndy=ndy)
-      self.fillcoord(typex,typey)
-      if not self.fixedlt: umst = self.loct
-      for i in range(ndx):
-       for j in range(ndy):
-         self.filldim(self.xcoord[i],self.ycoord[j],typex,typey)  
-         if not self.fixedlt: self.loct = (umst + self.lon/15.) % 24
-         self.update() ; self.put2d(i,j)
-      if not self.fixedlt: self.loct = umst
-      self.lon = save1 ; self.lat = save2 ; self.loct = save3
-
-    def secalt(self,ndx=dfzon,ndy=dfver,typex="lat"):
-    ### retrieve a coordinate/altitude slice
-      typey = "alt"
+    def query2d(self,typex="lon",typey="lat"):
+    ### retrieve a 2D slice
       save1 = self.lon ; save2 = self.xz ; save3 = self.loct ; save4 = self.lat
-      self.prepare(ndx=ndx,ndy=ndy)
       self.fillcoord(typex,typey)
-      if not self.fixedlt: umst = self.loct
-      for i in range(ndx):
-       for j in range(ndy):
+      if not self.fixedlt: umst = self.loct # local time is not fixed. user-defined local time is at longitude 0.
+      for i in range(self.xcoord.size):
+       for j in range(self.ycoord.size):
          self.filldim(self.xcoord[i],self.ycoord[j],typex,typey)  
          if not self.fixedlt: self.loct = (umst + self.lon/15.) % 24
          self.update() ; self.put2d(i,j)
       if not self.fixedlt: self.loct = umst
       self.lon = save1 ; self.xz = save2 ; self.loct = save3 ; self.lat = save4
 
+    def latlon(self):
+    ### retrieve a latitude/longitude slice
+      self.query2d()
+
+    def secalt(self,typex="lat"):
+    ### retrieve a coordinate/altitude slice
+      self.query2d(typex=typex,typey="alt")
+
     def fillcoord(self,typex,typey):
+    ### define coordinates. using global default values for number of points.
+    ### prepare output arrays once coordinates are defined.
       # fill in coord properties // x-axis
       if typex == "lat":
+        ndx = dfmer
         self.xlabel = latlab
-        self.ininterv(-90.,90.,dfmer,start=self.lats,end=self.late) ## do we want to change ndx or just use dfzon?
+        self.ininterv(-90.,90.,ndx,start=self.lats,end=self.late) ## do we want to change ndx or just use dfzon?
       elif typex == "lon":
+        ndx = dfzon
         self.xlabel = lonlab
-        self.ininterv(-180.,180.,dfzon,start=self.lons,end=self.lone)
+        self.ininterv(-180.,180.,ndx,start=self.lons,end=self.lone)
       elif typex == "alt":
+        ndx = dfver
         self.vertlabel()
         self.vertaxis(dfver)
       # fill in coord properties // y-axis
       if typey == "lat":
+        ndy = dfmer
         self.ylabel = latlab
-        self.ininterv(-90.,90.,dfmer,start=self.lats,end=self.late,yaxis=True) 
+        self.ininterv(-90.,90.,ndy,start=self.lats,end=self.late,yaxis=True) 
       elif typey == "lon":
+        ndy = dfzon
         self.ylabel = lonlab
-        self.ininterv(-180.,180.,dfzon,start=self.lons,end=self.lone,yaxis=True)
+        self.ininterv(-180.,180.,ndy,start=self.lons,end=self.lone,yaxis=True)
       elif typey == "alt":
+        ndy = dfver
         sav = self.xlabel # save because used below as intermediate (to be improved)
         self.vertlabel() ; self.ylabel = self.xlabel
         self.xlabel = sav
-        self.vertaxis(dfver,yaxis=True)
-
+        self.vertaxis(ndy,yaxis=True)
+      # prepare arrays with correct dimensions
+      self.prepare(ndx=ndx,ndy=ndy)
+        
     def filldim(self,xx,yy,typex,typey):
       # fill in individual values in axis
       tab = [[typex,xx],[typey,yy]]
@@ -1217,8 +1217,7 @@ class mcd():
         # -- if longitude is free dimension
         if self.lons is not None:    
            if zetypey is None:
-             #self.secalt(ndx=64,ndy=35,typex="lon")
-             self.secalt(ndx=dfzon,ndy=dfver,typex="lon")
+             self.secalt(typex="lon")
            else:
              self.hovmoller(typex="lon",typey=zetypey)
         elif self.lats is not None:  
@@ -1226,8 +1225,7 @@ class mcd():
                if self.zonmean:    
                  self.zonalmean(typex="lat",typey="alt")
                else:               
-                 #self.secalt(ndx=48,ndy=35,typex="lat") ## why x y hardcoded? change default maybe?
-                 self.secalt(ndx=dfmer,ndy=dfver,typex="lat") ## why x y hardcoded? change default maybe?
+                 self.secalt(typex="lat") 
            else:    
                if self.zonmean:
                  self.zonalmean(typex="ls",typey="lat")
