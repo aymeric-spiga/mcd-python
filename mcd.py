@@ -790,18 +790,36 @@ class mcd():
 ### 2D analysis ###
 ###################
 
-    def query2d(self,typex="lon",typey="lat"):
+    def query2d(self,typex="lon",typey="lat",averaging=None,ndmean=32):
     ### retrieve a 2D slice
-      save1 = self.lon ; save2 = self.xz ; save3 = self.loct ; save4 = self.lat
+      save1 = self.lon ; save2 = self.xz ; save3 = self.loct ; save4 = self.lat ; save5 = self.xdate
+      if averaging is not None:
+        coordmean = self.meandim(ndmean=ndmean,typem=averaging) # TBD: make it generic
+        if averaging == "lon": 
+          self.fixedlt = False
       self.fillcoord(typex,typey)
       if not self.fixedlt: umst = self.loct # local time is not fixed. user-defined local time is at longitude 0.
+      ###
+      if averaging is not None:
+        if averaging == "lon":
+          umst = self.loct #fixedlt false for this case
+      ###
       for i in range(self.xcoord.size):
        for j in range(self.ycoord.size):
+         # fill in correct values for query
          self.filldim(self.xcoord[i],self.ycoord[j],typex,typey)  
+         # local time specificity
          if not self.fixedlt: self.loct = (umst + self.lon/15.) % 24
-         self.update() ; self.put2d(i,j)
+         # get field (simple or average)
+         if averaging is None:
+           self.update()
+         else:
+           self.meanperform(coordmean,umst=umst) # TBD: make it generic
+         # fill in 2D array
+         self.put2d(i,j)
+      # reinstall init state
       if not self.fixedlt: self.loct = umst
-      self.lon = save1 ; self.xz = save2 ; self.loct = save3 ; self.lat = save4
+      self.lon = save1 ; self.xz = save2 ; self.loct = save3 ; self.lat = save4 ; self.xdate = save5
 
     def latlon(self):
     ### retrieve a latitude/longitude slice
@@ -827,6 +845,10 @@ class mcd():
         ndx = dfver
         self.vertlabel()
         self.vertaxis(dfver)
+      elif typex == "ls":
+        ndx = dfsea
+        self.xlabel = lslab
+        self.ininterv(0.,360.,ndx,start=self.xdates,end=self.xdatee)
       # fill in coord properties // y-axis
       if typey == "lat":
         ndy = dfmer
@@ -842,9 +864,13 @@ class mcd():
         self.vertlabel() ; self.ylabel = self.xlabel
         self.xlabel = sav
         self.vertaxis(ndy,yaxis=True)
+      elif typey == "ls":
+        ndy = dfsea
+        self.ylabel = lslab
+        self.ininterv(0.,360.,ndy,start=self.xdates,end=self.xdatee,yaxis=True)
       # prepare arrays with correct dimensions
       self.prepare(ndx=ndx,ndy=ndy)
-        
+
     def filldim(self,xx,yy,typex,typey):
       # fill in individual values in axis
       tab = [[typex,xx],[typey,yy]]
@@ -855,61 +881,18 @@ class mcd():
         if "loct" in ttt[0]: self.loct  = ttt[1]
         if "ls"   in ttt[0]: self.xdate = ttt[1]
 
-    def meandim(ndmean=32,typem="lon"):
+    def meandim(self,ndmean=32,typem="lon"):
     ### define averaging dimension
       if typem == "lon":
         sav = self.xcoord #using xcoord as an intermediate
         self.ininterv(-180.,180.,ndmean)
         coordmean = self.xcoord
         self.xcoord = sav
+      return coordmean
 
-    def zonalmean(self,ndx=dfmer,ndmean=32,typey="alt",typex = "lat"):
+    def zonalmean(self,ndmean=32,typey="alt",typex="lat"):
     ### retrieve a zonalmean lat/altitude or ls/lat slice
-      # initialize
-      self.fixedlt = False
-      save1 = self.lon ; save2 = self.xz ; save3 = self.loct ; save4 = self.lat ; save5 = self.xdate
-      # define zonal averaging dimension
-      self.meandim(ndmean=ndmean,typem="lon")
-      # define spatial dimension in possible cases
-      datype = typex+typey
-      if datype == "latalt":  # zonal-mean latitude/altitude plot
-        ndx = dfmer ; ndy = dfver     
-      elif datype == "lslat": # ls/lat MAWD/TES-like plot
-        ndx = dfsea ; ndy = dfmer
-      else:
-        errormess("not supported",printvar=typey)
-      # prepare arrays with correct dimensions for plots (i.e. no longitude)
-      # ... this also creates self.xcoord and self.ycoord but this is modified later with ininterv
-      self.prepare(ndx=ndx,ndy=ndy)
-      # now prepare axis specifics. could be probably more elegant.
-      # - treat specifics of altitude vertical axis, if applicable
-      if typey == "alt":
-        self.vertlabel() ; self.ylabel = self.xlabel
-        self.vertaxis(ndy,yaxis=True) # modifies self.ycoord
-      # - treat specifics of ls axis, if applicable
-      if typex == "ls":
-        self.xlabel = lslab
-        self.ininterv(0.,360.,ndx,start=self.xdates,end=self.xdatee)
-      # - treat specifics if lat axis, if applicable
-      if typex == "lat": 
-        self.xlabel = latlab
-        self.ininterv(-90.,90.,ndx,start=self.lats,end=self.late) # modifies self.xcoord  
-      if typey == "lat":
-        self.ylabel = latlab
-        self.ininterv(-90.,90.,ndy,start=self.lats,end=self.late,yaxis=True) # modifies self.ycoord                
-      # now the LOOP on 1) x coordinate 2) y coordinate 3) average coordinate
-      umst = self.loct #fixedlt false for this case
-      for i in range(ndx):
-       for j in range(ndy):
-        # fill in correct values for query
-        self.filldim(self.xcoord[i],self.ycoord[j],typex,typey)     
-        ####
-        self.meanperform(coordmean,umst=umst) ## and we could even make something more generic...
-        ####
-        self.put2d(i,j)
-      ### reinstall init state
-      self.loct = umst #fixedlt false for this case
-      self.lon = save1 ; self.xz = save2 ; self.loct = save3 ; self.lat = save4 ; self.xdate = save5
+      self.query2d(typex=typex,typey=typey,averaging="lon")
 
     def meanperform(self,coordmean,meanstyle="zonal",umst=None):
       ndmean = coordmean.size
