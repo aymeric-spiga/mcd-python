@@ -10,3 +10,5 @@ input_dust
 input_water
 dustopacity.def
 perso/inimeso/*.png
+tutorial/*.png
+*.ipynb_checkpoints*
