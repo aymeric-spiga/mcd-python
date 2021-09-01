@@ -524,11 +524,12 @@ class mcd():
 ########################
 
     def prepare(self,ndx=None,ndy=None):
-    ### prepare I/O arrays for 1d slices
+    ### --- prepare I/O arrays for 1d slices ---
+    ### NB: use ininterv to define xcoord and ycoord, not done here
       if ndx is None:  print "No dimension in prepare. Exit. Set at least ndx." ; exit()
-      else:            self.xcoord = np.ones(ndx)
-      if ndy is None:  dashape = (ndx)     ; dashapemean = (ndx,6)     ; dashapeext = (ndx,101)     ; self.ycoord = None
-      else:            dashape = (ndx,ndy) ; dashapemean = (ndx,ndy,6) ; dashapeext = (ndx,ndy,101) ; self.ycoord = np.ones(ndy)
+      #else:            self.xcoord = np.ones(ndx)
+      if ndy is None:  dashape = (ndx)     ; dashapemean = (ndx,6)     ; dashapeext = (ndx,101)     #; self.ycoord = None
+      else:            dashape = (ndx,ndy) ; dashapemean = (ndx,ndy,6) ; dashapeext = (ndx,ndy,101) #; self.ycoord = np.ones(ndy)
       self.prestab = np.ones(dashape) ; self.denstab = np.ones(dashape) ; self.temptab = np.ones(dashape)
       self.zonwindtab = np.ones(dashape) ; self.merwindtab = np.ones(dashape) 
       self.meanvartab = np.ones(dashapemean) ; self.extvartab = np.ones(dashapeext)
