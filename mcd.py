@@ -15,6 +15,13 @@ import numpy as np
 import matplotlib.pyplot as mpl
 ###
 
+## default number of points for each dimension
+dfzon = 37 # zonal dimension
+dfmer = 19 # meridional dimension
+dfver = 20 # vertical dimension
+dflct = 13 # local time dimension
+dfsea = 25 # solar long dimension
+
 def errormess(text,printvar=None):
     print text
     if printvar is not None: print printvar
@@ -595,7 +602,7 @@ class mcd():
       self.meanvartab[i,1:5] = self.meanvar[0:4]  ## note: var numbering according to MCD manual is kept
       self.extvartab[i,1:100] = self.extvar[0:99] ## note: var numbering according to MCD manual is kept
 
-    def diurnal(self,nd=13):
+    def diurnal(self,nd=dflct):
     ### retrieve a local time slice
       self.fixedlt = True  ## local time is real local time
       save = self.loct
@@ -604,7 +611,7 @@ class mcd():
       for i in range(nd): self.loct = self.xcoord[i] ; self.update() ; self.put1d(i)
       self.loct = save
 
-    def zonal(self,nd=37):
+    def zonal(self,nd=dfzon):
     ### retrieve a longitude slice
       save = self.lon
       self.xlabel = "East longitude (degrees)"
@@ -616,7 +623,7 @@ class mcd():
           self.update() ; self.put1d(i)
       self.lon = save
 
-    def meridional(self,nd=19):
+    def meridional(self,nd=dfmer):
     ### retrieve a latitude slice
       self.fixedlt = True  ## local time is real local time
       save = self.lat
@@ -625,7 +632,7 @@ class mcd():
       for i in range(nd): self.lat = self.xcoord[i] ; self.update() ; self.put1d(i)
       self.lat = save
 
-    def profile(self,nd=20,tabperso=None):
+    def profile(self,nd=dfver,tabperso=None):
     ### retrieve an altitude slice (profile)
       self.fixedlt = True  ## local time is real local time
       save = self.xz
@@ -638,7 +645,7 @@ class mcd():
       for i in range(nd): self.xz = self.xcoord[i] ; self.update() ; self.put1d(i)
       self.xz = save
 
-    def seasonal(self,nd=25):
+    def seasonal(self,nd=dfsea):
     ### retrieve a seasonal slice
       save = self.xdate
       self.xlabel = "Areocentric longitude (degrees)"
@@ -776,7 +783,7 @@ class mcd():
 ### 2D analysis ###
 ###################
 
-    def latlon(self,ndx=37,ndy=19):
+    def latlon(self,ndx=dfzon,ndy=dfmer):
     ### retrieve a latitude/longitude slice
     ### default is: local time is not fixed. user-defined local time is at longitude 0.
       save1 = self.lon ; save2 = self.lat ; save3 = self.loct
@@ -793,7 +800,7 @@ class mcd():
       if not self.fixedlt: self.loct = umst
       self.lon = save1 ; self.lat = save2 ; self.loct = save3
 
-    def secalt(self,ndx=37,ndy=20,typex="lat"):
+    def secalt(self,ndx=dfzon,ndy=dfver,typex="lat"):
     ### retrieve a coordinate/altitude slice
       save1 = self.lon ; save2 = self.xz ; save3 = self.loct ; save4 = self.lat
       self.prepare(ndx=ndx,ndy=ndy)
@@ -816,16 +823,18 @@ class mcd():
       if not self.fixedlt: self.loct = umst
       self.lon = save1 ; self.xz = save2 ; self.loct = save3 ; self.lat = save4
 
-    def zonalmean(self,ndx=37,ndy=20,ndmean=32):
+    def zonalmean(self,ndx=dfzon,ndy=dfver,ndmean=32):
     ### retrieve a zonalmean lat/altitude slice
       self.fixedlt = False
       save1 = self.lon ; save2 = self.xz ; save3 = self.loct ; save4 = self.lat
       self.prepare(ndx=ndx,ndy=ndy)
       self.vertlabel() ; self.ylabel = self.xlabel
       self.vertaxis(ndy,yaxis=True)
-      self.xlabel = "North latitude (degrees)"
+      # define first zonal averaging dimension
       self.ininterv(-180.,180.,ndmean)
       coordmean = self.xcoord
+      # define then the actual xcoordinate
+      self.xlabel = "North latitude (degrees)"
       self.ininterv(-90.,90.,ndx,start=self.lats,end=self.late)
       umst = self.loct #fixedlt false for this case
       for i in range(ndx):
@@ -833,6 +842,7 @@ class mcd():
        for j in range(ndy):
         self.xz = self.ycoord[j]
         meanpres = 0. ; meandens = 0. ; meantemp = 0. ; meanzonwind = 0. ; meanmerwind = 0. ; meanmeanvar = np.zeros(5) ; meanextvar = np.zeros(100)        
+        # zonal averaging with forcing of local time
         for m in range(ndmean):
            self.lon = coordmean[m]
            self.loct = (umst + self.lon/15.) % 24 #fixedlt false for this case
@@ -846,27 +856,35 @@ class mcd():
       self.loct = umst #fixedlt false for this case
       self.lon = save1 ; self.xz = save2 ; self.loct = save3 ; self.lat = save4
 
-    def hovmoller(self,ndcoord=20,typex="lat",typey="loct"):
+    def hovmoller(self,typex="lat",typey="loct"):
     ### retrieve a time/other coordinate slice
       save1 = self.lat ; save2 = self.xz ; save3 = self.loct ; save4 = self.lon ; save5 = self.xdate
       # set up time axis
-      ndtime=25
       if typey == "loct":
           labeltime = "Local time (Martian hour)"
+          ndtime = dflct
           zestart,zeend = 0.,24.
           zestarti,zeendi = self.locts,self.locte
           zeyaxis = True
       elif typey == "ls":
-          labeltime = "Areocentric longitude (degrees)"    
+          labeltime = "Areocentric longitude (degrees)" 
+          ndtime = dfsea   
           zestart,zeend = 0.,360.
           zestarti,zeendi = self.xdates,self.xdatee
           zeyaxis = False
+      # set up spatial axis (number of points)
+      if typex == "lat":
+          ndcoord = 48 #dflat
+      elif typex == "lon":
+          ndcoord = 64 #dflon
+      elif typex == "alt":
+          ndcoord = 35 #dfalt
       # hovmoller with ls is more standard with ls as horizontal axis
       if typey == "ls" or typex == "alt":
           ndx,ndy = ndtime,ndcoord
       else:
           ndx,ndy = ndcoord,ndtime
-      # set up spatial axis
+      # set up spatial axis (arrays and plots)
       if typex == "lat": 
           self.xlabel = "North latitude (degrees)" 
           self.ylabel = labeltime
@@ -1138,7 +1156,7 @@ class mcd():
            if zetypey is None:
              self.secalt(ndx=64,ndy=35,typex="lon")
            else:
-             self.hovmoller(ndcoord=64,typex="lon",typey=zetypey)
+             self.hovmoller(typex="lon",typey=zetypey)
         elif self.lats is not None:  
            if zetypey is None:  
                if self.zonmean:    
@@ -1146,9 +1164,9 @@ class mcd():
                else:               
                  self.secalt(ndx=48,ndy=35,typex="lat")
            else:                   
-             self.hovmoller(ndcoord=48,typex="lat",typey=zetypey)
+             self.hovmoller(typex="lat",typey=zetypey)
         else:
-           self.hovmoller(ndcoord=35,typex="alt",typey=zetypey)
+           self.hovmoller(typex="alt",typey=zetypey)
 
         (field, fieldlab) = self.definefield(choice)
 
