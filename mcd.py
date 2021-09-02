@@ -149,8 +149,8 @@ class mcd():
           self.title = self.title + " JD " + str(self.xdate) + "."
         if not oneline: self.title = self.title + "\n"
         if self.lats is None:  self.title = self.title + " Latitude " + str(self.lat) + "N"
-        if self.zonmean and (self.lats is not None and self.xzs is not None) or (self.lats is not None and self.xdates is not None): 
-            self.title = self.title + "Zonal mean over all longitudes."
+        if self.zonmean: 
+            self.title = self.title + " Zonal mean over all longitudes."
         elif self.lons is None: 
             self.title = self.title + " Longitude " + str(self.lon) + "E"
         if self.xzs is None:   
@@ -1201,34 +1201,18 @@ class mcd():
       fig = mcdcomp.setfig(len(tabtodo))
       subv,subh = mcdcomp.definesubplot( len(tabtodo) , fig )
 
+      #######################
+      if self.zonmean:
+        averaging = "lon"
+      else:
+        averaging = None
+      #######################
+      self.query2d(self,averaging=averaging)
+      #######################
+
       for i in range(len(tabtodo)):
         yeah = fig.add_subplot(subv,subh,i+1)
         choice = tabtodo[i]
-
-        # explore all types of 2D plots
-        # -- retrieve kind of time axis
-        if self.locts is not None: zetypey = "loct"
-        elif self.xdates is not None: zetypey = "ls"
-        else: zetypey = None
-        # -- if longitude is free dimension
-        if self.lons is not None:    
-           if zetypey is None:
-             self.secalt(typex="lon")
-           else:
-             self.hovmoller(typex="lon",typey=zetypey)
-        elif self.lats is not None:  
-           if zetypey is None:  
-               if self.zonmean:    
-                 self.zonalmean(typex="lat",typey="alt")
-               else:               
-                 self.secalt(typex="lat") 
-           else:    
-               if self.zonmean:
-                 self.zonalmean(typex="ls",typey="lat")
-               else:               
-                 self.hovmoller(typex="lat",typey=zetypey)
-        else:
-           self.hovmoller(typex="alt",typey=zetypey)
 
         (field, fieldlab) = self.definefield(choice)
 
