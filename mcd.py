@@ -860,8 +860,10 @@ class mcd():
        for j in range(self.ycoord.size):
          # fill in correct values for query
          self.filldim(self.xcoord[i],self.ycoord[j])  
-         # local time specificity
-         if not self.fixedlt: self.loct = (umst + self.lon/15.) % 24
+         # emulate "natural" global local time if not free dim and not fixedlt
+         if self.locts is None:
+           if not self.fixedlt: 
+             self.loct = (umst + self.lon/15.) % 24
          # get field (simple or average)
          if averaging is None:
            self.update()
