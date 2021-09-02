@@ -100,6 +100,7 @@ class mcd():
         self.prestab = None ; self.denstab = None ; self.temptab = None 
         self.zonwindtab = None ; self.merwindtab = None ; self.meanvartab = None ; self.extvartab = None
         ## plot stuff
+        self.typex = None ; self.typey = None
         self.xlabel = None ; self.ylabel = None ; self.title = ""
         self.vertplot = False
         self.fmt = "%.1e" 
@@ -790,14 +791,65 @@ class mcd():
 ### 2D analysis ###
 ###################
 
-    def query2d(self,typex="lon",typey="lat",averaging=None,ndmean=32):
+    def definetype(self,typex=None,typey=None):
+      ### get the type of 2D plot
+      # -- we keep a "forcing" option for retrocompatibility (e.g. for maps)
+      # -- this is meant to ultimately disappear
+      if typex is not None and typey is not None:
+        self.typex = typex
+        self.typey = typey
+        return
+      # -- retrieve kind of time axis
+      if self.locts is not None: 
+        zetypet = "loct"
+        # case of a ls/lt map (all-time plot)
+        if self.xdates is not None:
+          self.typex = "ls" ; self.typey = zetypet
+          return
+      elif self.xdates is not None: 
+        zetypet = "ls"
+      else: 
+        zetypet = None
+      # -- retrieve kind of spatial axis
+      if self.lons is not None: 
+        zetypes = "lon"
+        # case of a lat/lon map
+        if self.lats is not None:
+          self.typex = zetypes ; self.typey = "lat"
+          return      
+      elif self.lats is not None: 
+        zetypes = "lat"
+      # -- explore all possibilities
+      if zetypet is None:
+        # this is horizontal/vertical section
+        self.typex = zetypes ; self.typey = "alt" # secalt
+      else:
+        # there is a time axis
+        # -- first we consider that spatial could be altitude
+        # -- others (lat & lon) were done above
+        if self.xzs is not None: 
+          zetypes = "alt"
+        # -- second we organize coordinates as usual
+        if zetypet == "loct":
+          self.typex = zetypes ; self.typey = zetypet # hovmoller
+        elif zetypet == "ls":
+          self.typex = zetypet ; self.typey = zetypes # seasonal
+      return
+
+    def query2d(self,typex=None,typey=None,averaging=None,ndmean=32):
     ### retrieve a 2D slice
+      # save query
       save1 = self.lon ; save2 = self.xz ; save3 = self.loct ; save4 = self.lat ; save5 = self.xdate
+      # define the type of 2D plot
+      # -- hard setting of typex and typey is meant to disappear
+      self.definetype(typex=typex,typey=typey)
+      # settings for averaging
       if averaging is not None:
         coordmean = self.meandim(ndmean=ndmean,typem=averaging) # TBD: make it generic
         if averaging == "lon": 
           self.fixedlt = False
-      self.fillcoord(typex,typey)
+      # get coordinates
+      self.fillcoord()
       if not self.fixedlt: umst = self.loct # local time is not fixed. user-defined local time is at longitude 0.
       ###
       if averaging is not None:
@@ -807,7 +859,7 @@ class mcd():
       for i in range(self.xcoord.size):
        for j in range(self.ycoord.size):
          # fill in correct values for query
-         self.filldim(self.xcoord[i],self.ycoord[j],typex,typey)  
+         self.filldim(self.xcoord[i],self.ycoord[j])  
          # local time specificity
          if not self.fixedlt: self.loct = (umst + self.lon/15.) % 24
          # get field (simple or average)
@@ -821,59 +873,80 @@ class mcd():
       if not self.fixedlt: self.loct = umst
       self.lon = save1 ; self.xz = save2 ; self.loct = save3 ; self.lat = save4 ; self.xdate = save5
 
-    def latlon(self):
+################################################
+### retro-compatibility functions
+### -- only latlon is used now in htmlmap2d query
+### -- htmlplot2d uses now query2d() in which plot type is set
+### -- but what is below could be useful in interactive mode
+    def latlon(self,typex="lon",typey="lat"):
     ### retrieve a latitude/longitude slice
-      self.query2d()
-
+      self.query2d(typex=typex,typey=typey)
     def secalt(self,typex="lat"):
     ### retrieve a coordinate/altitude slice
       self.query2d(typex=typex,typey="alt")
+    def hovmoller(self,typex="lat",typey="loct"):
+    ### retrieve a time/other coordinate slice
+      if typey == "ls":
+         typey = typex ; typex = "ls" #usually in seasonal plots, Ls is in x-axis
+      self.query2d(typex=typex,typey=typey)
+    def zonalmean(self,ndmean=32,typey="alt",typex="lat"):
+    ### retrieve a zonalmean lat/altitude or ls/lat slice
+      self.query2d(typex=typex,typey=typey,averaging="lon")
+################################################
 
-    def fillcoord(self,typex,typey):
+    def fillcoord(self):
     ### define coordinates. using global default values for number of points.
     ### prepare output arrays once coordinates are defined.
       # fill in coord properties // x-axis
-      if typex == "lat":
+      if self.typex == "lat":
         ndx = dfmer
         self.xlabel = latlab
         self.ininterv(-90.,90.,ndx,start=self.lats,end=self.late) ## do we want to change ndx or just use dfzon?
-      elif typex == "lon":
+      elif self.typex == "lon":
         ndx = dfzon
         self.xlabel = lonlab
         self.ininterv(-180.,180.,ndx,start=self.lons,end=self.lone)
-      elif typex == "alt":
+      elif self.typex == "alt":
         ndx = dfver
         self.vertlabel()
         self.vertaxis(dfver)
-      elif typex == "ls":
+      elif self.typex == "ls":
         ndx = dfsea
         self.xlabel = lslab
         self.ininterv(0.,360.,ndx,start=self.xdates,end=self.xdatee)
+      elif self.typex == "loct":
+        ndx = dflct
+        self.xlabel = ltlab
+        self.ininterv(0.,24.,ndx,start=self.locts,end=self.locte)
       # fill in coord properties // y-axis
-      if typey == "lat":
+      if self.typey == "lat":
         ndy = dfmer
         self.ylabel = latlab
         self.ininterv(-90.,90.,ndy,start=self.lats,end=self.late,yaxis=True) 
-      elif typey == "lon":
+      elif self.typey == "lon":
         ndy = dfzon
         self.ylabel = lonlab
         self.ininterv(-180.,180.,ndy,start=self.lons,end=self.lone,yaxis=True)
-      elif typey == "alt":
+      elif self.typey == "alt":
         ndy = dfver
         sav = self.xlabel # save because used below as intermediate (to be improved)
         self.vertlabel() ; self.ylabel = self.xlabel
         self.xlabel = sav
         self.vertaxis(ndy,yaxis=True)
-      elif typey == "ls":
+      elif self.typey == "ls":
         ndy = dfsea
         self.ylabel = lslab
         self.ininterv(0.,360.,ndy,start=self.xdates,end=self.xdatee,yaxis=True)
+      elif self.typey == "loct":
+        ndy = dflct
+        self.ylabel = ltlab
+        self.ininterv(0.,24.,ndy,start=self.locts,end=self.locte,yaxis=True)
       # prepare arrays with correct dimensions
       self.prepare(ndx=ndx,ndy=ndy)
 
-    def filldim(self,xx,yy,typex,typey):
+    def filldim(self,xx,yy):
       # fill in individual values in axis
-      tab = [[typex,xx],[typey,yy]]
+      tab = [[self.typex,xx],[self.typey,yy]]
       for ttt in tab:
         if "lat"  in ttt[0]: self.lat   = ttt[1]
         if "lon"  in ttt[0]: self.lon   = ttt[1]
@@ -890,10 +963,6 @@ class mcd():
         self.xcoord = sav
       return coordmean
 
-    def zonalmean(self,ndmean=32,typey="alt",typex="lat"):
-    ### retrieve a zonalmean lat/altitude or ls/lat slice
-      self.query2d(typex=typex,typey=typey,averaging="lon")
-
     def meanperform(self,coordmean,meanstyle="zonal",umst=None):
       ndmean = coordmean.size
       meanpres = 0. ; meandens = 0. ; meantemp = 0. ; meanzonwind = 0. ; meanmerwind = 0. ; meanmeanvar = np.zeros(5) ; meanextvar = np.zeros(100)        
@@ -908,69 +977,6 @@ class mcd():
         meanmeanvar = meanmeanvar + self.meanvar/float(ndmean) ; meanextvar = meanextvar + self.extvar/float(ndmean)
       self.pres=meanpres ; self.dens=meandens ; self.temp=meantemp ; self.zonwind=meanzonwind ; self.merwind=meanmerwind
       self.meanvar=meanmeanvar ; self.extvar=meanextvar
-
-    def hovmoller(self,typex="lat",typey="loct"):
-    ### retrieve a time/other coordinate slice
-      save1 = self.lat ; save2 = self.xz ; save3 = self.loct ; save4 = self.lon ; save5 = self.xdate
-      # set up time axis
-      if typey == "loct":
-          labeltime = ltlab
-          ndtime = dflct
-          zestart,zeend = 0.,24.
-          zestarti,zeendi = self.locts,self.locte
-          zeyaxis = True
-      elif typey == "ls":
-          labeltime = lslab
-          ndtime = dfsea   
-          zestart,zeend = 0.,360.
-          zestarti,zeendi = self.xdates,self.xdatee
-          zeyaxis = False
-      # set up spatial axis (number of points)
-      if typex == "lat":
-          ndcoord = 48 #dflat
-      elif typex == "lon":
-          ndcoord = 64 #dflon
-      elif typex == "alt":
-          ndcoord = 35 #dfalt
-      # hovmoller with ls is more standard with ls as horizontal axis
-      if typey == "ls" or typex == "alt":
-          ndx,ndy = ndtime,ndcoord
-      else:
-          ndx,ndy = ndcoord,ndtime
-      # set up spatial axis (arrays and plots)
-      if typex == "lat": 
-          self.xlabel = latlab 
-          self.ylabel = labeltime
-          if typey == "ls": self.xlabel,self.ylabel = self.ylabel,self.xlabel
-          self.prepare(ndx=ndx,ndy=ndy)
-          self.ininterv(-90.,90.,ndcoord,start=self.lats,end=self.late,yaxis=(not zeyaxis))
-          self.ininterv(zestart,zeend,ndtime,start=zestarti,end=zeendi,yaxis=zeyaxis)
-      elif typex == "lon":
-          self.xlabel = lonlab
-          self.ylabel = labeltime
-          if typey == "ls": self.xlabel,self.ylabel = self.ylabel,self.xlabel
-          self.prepare(ndx=ndx,ndy=ndy)
-          self.ininterv(-180.,180.,ndcoord,start=self.lons,end=self.lone,yaxis=(not zeyaxis))
-          self.ininterv(zestart,zeend,ndtime,start=zestarti,end=zeendi,yaxis=zeyaxis)
-      elif typex == "alt":
-          self.vertlabel() ; self.ylabel = self.xlabel
-          self.xlabel = labeltime
-          self.prepare(ndx=ndx,ndy=ndy)
-          self.vertaxis(ndy,yaxis=True)
-          self.ininterv(zestart,zeend,ndx,start=zestarti,end=zeendi)
-      ## TBD: solve this inconsistency by simply working out the axis by dimension
-      ## ... instead of swapping those in the case with Ls being on typey
-      ## ... what is below is a quick fix
-      if typey == "ls": 
-        typey = typex ; typex = "ls"
-      ##
-      for i in range(ndx):
-       for j in range(ndy):
-         # fill in correct values for query
-         self.filldim(self.xcoord[i],self.ycoord[j],typex,typey)
-         # query field
-         self.update() ; self.put2d(i,j)
-      self.lat = save1 ; self.xz = save2 ; self.loct = save3 ; self.lon = save4 ; self.xdate = save5
 
     def put2d(self,i,j):
     ## fill in subscript i,j in output arrays
