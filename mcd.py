@@ -831,7 +831,10 @@ class mcd():
           zetypes = "alt"
         # -- second we organize coordinates as usual
         if zetypet == "loct":
-          self.typex = zetypes ; self.typey = zetypet # hovmoller
+          if zetypes == "alt":
+            self.typex = zetypet ; self.typey = zetypes # hovmoller with alt
+          else:
+            self.typex = zetypes ; self.typey = zetypet # hovmoller
         elif zetypet == "ls":
           self.typex = zetypet ; self.typey = zetypes # seasonal
       return
