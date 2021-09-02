@@ -106,7 +106,7 @@ class mcd():
         self.fmt = "%.1e" 
         self.colorm = "jet"
         self.fixedlt = False
-        self.zonmean = False
+        self.averaging = None
         self.min2d = None
         self.max2d = None
         self.dpi = 80.
@@ -148,20 +148,24 @@ class mcd():
         elif self.datekey == 0:  
           self.title = self.title + " JD " + str(self.xdate) + "."
         if not oneline: self.title = self.title + "\n"
-        if self.lats is None:  self.title = self.title + " Latitude " + str(self.lat) + "N"
-        if self.zonmean: 
+        if self.lats is None:  
+            self.title = self.title + " Latitude " + str(self.lat) + "N."
+        if self.averaging == "lon": 
             self.title = self.title + " Zonal mean over all longitudes."
         elif self.lons is None: 
-            self.title = self.title + " Longitude " + str(self.lon) + "E"
+            self.title = self.title + " Longitude " + str(self.lon) + "E."
         if self.xzs is None:   
             self.vertunits()
-            self.title = self.title + " Altitude " + str(self.xz) + " " + self.vunits
+            self.title = self.title + " Altitude " + str(self.xz) + " " + self.vunits + "."
         if self.datekey == 1:
-          if self.locts is None:
-            self.title = self.title + " Local time " + str(self.loct) + "h"
-            if self.lons is not None: # if longitude is a free dimension
-              if not self.fixedlt:  self.title = self.title + " (at longitude 0) "
-              else: self.title = self.title + " (fixed at all longitudes) "
+          if self.averaging == "loct":
+            self.title = self.title + " Diurnal mean over all local times."
+          else:
+            if self.locts is None and self.averaging != "lon":
+              self.title = self.title + " Local time " + str(self.loct) + "h"
+              if self.lons is not None: # if longitude is a free dimension
+                if not self.fixedlt:  self.title = self.title + " (at longitude 0) "
+                else: self.title = self.title + " (fixed at all longitudes) "
 
     def getextvarlab(self,num):
         whichfield = { \
@@ -839,26 +843,25 @@ class mcd():
           self.typex = zetypet ; self.typey = zetypes # seasonal
       return
 
-    def query2d(self,typex=None,typey=None,averaging=None,ndmean=32):
+    def query2d(self,typex=None,typey=None,ndmean=32):
     ### retrieve a 2D slice
       # save query
       save1 = self.lon ; save2 = self.xz ; save3 = self.loct ; save4 = self.lat ; save5 = self.xdate
+      # initialize
+      if not self.fixedlt: 
+        umst = self.loct # local time is not fixed. user-defined local time is at longitude 0.
       # define the type of 2D plot
       # -- hard setting of typex and typey is meant to disappear
       self.definetype(typex=typex,typey=typey)
       # settings for averaging
-      if averaging is not None:
-        coordmean = self.meandim(ndmean=ndmean,typem=averaging) # TBD: make it generic
-        if averaging == "lon": 
+      if self.averaging is not None:
+        coordmean = self.meandim(ndmean=ndmean) 
+        if self.averaging == "lon": 
           self.fixedlt = False
+          umst = self.loct # shouldn't it be zero? does not matter anyways...
       # get coordinates
       self.fillcoord()
-      if not self.fixedlt: umst = self.loct # local time is not fixed. user-defined local time is at longitude 0.
-      ###
-      if averaging is not None:
-        if averaging == "lon":
-          umst = self.loct #fixedlt false for this case
-      ###
+      # MAIN QUERY LOOP
       for i in range(self.xcoord.size):
        for j in range(self.ycoord.size):
          # fill in correct values for query
@@ -868,10 +871,10 @@ class mcd():
            if not self.fixedlt: 
              self.loct = (umst + self.lon/15.) % 24
          # get field (simple or average)
-         if averaging is None:
+         if self.averaging is None:
            self.update()
          else:
-           self.meanperform(coordmean,umst=umst) # TBD: make it generic
+           self.meanperform(coordmean,umst=umst) 
          # fill in 2D array
          self.put2d(i,j)
       # reinstall init state
@@ -896,7 +899,8 @@ class mcd():
       self.query2d(typex=typex,typey=typey)
     def zonalmean(self,ndmean=32,typey="alt",typex="lat"):
     ### retrieve a zonalmean lat/altitude or ls/lat slice
-      self.query2d(typex=typex,typey=typey,averaging="lon")
+      self.averaging="lon"
+      self.query2d(typex=typex,typey=typey)
 ################################################
 
     def fillcoord(self):
@@ -959,23 +963,27 @@ class mcd():
         if "loct" in ttt[0]: self.loct  = ttt[1]
         if "ls"   in ttt[0]: self.xdate = ttt[1]
 
-    def meandim(self,ndmean=32,typem="lon"):
+    def meandim(self,ndmean=32):
     ### define averaging dimension
-      if typem == "lon":
-        sav = self.xcoord #using xcoord as an intermediate
+      sav = self.xcoord #using xcoord as an intermediate
+      if self.averaging == "lon":
         self.ininterv(-180.,180.,ndmean)
-        coordmean = self.xcoord
-        self.xcoord = sav
+      elif self.averaging == "loct":
+        self.ininterv(0.,24.,ndmean)
+      coordmean = self.xcoord
+      self.xcoord = sav
       return coordmean
 
-    def meanperform(self,coordmean,meanstyle="zonal",umst=None):
+    def meanperform(self,coordmean,umst=None):
       ndmean = coordmean.size
       meanpres = 0. ; meandens = 0. ; meantemp = 0. ; meanzonwind = 0. ; meanmerwind = 0. ; meanmeanvar = np.zeros(5) ; meanextvar = np.zeros(100)        
       for ccc in coordmean:
-        if meanstyle == "zonal":
+        if self.averaging == "lon":
           # zonal averaging with forcing of local time
           self.lon = ccc
           self.loct = (umst + self.lon/15.) % 24 #fixedlt false for this case
+        elif self.averaging == "loct":
+          self.loct = ccc
         self.update() 
         meanpres = meanpres + self.pres/float(ndmean) ; meandens = meandens + self.dens/float(ndmean) ; meantemp = meantemp + self.temp/float(ndmean)
         meanzonwind = meanzonwind + self.zonwind/float(ndmean) ; meanmerwind = meanmerwind + self.merwind/float(ndmean)
@@ -1207,12 +1215,7 @@ class mcd():
       subv,subh = mcdcomp.definesubplot( len(tabtodo) , fig )
 
       #######################
-      if self.zonmean:
-        averaging = "lon"
-      else:
-        averaging = None
-      #######################
-      self.query2d(self,averaging=averaging)
+      self.query2d(self)
       #######################
 
       for i in range(len(tabtodo)):
