@@ -1,10 +1,18 @@
-**MCD-PYTHON: python-based interface to the Mars Climate Database**
+**VCD-PYTHON: python-based interface to the Venus Climate Database**
 
 Open source code and contact information [available on github](https://github.com/aymeric-spiga) [no registration needed]
+
+Based on the MCD version (git branch 'master').
+***WARNING***
+To keep track of changes between the git branches,
+we keep the file names 'compile_fmcd.sh', 'mcd.py' and 'mcdcomp.py' as such, at least for now.
+Every instance of 'mcd' other than in these 3 file names is replaced by its 'vcd' counterpart.
+Also, we have not adapted yet the test_mcd repository
 
 * To get sources through git 
 ~~~
 git clone https://github.com/aymeric-spiga/mcd-python
+git checkout vcd_py2.7
 ~~~
 
 * To get sources through SVN 
@@ -13,13 +21,13 @@ svn co https://github.com/aymeric-spiga/mcd-python/trunk mcd-python
 ~~~
 
 * To get a static ZIP file of the current version of the code, 
-[click here](https://github.com/aymeric-spiga/mcd-python/archive/master.zip)
+[click here](https://github.com/aymeric-spiga/mcd-python/archive/vcd_py2.7.zip)
 
 ----
 
 **How to install?**
 
-It is assumed you were able to compile successfully the `mcd` sources with `gfortran`. 
+It is assumed you were able to compile successfully the `vcd` sources with `gfortran`. 
 
 The `netCDF` library should be installed on your system. 
 Moreover, from our experience, it seems that it must have been build
@@ -33,11 +41,11 @@ The installation below relies on `f2py` utility, which is part of the `numpy` pa
 
         export PYTHONPATH=$PYTHONPATH:adapt_to_your_own/mcd-python
 
- 2. Modify the compile script `compile_fmcd.sh` to link your local `netCDF` libraries and `mcd` distribution (Fortran sources)
+ 2. Modify the compile script `compile_fmcd.sh` to link your local `netCDF` libraries and `vcd` distribution (Fortran sources)
 
  3. Check that `f2py` is included in your `python` library suite.
 
- 4. Run `compile_fmcd.sh` and check for the created `.so` file (its size should be about 1 Mo)
+ 4. Run `compile_fmcd.sh` and check for the created `fvcd.so` file (its size should be about 1 Mo)
 
 ----
 
@@ -47,9 +55,9 @@ The installation below relies on `f2py` utility, which is part of the `numpy` pa
 quicktest.py
 ~~~
 
-Next step is to try and learn about the use of `mcd` Python library with the `tutorial` folder.
+Next step is to try and learn about the use of `vcd` Python library with the `tutorial` folder.
 
-A more advanced example (direct use of `fmcd` compiled with `f2py`) is provided in the `test_mcd` folder.
+A more advanced example (direct use of `fvcd` compiled with `f2py`) is provided in the `test_mcd` folder.
 
 ----
 

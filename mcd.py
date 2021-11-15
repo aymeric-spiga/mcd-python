@@ -1,23 +1,24 @@
-####################################################
-### A Python Class for the Mars Climate Database ###
-### ---------------------------------------------###
-### Aymeric SPIGA 17-21/04/2012                  ###
-### ---------------------------------------------###
-### (see mcdtest.py for examples of use)         ###
-####################################################
+#####################################################
+### A Python Class for the Venus Climate Database ###
+### ----------------------------------------------###
+### Aymeric SPIGA 17-21/04/2012                   ###
+### T. PIERRON & A. BIERJON 10/2021               ###
+### ----------------------------------------------###
+### (see quicktest.py for examples of use)        ###
+#####################################################
 
 ###
-from fmcd import call_mcd # MCD compiled with f2py
-from fmcd import dataloc  # location of MCD data file
-from fmcd import dataver  # compiled version of MCD 
+from fvcd import vcd # VCD compiled with f2py
+from fvcd import dataloc  # location of VCD data file
+from fvcd import dataver  # compiled version of VCD 
 ###
 import numpy as np
 import matplotlib.pyplot as mpl
 ###
 
 ## default number of points for each dimension
-dfzon = 64 #37 # zonal dimension
-dfmer = 48 #19 # meridional dimension
+dfzon = 96 #37 # zonal dimension
+dfmer = 96 #19 # meridional dimension
 dfver = 35 #20 # vertical dimension
 dflct = 25 #13 # local time dimension
 dfsea = 25 # solar long dimension
@@ -25,7 +26,7 @@ dfsea = 25 # solar long dimension
 lslab = "Areocentric longitude (degrees)"
 latlab = "North latitude (degrees)"
 lonlab = "East longitude (degrees)"
-ltlab = "Local time (Martian hour)"
+ltlab = "Local time (Venusian hours)"
 #NB: vertical labels are treated by .vertlabel()
 
 def errormess(text,printvar=None):
@@ -34,11 +35,11 @@ def errormess(text,printvar=None):
     exit()
     return
 
-class mcd():
+class vcd_class():
  
     def __repr__(self):
     # print out a help string when help is invoked on the object
-        whatprint = 'MCD object. \"help(mcd)\" for more information\n'
+        whatprint = 'VCD object. \"help(mcd)\" for more information\n'
         return whatprint
 
 ########################
@@ -48,9 +49,9 @@ class mcd():
     def __init__(self):
     # default settings
         ## 0. general stuff
-        self.name      = "MCD_v"+dataver # this is coming from fmcd
-        self.dset      = dataloc # this is coming from fmcd
-        self.ack       = "Mars Climate Database (c) LMD/OU/IAA/ESA/CNES"
+        self.name      = "VCD_v"+dataver # this is coming from fvcd
+        self.dset      = dataloc # this is coming from fvcd
+        self.ack       = "Venus Climate Database (c) LMD/ESA"
         ## 1. spatio-temporal coordinates
         self.lat       = 0.
         self.lats      = None
@@ -70,42 +71,36 @@ class mcd():
         ## 1bis. related settings
         self.zkey      = 3  # specify that xz is the altitude above surface (m)
                             # zkey  : <integer>   type of vertical coordinate xz
+                            # 0 = pressure level (Pa)
                             # 1 = radius from centre of planet (m)
-                            # 2 = height above areoid (m) (MOLA zero datum)
+                            # 2 = height above Venus ref sphere (m) (sphere of radius 6051848m)
                             # 3 = height above surface (m)
-                            # 4 = pressure level (Pa)
-                            # 5 = altitude above mean Mars Radius(=3396000m) (m)
         self.datekey   = 1  # 0 = "Earth time": xdate is given in Julian days (localtime must be set to zero)
-                            # 1 = "Mars date": xdate is the value of Ls
+                            # 1 = "Venus localtime": xdate is the value of local time
         ## 2. climatological options
-        if "v5" in self.name:
-            self.dust      = 1 # climatological average scenario
-        else:
-            self.dust      = 2  #our best guess MY24 scenario, with solar average conditions
-        self.hrkey     = 1  #set high resolution mode on (hrkey=0 to set high resolution off)
+        self.scena     = 1 # climatological average scenario
+        self.varE107   = 0 # value for the solar EUV (varE107=0 if scena!=7)
+        self.hrkey     = 1 # set high resolution mode on (hrkey=0 to set high resolution off)
         ## 3. additional settings for advanced use
-        if "v5" in self.name:
-            self.extvarkey = np.ones(100) # now a table in MCD version 5
-        else:
-            self.extvarkey = 1  #extra output variables (1: yes, 0: no)
+        self.extvarkey = np.ones(100) #extra output variables flag table (1: yes, 0: no)
         self.perturkey = 0  #integer perturkey ! perturbation type (0: none)
         self.seedin    = 1  #random number generator seed (unused if perturkey=0)
         self.gwlength  = 0. #gravity Wave wavelength (unused if perturkey=0)
         ## outputs. just to define attributes.
         ## --> in update
-        self.pres = None ; self.dens = None ; self.temp = None ; self.zonwind = None ; self.merwind = None ; self.meanvar = None ; self.extvar = None
+        self.zonwind = None ; self.merwind = None ; self.vertwind = None ; self.temp = None ; self.pres = None ; self.dens = None ; self.extvar = None
         self.seedout = None ; self.ierr = None
         ## --> in prepare
         self.xcoord = None ; self.ycoord = None
-        self.prestab = None ; self.denstab = None ; self.temptab = None 
-        self.zonwindtab = None ; self.merwindtab = None ; self.meanvartab = None ; self.extvartab = None
+        self.zonwindtab = None ; self.merwindtab = None ; self.vertwindtab = None
+        self.temptab = None ; self.prestab = None ; self.denstab = None ; self.extvartab = None
         ## plot stuff
         self.typex = None ; self.typey = None
         self.xlabel = None ; self.ylabel = None ; self.title = ""
         self.vertplot = False
         self.fmt = "%.1e" 
         self.colorm = "jet"
-        self.fixedlt = False
+        self.fixedlt = False # can be used as Universal Venus Time (uvt), or as Local True Solar Time
         self.averaging = None
         self.min2d = None
         self.max2d = None
@@ -119,33 +114,26 @@ class mcd():
         self.latpoint = None
         self.lonpoint = None
 
-    def viking1(self): self.name = "Viking 1 site. MCD v4.3 output" ; self.lat = 22.48 ; self.lon = -49.97 ; self.xdate = 97.
-    def viking2(self): self.name = "Viking 2 site. MCD v4.3 output" ; self.lat = 47.97 ; self.lon = -225.74 ; self.xdate = 117.6
-
-    def getdustlabel(self):
-        if self.dust == 1: 
-            self.dustlabel = "MY24 minimum solar scenario"
-            if "v5" in self.name: self.dustlabel = "climatology average solar scenario"
-        elif self.dust == 2: 
-            self.dustlabel = "MY24 average solar scenario"
-            if "v5" in self.name: self.dustlabel = "climatology minimum solar scenario"
-        elif self.dust == 3: 
-            self.dustlabel = "MY24 maximum solar scenario"
-            if "v5" in self.name: self.dustlabel = "climatology maximum solar scenario"
-        elif self.dust == 4: self.dustlabel = "dust storm minimum solar scenario"
-        elif self.dust == 5: self.dustlabel = "dust storm average solar scenario"
-        elif self.dust == 6: self.dustlabel = "dust storm maximum solar scenario"
-        elif self.dust == 7: self.dustlabel = "warm scenario (dusty, maximum solar)"
-        elif self.dust == 8: self.dustlabel = "cold scenario (low dust, minimum solar)"
-        elif self.dust > 20: self.dustlabel = "Martian Year "+str(self.dust)+" scenario"
+    def getscenalabel(self):
+        if self.scena == 1: self.scenalabel = "Standard cloud albedo scenario, average solar EUV conditions"
+        elif self.scena == 2: self.scenalabel = "Standard cloud albedo scenario, minimum solar EUV conditions"
+        elif self.scena == 3: self.scenalabel = "Standard cloud albedo scenario, maximum solar EUV conditions"
+        elif self.scena == 4: self.scenalabel = "Low cloud albedo scenario, average solar EUV conditions"
+        elif self.scena == 5: self.scenalabel = "High cloud albedo scenario, average solar EUV conditions"
+        elif self.scena == 6: self.scenalabel = "EUV input as deduced from the input Julian date" #+ " ("+str(self.varE107)+" s.f.u)"
+        elif self.scena == 7: self.scenalabel = "EUV input specified by user ("+str(int(self.varE107))+"sfu)"
 
     def gettitle(self,oneline=False):
-        self.getdustlabel()
-        self.title = self.name + " with " + self.dustlabel + "."
-        if self.datekey == 1:    
-          if self.xdates is None:
-           self.title = self.title + " Ls " + str(self.xdate) + "deg."
-        elif self.datekey == 0:  
+        self.getscenalabel()
+        self.title = self.name + " with " + self.scenalabel + "."
+        #if self.datekey == 1:    
+          #if self.xdates is None:
+          # self.title = self.title + " LT " + str(self.xdate) + "Vhrs"
+          #if self.locts is None and self.averaging is None:
+          #  if self.lons is not None: # if longitude is a free dimension
+          #   if not self.fixedlt:  self.title = self.title + " (at longitude 0) "
+          #     else: self.title = self.title + " (fixed at all longitudes) "
+        if self.datekey == 0:  
           self.title = self.title + " JD " + str(self.xdate) + "."
         if not oneline: self.title = self.title + "\n"
         if self.lats is None:  
@@ -157,122 +145,106 @@ class mcd():
         if self.xzs is None:   
             self.vertunits()
             self.title = self.title + " Altitude " + str(self.xz) + " " + self.vunits + "."
-        if self.datekey == 1:
+        if self.datekey == 0:  
+          self.title = self.title + " JD " + str(self.xdate) + "."
+        elif self.datekey == 1:
           if self.averaging == "loct":
             self.title = self.title + " Diurnal mean over all local times."
           else:
             if self.locts is None and self.averaging != "lon":
-              self.title = self.title + " Local time " + str(self.loct) + "h"
+              self.title = self.title + " Local time " + str(self.loct) + "Vhrs"
               if self.lons is not None: # if longitude is a free dimension
                 if not self.fixedlt:  self.title = self.title + " (at longitude 0) "
                 else: self.title = self.title + " (fixed at all longitudes) "
 
     def getextvarlab(self,num):
+        ## we use the end of extvar (unused) to store the meanvar (see update)
         whichfield = { \
-        91: "Pressure (Pa)", \
-        92: "Density (kg/m3)", \
-        93: "Temperature (K)", \
+	93: "Horizontal wind speed (m/s)", \
         94: "W-E wind component (m/s)", \
         95: "S-N wind component (m/s)", \
-        96: "Horizontal wind speed (m/s)", \
-	1: "Radial distance from planet center (m)",\
-	2: "Altitude above areoid (Mars geoid) (m)",\
-	3: "Altitude above local surface (m)",\
-	4: "orographic height (m) (surf alt above areoid)",\
-	5: "Ls, solar longitude of Mars (deg)",\
-	6: "LST local true solar time (hrs)",\
-	7: "Universal solar time (LST at lon=0) (hrs)",\
-	8: "Air heat capacity Cp (J kg-1 K-1)",\
-	9: "gamma=Cp/Cv Ratio of specific heats",\
-	10: "density RMS day to day variations (kg/m^3)",\
-        11: "[not defined]",\
-        12: "[not defined]",\
-	13: "scale height H(p) (m)",\
-	14: "GCM orography (m)",\
-	15: "surface temperature (K)",\
-	16: "daily max mean surface temperature (K)",\
-	17: "daily min mean surface temperature (K)",\
-	18: "surf. temperature RMS day to day variations (K)",\
-	19: "surface pressure (Pa)",\
-	20: "GCM surface pressure (Pa)",\
-	21: "atmospheric pressure RMS day to day variations (Pa)",\
-	22: "surface pressure RMS day to day variations (Pa)",\
-	23: "temperature RMS day to day variations (K)",\
-	24: "zonal wind RMS day to day variations (m/s)",\
-	25: "meridional wind RMS day to day variations (m/s)",\
-	26: "vertical wind component (m/s) >0 when downwards!",\
-	27: "vertical wind RMS day to day variations (m/s)",\
-	28: "small scale perturbation (gravity wave) (kg/m^3)",\
-	29: "q2: turbulent kinetic energy (m2/s2)",\
-        30: "[not defined]",\
-	31: "thermal IR flux to surface (W/m2)",\
-	32: "solar flux to surface (W/m2)",\
-	33: "thermal IR flux to space (W/m2)",\
-	34: "solar flux reflected to space (W/m2)",\
-	35: "surface CO2 ice layer (kg/m2)",\
-	36: "DOD: Dust column visible optical depth",\
-	37: "Dust mass mixing ratio (kg/kg)",\
-	38: "DOD RMS day to day variations",\
-	39: "DOD total standard deviation over season",\
-	40: "Water vapor column (kg/m2)",\
-	41: "Water vapor vol. mixing ratio (mol/mol)",\
-	42: "Water ice column (kg/m2)",\
-	43: "Water ice mixing ratio (mol/mol)",\
-	44: "O3 ozone vol. mixing ratio (mol/mol)",\
-	45: "[CO2] vol. mixing ratio (mol/mol)",\
-	46: "[O] vol. mixing ratio (mol/mol)",\
-	47: "[N2] vol. mixing ratio (mol/mol)",\
-	48: "[CO] vol. mixing ratio (mol/mol)",\
-	49: "R: Molecular gas constant (J K-1 kg-1)",\
-	50: "Air viscosity estimation (N s m-2)"
+        96: "Upward vertical wind component (m/s)", \
+        97: "Temperature (K)", \
+        98: "Pressure (Pa)", \
+        99: "Density (kg/m3)", \
+        1: "distance to planet centre (m)", \
+        2: "altitude above the reference sphere (m)", \
+        3: "altitude above local surface (m)", \
+        4: "orographic height (m) (altitude of the surface above the reference sphere)", \
+        5: "orographic height (m) in the GCM", \
+        6: "Solar longitude of Venus (deg)", \
+        7: "Sun-Venus distance (UA)", \
+        8: "Local true solar time at longitude lon (Vhrs)", \
+        9: "Universal solar time (i.e. local true solar time at longitude 0) (Vhrs)", \
+        10: "Solar zenith angle (deg)", \
+        11: "unperturbed (climatological) zonal wind (m/s)", \
+        12: "unperturbed (climatological) meridional wind (m/s)", \
+        13: "unperturbed (climatological) vertical wind (m/s)", \
+        14: "unperturbed (climatological) atmospheric temperature (K) ", \
+        15: "unperturbed (climatological) atmospheric pressure (Pa)", \
+        16: "unperturbed (climatological) atmospheric density (kg/m3)", \
+        17: "Surface temperature (K)", \
+        18: "Surface pressure (Pa)", \
+        20: "V-hourly variability (RMS) of the zonal wind (m/s)", \
+        21: "V-hourly variability (RMS) of the meridional wind (m/s)", \
+        22: "V-hourly variability (RMS) of the vertical wind (m/s)", \
+        23: "V-hourly variability (RMS) of the atmospheric temperature (K)", \
+        24: "V-hourly variability (RMS) of the atmospheric pressure (Pa)", \
+        25: "V-hourly variability (RMS) of the atmospheric density (kg/m3)", \
+        26: "V-hourly variability (RMS) of the surface temperature (K)", \
+        27: "V-hourly variability (RMS) of the surface pressure (Pa)", \
+        30: "Vday to Vday variability (RMS) of the zonal wind (m/s)", \
+        31: "Vday to Vday variability (RMS) of the meridional wind (m/s)", \
+        32: "Vday to Vday variability (RMS) of the vertical wind (m/s)", \
+        33: "Vday to Vday variability (RMS) of the atmospheric temperature (K)", \
+        34: "Vday to Vday variability (RMS) of the atmospheric pressure (Pa)", \
+        35: "Vday to Vday variability (RMS) of the atmospheric density (kg/m3)", \
+        36: "Vday to Vday variability (RMS) of the surface temperature (K)", \
+        37: "Vday to Vday variability (RMS) of the surface pressure (Pa)", \
+        40: "Net Solar Flux (SW) received at the top of the atmosphere (W/m2), positive downward", \
+        41: "SW net flux at given altitude (W/m2), positive downward", \
+        42: "LW net flux at given altitude (W/m2), positive upward", \
+        43: "atmospheric scale height at given altitude (m)", \
+        44: "atmospheric mean molar mass at given altitude (g/mol)", \
+        45: "atmospheric speed of sound cs (m/s)", \
+        46: "atmospheric reduced molecular gas constant r (J/K/kg)", \
+        47: "atmospheric heat capacity Cp (J/kg/K) ", \
+        48: "atmospheric specific heat ratio $\gamma$ (N/A) ", \
+        49: "atmospheric viscosity estimation (N/s/m2)", \
+        50: "CO2 volume mixing ratio (mol/mol)", \
+        51: "CO volume mixing ratio (mol/mol)", \
+        52: "O2 volume mixing ratio (mol/mol)", \
+        53: "O volume mixing ratio (mol/mol)", \
+        54: "H volume mixing ratio (mol/mol)", \
+        55: "H2 volume mixing ratio (mol/mol)", \
+        56: "H2O volume mixing ratio (mol/mol)", \
+        57: "SO2 volume mixing ratio (mol/mol)", \
+        58: "SO volume mixing ratio (mol/mol)", \
+        59: "OCS volume mixing ratio (mol/mol)", \
+        60: "O3 volume mixing ratio (mol/mol)", \
+        61: "HCl volume mixing ratio (mol/mol)", \
+        62: "N2 volume mixing ratio (mol/mol)", \
+        63: "He volume mixing ratio (mol/mol)", \
+        70: "CO2 column (kg/m2)", \
+        71: "CO column (kg/m2)", \
+        72: "O2 column (kg/m2)", \
+        73: "O column (kg/m2)", \
+        74: "H column (kg/m2)", \
+        75: "H2 column (kg/m2)", \
+        76: "H2O column (kg/m2)", \
+        77: "SO2 column (kg/m2)", \
+        78: "SO column (kg/m2)", \
+        79: "OCS column (kg/m2)", \
+        80: "O3 column (kg/m2)", \
+        81: "HCl column (kg/m2)", \
+        82: "N2 column (kg/m2)", \
+        83: "He column (kg/m2)", \
+        84: "Vertically integrated O2 nightglow ($\Delta$ emission) (MR)", \
+        90: "VIRA temperature (K) at the same location", \
+        91: "VIRA pressure (Pa) at the same location", \
+        92: "VIRA density (kg/m3) at the same location"
         }
-        ### MCD version 5 new variables. AS 12/2012.
-        if "v5" in self.name:
-          whichfield[30] = whichfield[34]
-          whichfield[34] = "surface H2O ice layer (kg/m2, 0.5: perennial)"
-          whichfield[29] = "Surface roughness length z0 (m)"
-          whichfield[37] = "DOD RMS day to day variations"
-          whichfield[38] = "Dust mass mixing ratio (kg/kg)"
-          whichfield[39] = "Dust effective radius (m)"
-          whichfield[44] =  whichfield[43]
-          whichfield[43] =  whichfield[42]
-          whichfield[42] =  whichfield[41]
-          whichfield[41] =  whichfield[40]
-          whichfield[40] = "Dust deposition on flat surface (kg m-2 s-1)"
-          whichfield[45] = "Water ice effective radius (m)"
-          whichfield[46] = "Convective PBL height (m)"
-          whichfield[47] = "Max. upward convective wind within the PBL (m/s)"
-          whichfield[48] = "Max. downward convective wind within the PBL (m/s)"
-          whichfield[49] = "Convective vertical wind variance at level z (m2/s2)"
-          whichfield[50] = "Convective eddy vertical heat flux at level z (m/s/K)"
-          whichfield[51] = "Surface wind stress (Kg/m/s2)"
-          whichfield[52] = "Surface sensible heat flux (W/m2) (<0 when flux from surf to atm.)"
-          whichfield[53] = "R: Molecular gas constant (J K-1 kg-1)"
-          whichfield[54] = "Air viscosity estimation (N s m-2)"
-          whichfield[55] = "not used (set to zero)"
-          whichfield[56] = "not used (set to zero)"
-          whichfield[57] = "[CO2] vol. mixing ratio (mol/mol)"
-          whichfield[58] = "[N2] vol. mixing ratio (mol/mol)"
-          whichfield[59] = "[Ar] vol. mixing ratio (mol/mol)"
-          whichfield[60] = "[CO] vol. mixing ratio (mol/mol)"
-          whichfield[61] = "[O] vol. mixing ratio (mol/mol)"
-          whichfield[62] = "[O2] vol. mixing ratio (mol/mol)"
-          whichfield[63] = "[O3] vol. mixing ratio (mol/mol)"
-          whichfield[64] = "[H] vol. mixing ratio (mol/mol)"
-          whichfield[65] = "[H2] vol. mixing ratio (mol/mol)"
-          whichfield[66] = "electron number density (cm-3)"
-          whichfield[67] = "CO2 column (kg/m2)"
-          whichfield[68] = "N2 column (kg/m2)"
-          whichfield[69] = "Ar column (kg/m2)"
-          whichfield[70] = "CO column (kg/m2)"
-          whichfield[71] = "O column (kg/m2)"
-          whichfield[72] = "O2 column (kg/m2)"
-          whichfield[73] = "O3 column (kg/m2)"
-          whichfield[74] = "H column (kg/m2)"
-          whichfield[75] = "H2 column (kg/m2)"
-          whichfield[76] = "Total Electronic Content (TEC) (m-2)"
-          whichfield[77] = "He column (kg/m2)"
-          whichfield[78] = "[He] vol. mixing ratio (mol/mol)"
+        
         if num not in whichfield: errormess("Incorrect subscript in extvar.")
         dastuff = whichfield[num]
         expf = "%.1e"
@@ -290,145 +262,100 @@ class mcd():
 
     def convertlab(self,num):        
         ## a conversion from text inquiries to extvar numbers. to be completed.
-        if num == "p": num = 91
-        elif num == "rho": num = 92
-        elif num == "t": num = 93
-        elif num == "u": num = 94
+        if num == "u": num = 94
         elif num == "v": num = 95
-        elif num == "wind": num = 96
-        elif num == "tsurf": num = 15
-        elif num == "topo": num = 4
-        elif num == "h": num = 13
-        elif num == "ps": num = 19
-        elif num == "tau": num = 36
-        elif num == "R": 
-            if "v5" in self.name:  num = 53 
-            else:                  num = 49
-        elif num == "mtot": 
-            if "v5" in self.name:  num = 41 
-            else:                  num = 40
-        elif num == "icetot": 
-            if "v5" in self.name:  num = 43
-            else:                  num = 42
-        elif num == "h2ovap": 
-            if "v5" in self.name:  num = 42
-            else:                  num = 41
-        elif num == "h2oice": 
-            if "v5" in self.name:  num = 44
-            else:                  num = 43
-        elif num == "cp": num = 8
-        elif num == "gamma": num = 9
-        elif num == "rho_ddv": num = 10
-        elif num == "ps_ddv": num = 22
-        elif num == "p_ddv": num = 21
-        elif num == "t_ddv": num = 23
-        elif num == "u_ddv": num = 24
-        elif num == "v_ddv": num = 25
-        elif num == "w": num = 26
-        elif num == "w_ddv": num = 27
-        elif num == "tsurfmx": num = 16
-        elif num == "tsurfmn": num = 17
-        elif num == "lwdown": num = 31
-        elif num == "swdown": num = 32
-        elif num == "lwup": num = 33
-        elif num == "swup":
-            if "v5" in self.name:  num = 30
-            else:                  num = 34
-        elif num == "tau": num = 36
-        elif num == "tau_ddv":
-            if "v5" in self.name:  num = 37
-            else:                  num = 38
-        elif num == "qdust":
-            if "v5" in self.name:  num = 38
-            else:                  num = 37
-        elif num == "co2":
-            if "v5" in self.name:  num = 57
-            else:                  num = 45
-        elif num == "o3": 
-            if "v5" in self.name:  num = 63
-            else:                  num = 44
-        elif num == "o": 
-            if "v5" in self.name:  num = 61
-            else:                  num = 46
-        elif num == "co": 
-            if "v5" in self.name:  num = 60
-            else:                  num = 48
-        elif num == "visc": 
-            if "v5" in self.name:  num = 54
-            else:                  num = 50
-        elif num == "co2ice": num = 35
-        elif num == "n2":
-            if "v5" in self.name:  num = 58
-            else:                  num = 47
-        elif num == "n2col":
-            if "v5" in self.name:  num = 68
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "rdust":
-            if "v5" in self.name:  num = 39
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "sdust":
-            if "v5" in self.name:  num = 40
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "pbl":
-            if "v5" in self.name:  num = 46
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "updraft":
-            if "v5" in self.name:  num = 47
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "downdraft":
-            if "v5" in self.name:  num = 48
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "pblwvar":
-            if "v5" in self.name:  num = 49
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "pblhvar":
-            if "v5" in self.name:  num = 50
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "stress":
-            if "v5" in self.name:  num = 51
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "ar":
-            if "v5" in self.name:  num = 59
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "o2":
-            if "v5" in self.name:  num = 62
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "co2col":
-            if "v5" in self.name:  num = 67
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "arcol":
-            if "v5" in self.name:  num = 69
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "cocol":
-            if "v5" in self.name:  num = 70
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "o3col":
-            if "v5" in self.name:  num = 73
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "hydro":
-            if "v5" in self.name:  num = 64
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "hydro2":
-            if "v5" in self.name:  num = 65
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "e":
-            if "v5" in self.name:  num = 66
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "ecol":
-            if "v5" in self.name:  num = 76
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "he":
-            if "v5" in self.name:  num = 78
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "hecol":
-            if "v5" in self.name:  num = 77
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "groundice":
-            if "v5" in self.name:  num = 34
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "rice":
-            if "v5" in self.name:  num = 45
-            else:                  num = 11 # an undefined variable to avoid misleading output
+        elif num == "w": num = 96
+        elif num == "wind": num = 93
+        elif num == "t": num = 97
+        elif num == "p": num = 98
+        elif num == "rho": num = 99
+        
+        elif num == "zradius": num = 1
+        elif num == "zsphere": num = 2
+        elif num == "zsurface": num = 3
+        elif num == "oroheight": num = 4
+        elif num == "oro_gcm": num = 5
+        elif num == "ls": num = 6
+        elif num == "venusau": num = 7
+        elif num == "LTST": num = 8
+        elif num == "utime": num = 9
+        elif num == "solzenangle": num = 10
+        
+        elif num == "u_np": num = 11
+        elif num == "v_np": num = 12
+        elif num == "w_np": num = 13
+        elif num == "t_np": num = 14
+        elif num == "p_np": num = 15
+        elif num == "rho_np": num = 16
+        
+        elif num == "tsurf": num = 17
+        elif num == "ps": num = 18
+        
+        elif num == "rms_u": num = 20
+        elif num == "rms_v": num = 21
+        elif num == "rms_w": num = 22
+        elif num == "rms_t": num = 23
+        elif num == "rms_p": num = 24
+        elif num == "rms_rho": num = 25
+        elif num == "rms_tsurf": num = 26
+        elif num == "rms_ps": num = 27
+        
+        elif num == "dtd_u": num = 30
+        elif num == "dtd_v": num = 31
+        elif num == "dtd_w": num = 32
+        elif num == "dtd_t": num = 33
+        elif num == "dtd_p": num = 34
+        elif num == "dtd_rho": num = 35
+        elif num == "dtd_tsurf": num = 36
+        elif num == "dtd_ps": num = 37
+
+        elif num == "solar_flux_top": num = 40
+        elif num == "solar_flux_sw": num = 41
+        elif num == "solar_flux_lw": num = 42
+        elif num == "pscaleheight": num = 43
+        elif num == "mean_mol_mass": num = 44
+        
+        elif num == "cs": num = 45
+        elif num == "r_gas": num = 46
+        elif num == "cp": num = 47
+        elif num == "gamma": num = 48
+        elif num == "viscosity": num = 49
+        
+        elif num == "vmr_co2": num = 50
+        elif num == "vmr_co": num = 51
+        elif num == "vmr_o2": num = 52
+        elif num == "vmr_o": num = 53
+        elif num == "vmr_h": num = 54
+        elif num == "vmr_h2": num = 55
+        elif num == "vmr_h2o": num = 56
+        elif num == "vmr_so2": num = 57
+        elif num == "vmr_so": num = 58
+        elif num == "vmr_ocs": num = 59
+        elif num == "vmr_o3": num = 60
+        elif num == "vmr_hcl": num = 61
+        elif num == "vmr_n2": num = 62
+        elif num == "vmr_he": num = 63
+        
+        elif num == "col_co2": num = 70
+        elif num == "col_co": num = 71
+        elif num == "col_o2": num = 72
+        elif num == "col_o": num = 73
+        elif num == "col_h": num = 74
+        elif num == "col_h2": num = 75
+        elif num == "col_h2o": num = 76
+        elif num == "col_so2": num = 77
+        elif num == "col_so": num = 78
+        elif num == "col_ocs": num = 79
+        elif num == "col_o3": num = 80
+        elif num == "col_hcl": num = 81
+        elif num == "col_n2": num = 82
+        elif num == "col_he": num = 83
+        elif num == "o2_ng": num = 84
+
+        elif num == "vira_temp": num = 90
+        elif num == "vira_pres": num = 91
+        elif num == "vira_dens": num = 92
+        
         elif not isinstance(num, np.int): errormess("field reference not found.")
         return num
 
@@ -437,7 +364,7 @@ class mcd():
 ###################
 
     def update(self):
-    # retrieve fields from MCD (call_mcd). more info in fmcd.call_mcd.__doc__
+    # retrieve fields from VCD (call_vcd). more info in fvcd.call_vcd.__doc__
         ## sanity first
         self.loct = abs(self.loct)%24
         if self.locts is not None and self.locte is not None: 
@@ -446,59 +373,70 @@ class mcd():
             if self.locts == self.locte: self.locte = self.locts + 24
         ## ensure that local time = 0 when using Earth dates
         if self.datekey == 0: self.loct = 0.
-        ### now MCD request
-        (self.pres, self.dens, self.temp, self.zonwind, self.merwind, \
-         self.meanvar, self.extvar, self.seedout, self.ierr) \
+        ### now VCD request
+        (self.zonwind, self.merwind, self.vertwind, self.temp, self.pres, self.dens, \
+         self.extvar, self.seedout, self.ierr) \
          = \
-         call_mcd(self.zkey,self.xz,self.lon,self.lat,self.hrkey, \
-             self.datekey,self.xdate,self.loct,self.dset,self.dust, \
+         vcd.call_vcd(self.zkey,self.xz,self.lon,self.lat,self.hrkey, \
+             self.datekey,self.xdate,self.loct,self.dset,self.scena,self.varE107, \
              self.perturkey,self.seedin,self.gwlength,self.extvarkey )
         ## we use the end of extvar (unused) to store meanvar. this is convenient for getextvar(lab)
-        self.extvar[90] = self.pres ; self.extvar[91] = self.dens
-        self.extvar[92] = self.temp ; self.extvar[93] = self.zonwind ; self.extvar[94] = self.merwind
-        self.extvar[95] = np.sqrt(self.extvar[93]**2 + self.extvar[94]**2) # calculate wind modulus
+        self.extvar[93] = self.zonwind ; self.extvar[94] = self.merwind
+        self.extvar[95] = self.vertwind ; self.extvar[96] = self.temp
+        self.extvar[97] = self.pres ; self.extvar[98] = self.dens
+	self.extvar[92] = np.sqrt(self.extvar[93]**2 + self.extvar[94]**2)
+
         ## treat missing values 
-        if self.temp == -999: self.extvar[:] = np.NaN ; self.meanvar[:] = np.NaN
+        if self.temp == -999: self.extvar[:] = np.NaN
 
     def printset(self):
     # print main settings
-        print "zkey",self.zkey,"xz",self.xz,"lon",self.lon,"lat",self.lat,"hrkey",self.hrkey, \
-              "xdate",self.xdate,"loct",self.loct,"dust",self.dust
+        if self.datekey == 0: #Earth date
+          print "zkey",self.zkey,"xz",self.xz,"lon",self.lon,"lat",self.lat,"hrkey",self.hrkey, \
+                "xdate",self.xdate,"scena",self.scena
+        else: #Venusian hour
+          print "zkey",self.zkey,"xz",self.xz,"lon",self.lon,"lat",self.lat,"hrkey",self.hrkey, \
+                "loct",self.loct,"scena",self.scena
 
     def getnameset(self):
     # set a name referring to settings [convenient for databases]
         strlat = str(self.lat)+str(self.lats)+str(self.late)
         strlon = str(self.lon)+str(self.lons)+str(self.lone)
         strxz = str(self.xz)+str(self.xzs)+str(self.xze)
-        strloct = str(self.loct)+str(self.locts)+str(self.locte)
-        strdate = str(self.datekey)+str(self.xdate)+str(self.xdates)+str(self.xdatee)
-        name = str(self.zkey)+strxz+strlon+strlat+str(self.hrkey)+strdate+strloct+str(self.dust)
+        if self.datekey == 0: #Earth date
+          strdate = str(self.xdate)+str(self.xdates)+str(self.xdatee)
+          name = str(self.zkey)+strxz+strlon+strlat+str(self.hrkey)+str(self.datekey)+strdate+str(self.scena)
+        else: #Venusian hour
+          strloct = str(self.loct)+str(self.locts)+str(self.locte)
+          name = str(self.zkey)+strxz+strlon+strlat+str(self.hrkey)+str(self.datekey)+strloct+str(self.scena)
         return name
 
     def printcoord(self):
     # print requested space-time coordinates
-        print "LAT",self.lat,"LON",self.lon,"LOCT",self.loct,"XDATE",self.xdate
+        if self.datekey == 0: #Earth date
+          print "LAT",self.lat,"LON",self.lon,"XDATE",self.xdate
+        else: #Venusian hour
+          print "LAT",self.lat,"LON",self.lon,"LOCT",self.loct
 
     def printmeanvar(self):
-    # print mean MCD variables
-        print "Pressure = %5.3f pascals. " % (self.pres)
-        print "Density = %5.3f kilograms per cubic meter. " % (self.dens)
-        print "Temperature = %3.0f kelvins (%4.0f degrees celsius)." % (self.temp,self.temp-273.15)
+    # print mean VCD variables
         print "Zonal wind = %5.3f meters per second." % (self.zonwind)
         print "Meridional wind = %5.3f meters per second." % (self.merwind)
-        print "Total horizontal wind = %5.3f meters per second." % ( np.sqrt(self.zonwind**2 + self.merwind**2) )
-
+        print "Vertical wind = %5.3f meters per second." % (self.vertwind)
+        print "Temperature = %3.0f kelvins (%4.0f degrees celsius)." % (self.temp,self.temp-273.15)
+        print "Pressure = %5.3f pascals. " % (self.pres)
+        print "Density = %5.3f kilograms per cubic meter. " % (self.dens)
+        
     def printextvar(self,num):
-    # print extra MCD variables
+    # print extra VCD variables
         num = self.convertlab(num)
         dastr = str(self.extvar[num-1])
         if dastr == "nan":   print "!!!! There is a problem, probably a value is requested below the surface !!!!"
         else:                print self.getextvarlab(num) + " ..... " + dastr
 
     def printallextvar(self):
-    # print all extra MCD variables    
-        if "v5" in self.name:  limit=76
-        else:                  limit=50
+    # print all extra VCD variables    
+        limit=92
         for i in range(limit): self.printextvar(i+1)
 
     def htmlprinttabextvar(self,tabtodo):
@@ -518,7 +456,7 @@ class mcd():
         #self.printset()
 
     def printmcd(self):
-    # 1. call MCD 2. print settings 3. print mean vars
+    # 1. call VCD 2. print settings 3. print mean vars
         self.update()
         self.printcoord()
         print "-------------------------------------------"
@@ -535,9 +473,9 @@ class mcd():
       #else:            self.xcoord = np.ones(ndx)
       if ndy is None:  dashape = (ndx)     ; dashapemean = (ndx,6)     ; dashapeext = (ndx,101)     #; self.ycoord = None
       else:            dashape = (ndx,ndy) ; dashapemean = (ndx,ndy,6) ; dashapeext = (ndx,ndy,101) #; self.ycoord = np.ones(ndy)
-      self.prestab = np.ones(dashape) ; self.denstab = np.ones(dashape) ; self.temptab = np.ones(dashape)
-      self.zonwindtab = np.ones(dashape) ; self.merwindtab = np.ones(dashape) 
-      self.meanvartab = np.ones(dashapemean) ; self.extvartab = np.ones(dashapeext)
+      self.zonwindtab = np.ones(dashape) ; self.merwindtab = np.ones(dashape) ; self.vertwindtab = np.ones(dashape)
+      self.temptab = np.ones(dashape) ; self.prestab = np.ones(dashape) ; self.denstab = np.ones(dashape)
+      self.extvartab = np.ones(dashapeext)
 
     def getextvar(self,num):
     ### get a given var in extvartab
@@ -559,13 +497,13 @@ class mcd():
     ### user-defined start and end are used to create xcoord (or ycoord) vector
       if start is not None and end is not None:  first, second = self.correctbounds(start,end,vertcoord)
       else:                                      first, second = self.correctbounds(dstart,dend,vertcoord)  
-      if self.zkey != 4 or not vertcoord:   tabtab = np.linspace(first,second,nd)
+      if self.zkey != 0 or not vertcoord:   tabtab = np.linspace(first,second,nd)
       else:                                 tabtab = np.logspace(first,second,nd)
       if not yaxis:      self.xcoord = tabtab
       else:              self.ycoord = tabtab
 
     def correctbounds(self,start,end,vertcoord):
-      if self.zkey != 4 or not vertcoord:
+      if self.zkey != 0 or not vertcoord:
         # regular altitudes
         if start > end: first = end ; second = start
         else:           first = start ; second = end
@@ -576,30 +514,27 @@ class mcd():
       return first, second
 
     def vertlabel(self):
-#      if self.zkey == 1:   self.xlabel = "radius from centre of planet (m)"
-#      elif self.zkey == 2: self.xlabel = "height above areoid (m) (MOLA zero datum)"
-#      elif self.zkey == 3: self.xlabel = "height above surface (m)"
-#      elif self.zkey == 4: self.xlabel = "pressure level (Pa)"
-#      elif self.zkey == 5: self.xlabel = "altitude above mean Mars Radius(=3396000m) (m)"
-      if self.zkey == 1:   self.xlabel = "radius from centre of planet (m)"
-      elif self.zkey == 2: self.xlabel = "altitude above MOLA$_0$ (m)"
+      if self.zkey == 0:   self.xlabel = "pressure (Pa)"
+      elif self.zkey == 1: self.xlabel = "radius from centre of planet (m)"
+      elif self.zkey == 2: self.xlabel = "altitude above Venus ref sphere (m)"
       elif self.zkey == 3: self.xlabel = "height above surface (m)"
-      elif self.zkey == 4: self.xlabel = "pressure (Pa)"
-      elif self.zkey == 5: self.xlabel = "altitude above mean Mars radius (m)"
 
     def vertunits(self):
-      if self.zkey == 1:   self.vunits = "m CP"
-      elif self.zkey == 2: self.vunits = "m AMR"
-      elif self.zkey == 3: self.vunits = "m ALS"
-      elif self.zkey == 4: self.vunits = "Pa"
-      elif self.zkey == 5: self.vunits = "m AMMRad"
+      if self.zkey == 0:   self.vunits = "Pa"
+      elif self.zkey == 1: self.vunits = "m CP"  #Centre of Planet
+      elif self.zkey == 2: self.vunits = "m AVS" #Above Venus Sphere
+      elif self.zkey == 3: self.vunits = "m ALS" #Above Local Surface
 
     def vertaxis(self,number,yaxis=False):
-      if self.zkey == 2:   self.ininterv(-5000.,100000.,number,start=self.xzs,end=self.xze,yaxis=yaxis,vertcoord=True)
-      elif self.zkey == 3: self.ininterv(0.,120000.,number,start=self.xzs,end=self.xze,yaxis=yaxis,vertcoord=True)
-      elif self.zkey == 5: self.ininterv(-5000.,100000.,number,start=self.xzs,end=self.xze,yaxis=yaxis,vertcoord=True)
-      elif self.zkey == 4: self.ininterv(1000.,0.001,number,start=self.xzs,end=self.xze,yaxis=yaxis,vertcoord=True)
-      elif self.zkey == 1: self.ininterv(3396000,3596000,number,start=self.xzs,end=self.xze,yaxis=yaxis,vertcoord=True)
+#------MARS VALUES-------------    
+#      if self.zkey == 0:   self.ininterv(1000.,0.001,number,start=self.xzs,end=self.xze,yaxis=yaxis,vertcoord=True)
+#      elif self.zkey == 1: self.ininterv(3396000,3596000,number,start=self.xzs,end=self.xze,yaxis=yaxis,vertcoord=True)
+#      elif self.zkey == 2: self.ininterv(-5000.,100000.,number,start=self.xzs,end=self.xze,yaxis=yaxis,vertcoord=True)
+#      elif self.zkey == 3: self.ininterv(0.,120000.,number,start=self.xzs,end=self.xze,yaxis=yaxis,vertcoord=True)
+      if self.zkey == 0:   self.ininterv(1.e7,1.0,number,start=self.xzs,end=self.xze,yaxis=yaxis,vertcoord=True) #~0-150km, no thermosphere
+      elif self.zkey == 1: self.ininterv(6051848,6301848,number,start=self.xzs,end=self.xze,yaxis=yaxis,vertcoord=True) #~0-250km, with thermosphere
+      elif self.zkey == 2: self.ininterv(-2000.,145000.,number,start=self.xzs,end=self.xze,yaxis=yaxis,vertcoord=True) #-2 - 145km, no thermosphere
+      elif self.zkey == 3: self.ininterv(0.,150000.,number,start=self.xzs,end=self.xze,yaxis=yaxis,vertcoord=True) # 0-150km, no thermosphere
 
 ###################
 ### 1D analysis ###
@@ -609,10 +544,9 @@ class mcd():
     ## fill in subscript i in output arrays
     ## (arrays must have been correctly defined through prepare)
       if self.prestab is None:  errormess("arrays must be prepared first through self.prepare")
-      self.prestab[i] = self.pres ; self.denstab[i] = self.dens ; self.temptab[i] = self.temp
-      self.zonwindtab[i] = self.zonwind ; self.merwindtab[i] = self.merwind
-      self.meanvartab[i,1:5] = self.meanvar[0:4]  ## note: var numbering according to MCD manual is kept
-      self.extvartab[i,1:100] = self.extvar[0:99] ## note: var numbering according to MCD manual is kept
+      self.zonwindtab[i] = self.zonwind ; self.merwindtab[i] = self.merwind ; self.vertwindtab[i] = self.vertwind
+      self.temptab[i] = self.temp ; self.prestab[i] = self.pres ; self.denstab[i] = self.dens
+      self.extvartab[i,1:100] = self.extvar[0:99] ## note: var numbering according to VCD manual is kept
 
     def diurnal(self,nd=dflct):
     ### retrieve a local time slice
@@ -628,10 +562,10 @@ class mcd():
       save = self.lon
       self.xlabel = lonlab
       self.prepare(ndx=nd) ; self.ininterv(-180.,180.,nd,start=self.lons,end=self.lone)
-      if not self.fixedlt: umst = self.loct
+      if not self.fixedlt: uvt = self.loct
       for i in range(nd): 
           self.lon = self.xcoord[i]
-          if not self.fixedlt: self.loct = (umst + self.lon/15.) % 24
+          if not self.fixedlt: self.loct = (uvt - self.lon/15.) % 24  # Venus has retrograde rotation
           self.update() ; self.put1d(i)
       self.lon = save
 
@@ -723,17 +657,17 @@ class mcd():
       else:                  ordo = self.xcoord ; absc = field ; absclab = fieldlab ; ordolab = self.xlabel
       mpl.plot(absc,ordo,'-bo') ; mpl.ylabel(ordolab) ; mpl.xlabel(absclab) #; mpl.xticks(query.xcoord)
       # cases with log axis
-      if self.zkey == 4: mpl.semilogy() ; ax = mpl.gca() ; ax.set_ylim(ax.get_ylim()[::-1])
+      if self.zkey == 0: mpl.semilogy() ; ax = mpl.gca() ; ax.set_ylim(ax.get_ylim()[::-1])
       if not self.vertplot and self.islog: mpl.semilogy()
       if self.vertplot and self.islog: mpl.semilogx()
       mpl.figtext(0.5, 0.01, self.ack, ha='center')
 
     def plot1d(self,tabtodo):
     ### complete 1D figure with possible multiplots
-      import mcdcomp as mcdcomp
+      import vcdcomp as vcdcomp
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
-      fig = mpl.figure() ; subv,subh = mcdcomp.definesubplot( len(tabtodo) , fig ) 
+      fig = mpl.figure() ; subv,subh = vcdcomp.definesubplot( len(tabtodo) , fig ) 
       for i in range(len(tabtodo)): mpl.subplot(subv,subh,i+1).grid(True, linestyle=':', color='grey') ; self.makeplot1d(tabtodo[i])
       mpl.show()
 
@@ -741,7 +675,7 @@ class mcd():
     ### complete 1D figure with possible multiplots
     ### added in 09/2012 for online MCD
     ### see http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
-      import mcdcomp as mcdcomp
+      import vcdcomp as vcdcomp
       from matplotlib.figure import Figure
       from matplotlib.backends.backend_agg import FigureCanvasAgg
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
@@ -753,7 +687,7 @@ class mcd():
       elif howmanyplots == 3: fig = Figure(figsize=(8,16))
       elif howmanyplots == 4: fig = Figure(figsize=(16,8))
 
-      subv,subh = mcdcomp.definesubplot( len(tabtodo) , fig )
+      subv,subh = vcdcomp.definesubplot( len(tabtodo) , fig )
       for i in range(len(tabtodo)):
         yeah = fig.add_subplot(subv,subh,i+1) #.grid(True, linestyle=':', color='grey') 
         choice = tabtodo[i]
@@ -768,7 +702,7 @@ class mcd():
         yeah.plot(absc,ordo,'-bo') #; mpl.xticks(query.xcoord)
         ax = fig.gca() ; ax.set_ylabel(ordolab) ; ax.set_xlabel(absclab)
 
-        if self.xzs is not None and self.zkey == 4: ax.set_yscale('log') ; ax.set_ylim(ax.get_ylim()[::-1])
+        if self.xzs is not None and self.zkey == 0: ax.set_yscale('log') ; ax.set_ylim(ax.get_ylim()[::-1])
         if not self.vertplot and self.islog: ax.set_yscale('log')
         if self.vertplot and self.islog: ax.set_xscale('log')
 
@@ -821,8 +755,9 @@ class mcd():
         if self.lats is not None:
           self.typex = zetypes ; self.typey = "lat"
           return      
-      elif self.lats is not None: 
+      elif self.lats is not None:
         zetypes = "lat"
+	
       # -- explore all possibilities
       if zetypet is None:
         # this is horizontal/vertical section
@@ -838,7 +773,7 @@ class mcd():
           if zetypes == "alt":
             self.typex = zetypet ; self.typey = zetypes # hovmoller with alt
           else:
-            self.typex = zetypes ; self.typey = zetypet # hovmoller
+            self.typex = zetypet ; self.typey = zetypes # hovmoller
         elif zetypet == "ls":
           self.typex = zetypet ; self.typey = zetypes # seasonal
       return
@@ -849,7 +784,7 @@ class mcd():
       save1 = self.lon ; save2 = self.xz ; save3 = self.loct ; save4 = self.lat ; save5 = self.xdate
       # initialize
       if not self.fixedlt: 
-        umst = self.loct # local time is not fixed. user-defined local time is at longitude 0.
+        uvt = self.loct # local time is not fixed. user-defined local time is at longitude 0.
       # define the type of 2D plot
       # -- hard setting of typex and typey is meant to disappear
       self.definetype(typex=typex,typey=typey)
@@ -858,7 +793,7 @@ class mcd():
         coordmean = self.meandim(ndmean=ndmean) 
         if self.averaging == "lon": 
           self.fixedlt = False
-          umst = self.loct # shouldn't it be zero? does not matter anyways...
+          uvt = self.loct # shouldn't it be zero? does not matter anyways...
       # get coordinates
       self.fillcoord()
       # MAIN QUERY LOOP
@@ -869,16 +804,16 @@ class mcd():
          # emulate "natural" global local time if not free dim and not fixedlt
          if self.locts is None:
            if not self.fixedlt: 
-             self.loct = (umst + self.lon/15.) % 24
+             self.loct = (uvt - self.lon/15.) % 24  # Venus has retrograde rotation
          # get field (simple or average)
          if self.averaging is None:
            self.update()
          else:
-           self.meanperform(coordmean,umst=umst) 
+           self.meanperform(coordmean,uvt=uvt) 
          # fill in 2D array
          self.put2d(i,j)
       # reinstall init state
-      if not self.fixedlt: self.loct = umst
+      if not self.fixedlt: self.loct = uvt # AB: why do this since it is changed just below?
       self.lon = save1 ; self.xz = save2 ; self.loct = save3 ; self.lat = save4 ; self.xdate = save5
 
 ################################################
@@ -974,55 +909,56 @@ class mcd():
       self.xcoord = sav
       return coordmean
 
-    def meanperform(self,coordmean,umst=None):
+    def meanperform(self,coordmean,uvt=None):
       ndmean = coordmean.size
-      meanpres = 0. ; meandens = 0. ; meantemp = 0. ; meanzonwind = 0. ; meanmerwind = 0. ; meanmeanvar = np.zeros(5) ; meanextvar = np.zeros(100)        
+      meanzonwind = 0. ; meanmerwind = 0. ; meanvertwind = 0. ; meantemp = 0. ; meanpres = 0. ; meandens = 0. ; meanextvar = np.zeros(100)        
       for ccc in coordmean:
         if self.averaging == "lon":
           # zonal averaging with forcing of local time
           self.lon = ccc
-          self.loct = (umst + self.lon/15.) % 24 #fixedlt false for this case
+          self.loct = (uvt - self.lon/15.) % 24 #fixedlt false for this case  # Venus has retrograde rotation
         elif self.averaging == "loct":
           self.loct = ccc
         self.update() 
-        meanpres = meanpres + self.pres/float(ndmean) ; meandens = meandens + self.dens/float(ndmean) ; meantemp = meantemp + self.temp/float(ndmean)
-        meanzonwind = meanzonwind + self.zonwind/float(ndmean) ; meanmerwind = meanmerwind + self.merwind/float(ndmean)
-        meanmeanvar = meanmeanvar + self.meanvar/float(ndmean) ; meanextvar = meanextvar + self.extvar/float(ndmean)
-      self.pres=meanpres ; self.dens=meandens ; self.temp=meantemp ; self.zonwind=meanzonwind ; self.merwind=meanmerwind
-      self.meanvar=meanmeanvar ; self.extvar=meanextvar
+        meanzonwind = meanzonwind + self.zonwind/float(ndmean) ; meanmerwind = meanmerwind + self.merwind/float(ndmean) ; meanvertwind = meanvertwind + self.vertwind/float(ndmean)
+        meantemp = meantemp + self.temp/float(ndmean) ; meanpres = meanpres + self.pres/float(ndmean) ; meandens = meandens + self.dens/float(ndmean)
+        meanextvar = meanextvar + self.extvar/float(ndmean)
+      self.zonwind=meanzonwind ; self.merwind=meanmerwind ; self.vertwind=meanvertwind
+      self.temp=meantemp ; self.pres=meanpres ; self.dens=meandens
+      self.extvar=meanextvar
 
     def put2d(self,i,j):
     ## fill in subscript i,j in output arrays
     ## (arrays must have been correctly defined through prepare)
       if self.prestab is None:  errormess("arrays must be prepared first through self.prepare")
-      self.prestab[i,j] = self.pres ; self.denstab[i,j] = self.dens ; self.temptab[i,j] = self.temp
-      self.zonwindtab[i,j] = self.zonwind ; self.merwindtab[i,j] = self.merwind
-      self.meanvartab[i,j,1:5] = self.meanvar[0:4]  ## note: var numbering according to MCD manual is kept
-      self.extvartab[i,j,1:100] = self.extvar[0:99] ## note: var numbering according to MCD manual is kept
+      self.zonwindtab[i,j] = self.zonwind ; self.merwindtab[i,j] = self.merwind ; self.vertwindtab[i,j] = self.vertwind
+      self.temptab[i,j] = self.temp ; self.prestab[i,j] = self.pres ; self.denstab[i,j] = self.dens
+      self.extvartab[i,j,1:100] = self.extvar[0:99] ## note: var numbering according to VCD manual is kept
 
     def makemap2d(self,choice,incwind=False,proj="cyl"):
     ### one 2D map is created for the user-defined variable in choice.
-      import mcdcomp as mcdcomp
+      import vcdcomp as vcdcomp
       self.latlon() ## a map is implicitely a lat-lon plot. otherwise it is a plot (cf. makeplot2d)
       if choice == "wind" or incwind:
           (windx, fieldlabwx) = self.definefield("u")
           (windy, fieldlabwy) = self.definefield("v")
       if choice == "wind":
           field = np.sqrt(windx*windx + windy*windy)
+	  print windx
           fieldlab = "Horizontal wind speed (m/s)"
       else:    
           (field, fieldlab) = self.definefield(choice)
-      if incwind:   mcdcomp.maplatlon(self.xcoord,self.ycoord,field,title=fieldlab,proj=proj,vecx=windx,vecy=windy,vmin=self.min2d,vmax=self.max2d) #,stride=1)
-      else:         mcdcomp.maplatlon(self.xcoord,self.ycoord,field,title=fieldlab,proj=proj,vmin=self.min2d,vmax=self.max2d)
+      if incwind:   vcdcomp.maplatlon(self.xcoord,self.ycoord,field,title=fieldlab,proj=proj,vecx=windx,vecy=windy,vmin=self.min2d,vmax=self.max2d) #,stride=1)
+      else:         vcdcomp.maplatlon(self.xcoord,self.ycoord,field,title=fieldlab,proj=proj,vmin=self.min2d,vmax=self.max2d)
       mpl.figtext(0.5, 0.0, self.ack, ha='center')
 
     def map2d(self,tabtodo,incwind=False,proj="cyl"):
     ### complete 2D figure with possible multiplots
-      import mcdcomp as mcdcomp
+      import vcdcomp as vcdcomp
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       fig = mpl.figure()
-      subv,subh = mcdcomp.definesubplot( len(tabtodo) , fig ) 
+      subv,subh = vcdcomp.definesubplot( len(tabtodo) , fig ) 
       for i in range(len(tabtodo)): mpl.subplot(subv,subh,i+1) ; self.makemap2d(tabtodo[i],incwind=incwind,proj=proj)
       mpl.show() 
 
@@ -1040,7 +976,7 @@ class mcd():
     ### complete 2D figure with possible multiplots
     ### added in 09/2012 for online MCD
     ### see http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
-      import mcdcomp as mcdcomp
+      import vcdcomp as vcdcomp
       from matplotlib.figure import Figure
       from matplotlib.backends.backend_agg import FigureCanvasAgg
       from matplotlib.cm import get_cmap
@@ -1058,7 +994,7 @@ class mcd():
 
       try:
         from scipy.io import netcdf
-        filename = dataloc+"/mola32.nc" ; back = "alt"
+        filename = dataloc+"/relief.nc" ; back = "relief"
         zefile = netcdf.netcdf_file(filename, 'r') 
         fieldc = zefile.variables[back][::32,::32]/1000.
         yc = zefile.variables['latitude'][::32]
@@ -1066,19 +1002,19 @@ class mcd():
         zefile.close()
         havetopo = True
       except:
-        print "Trouble with netCDF or surface.nc file. Continue without topo lines."
+        print "Trouble with netCDF or relief.nc file. Continue without topo lines."
         havetopo = False
 
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
 
-      fig = mcdcomp.setfig(len(tabtodo),proj=self.proj)
-      subv,subh = mcdcomp.definesubplot( len(tabtodo) , fig )
+      fig = vcdcomp.setfig(len(tabtodo),proj=self.proj)
+      subv,subh = vcdcomp.definesubplot( len(tabtodo) , fig )
 
       for i in range(len(tabtodo)):
         yeah = fig.add_subplot(subv,subh,i+1)
         choice = tabtodo[i]
-        self.latlon() #ndx=64,ndy=48) 
+        self.latlon() #ndx=96,ndy=96) 
         ## a map is implicitely a lat-lon plot. otherwise it is a plot (cf. makeplot2d)
         (field, fieldlab) = self.definefield(choice)
         if incwind: (windx, fieldlabwx) = self.definefield("u") ; (windy, fieldlabwy) = self.definefield("v")
@@ -1107,7 +1043,7 @@ class mcd():
           ## NB: resolution=None is here to avoid loading coastlines which caused problems with some (plat,plon) couples
           ### background
           if isback:
-            img="/home/marshttp/www-mars/mcd_python/MarsMap_2500x1250.jpg"
+            img="/home/marshttp/www-venus/vcd_python/mapvenus.jpg"
             yeah.warpimage(img,scale=0.75)
           mertab,partab = np.r_[-180.:180.:30.],np.r_[-90.:90.:15.]
           merlab,parlab = [0,0,0,1],[1,0,0,0]
@@ -1122,7 +1058,7 @@ class mcd():
 
         ## define field. bound field.
         what_I_plot = np.transpose(field)
-        zevmin,zevmax,limtype = mcdcomp.setbounds(what_I_plot,vmin=self.min2d,vmax=self.max2d)
+        zevmin,zevmax,limtype = vcdcomp.setbounds(what_I_plot,vmin=self.min2d,vmax=self.max2d)
         ## define contour field levels. define color palette
         ticks = ndiv + 1
         zelevels = np.linspace(zevmin,zevmax,ticks)
@@ -1133,15 +1069,15 @@ class mcd():
           rcParams['contour.negative_linestyle'] = 'solid' # negative contours solid instead of dashed
           zelevc = np.linspace(-9.,20.,11.,0.)
           if isproj:
-             [xc2,yc2] = np.meshgrid(xc,yc)
+             [xc2,yc2] = np.meshgrid(np.array(xc)+180.,yc)
              xc3,yc3 = yeah(xc2,yc2)
              yeah.contour( xc3, yc3, fieldc, zelevc, colors='black',linewidths = 0.4 )
-             [xc2,yc2] = np.meshgrid(np.array(xc)-360.,yc)
+             [xc2,yc2] = np.meshgrid(np.array(xc)-180.,yc)
              xc3,yc3 = yeah(xc2,yc2)
              yeah.contour( xc3, yc3, fieldc, zelevc, colors='black',linewidths = 0.4 )
           else:
-             yeah.contour( np.array(xc)       , yc, fieldc, zelevc, colors='black',linewidths = 0.4)
-             yeah.contour( np.array(xc) - 360., yc, fieldc, zelevc, colors='black',linewidths = 0.4)
+             yeah.contour( np.array(xc) + 180 , yc, fieldc, zelevc, colors='black',linewidths = 0.4)
+             yeah.contour( np.array(xc) - 180., yc, fieldc, zelevc, colors='black',linewidths = 0.4)
 
         # contour field
         if self.iscontour: c = yeah.contour( x, y, what_I_plot, zelevels, cmap = palette )
@@ -1203,7 +1139,7 @@ class mcd():
     ### complete 2D figure with possible multiplots
     ### added in 10/2012 for online MCD
     ### see http://www.dalkescientific.com/writings/diary/archive/2005/04/23/matplotlib_without_gui.html
-      import mcdcomp as mcdcomp
+      import vcdcomp as vcdcomp
       from matplotlib import rcParams
       from matplotlib.figure import Figure
       from matplotlib.backends.backend_agg import FigureCanvasAgg
@@ -1211,8 +1147,8 @@ class mcd():
       if isinstance(tabtodo,np.str): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
       if isinstance(tabtodo,np.int): tabtodo=[tabtodo] ## so that asking one element without [] is possible.
 
-      fig = mcdcomp.setfig(len(tabtodo))
-      subv,subh = mcdcomp.definesubplot( len(tabtodo) , fig )
+      fig = vcdcomp.setfig(len(tabtodo))
+      subv,subh = vcdcomp.definesubplot( len(tabtodo) , fig )
 
       #######################
       self.query2d(self)
@@ -1228,7 +1164,7 @@ class mcd():
 
         ## define field. bound field.
         what_I_plot = np.transpose(field)
-        zevmin,zevmax,limtype = mcdcomp.setbounds(what_I_plot,vmin=self.min2d,vmax=self.max2d)  
+        zevmin,zevmax,limtype = vcdcomp.setbounds(what_I_plot,vmin=self.min2d,vmax=self.max2d)  
         ## define contour field levels. define color palette
         ticks = ndiv + 1
         zelevels = np.linspace(zevmin,zevmax,ticks)
@@ -1245,25 +1181,22 @@ class mcd():
 
         self.makeinterv()
         if self.lons is not None:
-          if self.xdates is not None:
+          if self.locts is not None:
             ax.set_yticks(np.arange(-360,361,self.loninterv)) ; ax.set_ybound(lower=self.lons, upper=self.lone)
           else:
             ax.set_xticks(np.arange(-360,361,self.loninterv)) ; ax.set_xbound(lower=self.lons, upper=self.lone)
         elif self.lats is not None: 
-          if self.xdates is not None:
+          if self.locts is not None:
             ax.set_yticks(np.arange(-90,91,self.latinterv)) ; ax.set_ybound(lower=self.lats, upper=self.late)
           else:
             ax.set_xticks(np.arange(-90,91,self.latinterv)) ; ax.set_xbound(lower=self.lats, upper=self.late)
 
         if self.locts is not None: 
-          if self.xzs is not None: 
             ax.set_xticks(np.arange(0,26,2)) ; ax.set_xbound(lower=self.locts, upper=self.locte)
-          else:
-            ax.set_yticks(np.arange(0,26,2)) ; ax.set_ybound(lower=self.locts, upper=self.locte)
         elif self.xdates is not None:
             ax.set_xticks(np.arange(0,361,30)) ; ax.set_xbound(lower=self.xdates, upper=self.xdatee)
 
-        if self.zkey == 4 and self.xzs is not None: 
+        if self.zkey == 0 and self.xzs is not None: 
             ax.set_yscale('log') ; ax.set_ylim(ax.get_ylim()[::-1])
         else:
             #ax.set_yticks(np.arange(self.xzs,self.xze,10000.)) ; 
