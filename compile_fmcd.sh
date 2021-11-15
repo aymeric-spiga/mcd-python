@@ -42,7 +42,8 @@ sed s/"\!\!'"/"'"/g $wheremcd/mcd/constants_mcd.inc  | sed s/"\!'"/"'"/g | sed -
 ### BUILD THROUGH f2py WHAT IS NECESSARY TO CREATE THE PYTHON FUNCTIONS
 touch fmcd$num.pyf
 \rm fmcd$num.pyf
-f2py -h fmcd$num.pyf -m fmcd$num tmp.call_mcd.F tmp.julian.F tmp.heights.F > fmcd$num.log 2>&1
+echo -e "  First f2py call : \n " > fmcd$num.log
+f2py -h fmcd$num.pyf -m fmcd$num tmp.call_mcd.F tmp.julian.F tmp.heights.F >> fmcd$num.log 2>&1
 
 ### IMPORTANT: we teach f2py about variables in the call_mcd subroutines which are intended to be out
 sed s/"real :: pres"/"real, intent(out) :: pres"/g fmcd$num.pyf | \
@@ -66,13 +67,14 @@ sed '/python module fmcd ! in/r patchtmp.txt' fmcd$num.pyf > tmp ; mv tmp fmcd$n
 sed '/interface  ! in :fmcd/r patch.txt' fmcd$num.pyf > tmp ; mv tmp fmcd$num.pyf
 
 ### BUILD
+echo -e " \n   Second f2py call : \n " >> fmcd$num.log
 f2py -c fmcd$num.pyf tmp.call_mcd.F tmp.julian.F tmp.heights.F --fcompiler=gnu95 \
   -L$NETCDF/lib -lnetcdf \
   -lm -I$NETCDF/include \
   --f90flags="-fPIC" \
   --f77flags="-fPIC" \
   --verbose \
-  > fmcd$num.log 2>&1
+  >> fmcd$num.log 2>&1
 
 #### CLEAN THE PLACE
 \rm tmp.call_mcd.F tmp.julian.F tmp.heights.F constants_mcd.inc
