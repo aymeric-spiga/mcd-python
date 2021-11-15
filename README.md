@@ -2,12 +2,12 @@
 
 Open source code and contact information [available on github](https://github.com/aymeric-spiga) [no registration needed]
 
-Based on the MCD version (git branch 'master').
-***WARNING***
+Based on the MCD version (git branch [master](https://github.com/aymeric-spiga/mcd-python/tree/master)).
+***WARNING:***
 To keep track of changes between the git branches,
-we keep the file names 'compile_fmcd.sh', 'mcd.py' and 'mcdcomp.py' as such, at least for now.
-Every instance of 'mcd' other than in these 3 file names is replaced by its 'vcd' counterpart.
-Also, we have not adapted yet the test_mcd repository
+we keep the file names `compile_fmcd.sh`, `mcd.py` and `mcdcomp.py` as such, at least for now.
+Every instance of `"mcd"` other than in these 3 file names is replaced by its `"vcd"` counterpart.
+Also, we have not adapted yet the `test_mcd` repository
 
 * To get sources through git 
 ~~~
@@ -57,7 +57,7 @@ quicktest.py
 
 Next step is to try and learn about the use of `vcd` Python library with the `tutorial` folder.
 
-A more advanced example (direct use of `fvcd` compiled with `f2py`) is provided in the `test_mcd` folder.
+A more advanced example (direct use of `fvcd` compiled with `f2py`) is not yet provided in the `test_mcd` folder.
 
 ----
 
