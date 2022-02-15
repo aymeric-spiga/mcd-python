@@ -116,6 +116,7 @@ class mcd():
         self.iscontour = False
         self.plat = 0.0
         self.plon = 0.0
+        self.palt = None             
         self.latpoint = None
         self.lonpoint = None
 
@@ -1091,6 +1092,8 @@ class mcd():
           ##
           if self.plat is None: self.plat = 0.5*(self.lats+self.late)
           if self.plon is None: self.plon = 0.5*(self.lons+self.lone)
+          if self.palt is None: self.palt  = 99999999.
+          
           ##
           if self.proj == "cyl": yeah = Basemap(projection=self.proj,\
                                                 llcrnrlat=self.lats,urcrnrlat=self.late,\
@@ -1104,6 +1107,8 @@ class mcd():
           elif self.proj == "spstere": yeah = Basemap(projection=self.proj,boundinglat=self.plat,lon_0=self.plon,resolution=None,ax=yeah)
           elif self.proj == "ortho": yeah = Basemap(projection=self.proj,lat_0=self.plat,lon_0=self.plon,resolution=None,ax=yeah)
           elif self.proj == "robin": yeah = Basemap(projection=self.proj,lon_0=0.,resolution=None,ax=yeah)
+          elif self.proj == "nsper": yeah = Basemap(projection=self.proj,lat_0=self.plat,lon_0=self.plon,satellite_height=self.palt*1000.,resolution=None,ax=yeah)
+          
           ## NB: resolution=None is here to avoid loading coastlines which caused problems with some (plat,plon) couples
           ### background
           if isback:
