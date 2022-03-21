@@ -1117,9 +1117,14 @@ class mcd():
           mertab,partab = np.r_[-180.:180.:30.],np.r_[-90.:90.:15.]
           merlab,parlab = [0,0,0,1],[1,0,0,0]
           #format = '%.1f'
-
-          yeah.drawmeridians(mertab,color="grey",labels=merlab)
-          yeah.drawparallels(partab,color="grey",labels=parlab)
+          
+	  if(self.proj=="nsper") : 
+           yeah.drawmeridians(mertab,color="grey")
+           yeah.drawparallels(partab,color="grey")
+	  else :
+           yeah.drawmeridians(mertab,color="grey",labels=merlab)
+           yeah.drawparallels(partab,color="grey",labels=parlab)	    
+	  
           [lon2d,lat2d] = np.meshgrid(lon,lat)
           x, y = yeah(lon2d, lat2d)
         else:
