@@ -560,6 +560,7 @@ class vcd_class():
     def zonal(self,nd=dfzon):
     ### retrieve a longitude slice
       save = self.lon
+      save2 = self.loct
       self.xlabel = lonlab
       self.prepare(ndx=nd) ; self.ininterv(-180.,180.,nd,start=self.lons,end=self.lone)
       if not self.fixedlt: uvt = self.loct
@@ -568,6 +569,7 @@ class vcd_class():
           if not self.fixedlt: self.loct = (uvt - self.lon/15.) % 24  # Venus has retrograde rotation
           self.update() ; self.put1d(i)
       self.lon = save
+      self.loct = save2
 
     def meridional(self,nd=dfmer):
     ### retrieve a latitude slice
