@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
-from mcd import mcd
-req = mcd()
+from mcd import mcd_class
+req = mcd_class()
 req.lat = -4.6
 req.lon = 137.4
 req.loct = 15

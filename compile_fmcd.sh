@@ -12,16 +12,15 @@
 ### ---> See mcd.py for use in python. Very easy!
 ###
 ### AS. 17/04/2012. 
-###
+### TP/ AB : 13/10/2022 : update for MCD6.1
 ######################################################################################
 
-NETCDF=../mcd-python/netcdf/gfortran_netcdf-4.0.1/
-wheremcd=../MCD_v5.2/
-version="5.2"
 
 NETCDF=/home/marshttp/NETCDF/netcdf64-4.0.1_gfortran_fPIC/
-wheremcd="/home/marshttp/MCD_5.3/"
-version="5.3"
+wheremcd="/home/marshttp/MCD_6.1/"
+
+
+version="6.1"
 
 ######################################################################################
 ######################################################################################
@@ -34,16 +33,14 @@ touch fmcd$num.log
 
 ### COPY/PREPARE SOURCES
 ### perform changes that makes f2py not to fail
-sed s/"\!\!'"/"'"/g $wheremcd/mcd/call_mcd.F         | sed s/"\!'"/"'"/g | sed -e 's/!/\'$'\n!/g' > tmp.call_mcd.F
-sed s/"\!\!'"/"'"/g $wheremcd/mcd/julian.F           | sed s/"\!'"/"'"/g | sed -e 's/!/\'$'\n!/g' > tmp.julian.F
-sed s/"\!\!'"/"'"/g $wheremcd/mcd/heights.F          | sed s/"\!'"/"'"/g | sed -e 's/!/\'$'\n!/g' > tmp.heights.F
-sed s/"\!\!'"/"'"/g $wheremcd/mcd/constants_mcd.inc  | sed s/"\!'"/"'"/g | sed -e 's/!/\'$'\n!/g' > constants_mcd.inc
+sed s/"\!\!'"/"'"/g $wheremcd/mcd/MCD.F90            | sed s/"\!'"/"'"/g | sed -e 's/!/\'$'\n!/g' > tmp.MCD.F90
+
 
 ### BUILD THROUGH f2py WHAT IS NECESSARY TO CREATE THE PYTHON FUNCTIONS
 touch fmcd$num.pyf
 \rm fmcd$num.pyf
 echo -e "  First f2py call : \n " > fmcd$num.log
-f2py -h fmcd$num.pyf -m fmcd$num tmp.call_mcd.F tmp.julian.F tmp.heights.F >> fmcd$num.log 2>&1
+f2py -h fmcd$num.pyf -m fmcd$num tmp.MCD.F90 >> fmcd$num.log 2>&1
 
 ### IMPORTANT: we teach f2py about variables in the call_mcd subroutines which are intended to be out
 sed s/"real :: pres"/"real, intent(out) :: pres"/g fmcd$num.pyf | \
@@ -68,14 +65,14 @@ sed '/interface  ! in :fmcd/r patch.txt' fmcd$num.pyf > tmp ; mv tmp fmcd$num.py
 
 ### BUILD
 echo -e " \n   Second f2py call : \n " >> fmcd$num.log
-f2py -c fmcd$num.pyf tmp.call_mcd.F tmp.julian.F tmp.heights.F --fcompiler=gnu95 \
-  -L$NETCDF/lib -lnetcdf \
+f2py -c fmcd$num.pyf tmp.MCD.F90 --fcompiler=gnu95 \
+  -L$NETCDF/lib -lnetcdf -lnetcdff\
   -lm -I$NETCDF/include \
-  --f90flags="-fPIC" \
+  --f90flags="-fPIC -ffree-form -ffree-line-length-none" \
   --f77flags="-fPIC" \
   --verbose \
   >> fmcd$num.log 2>&1
 
 #### CLEAN THE PLACE
-\rm tmp.call_mcd.F tmp.julian.F tmp.heights.F constants_mcd.inc
+\rm tmp.MCD.F90
 \rm patchtmp.txt

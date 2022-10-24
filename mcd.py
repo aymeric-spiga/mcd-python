@@ -7,7 +7,7 @@
 ####################################################
 
 ###
-from fmcd import call_mcd # MCD compiled with f2py
+from fmcd import mcd      # MCD compiled with f2py
 from fmcd import dataloc  # location of MCD data file
 from fmcd import dataver  # compiled version of MCD 
 ###
@@ -34,7 +34,7 @@ def errormess(text,printvar=None):
     exit()
     return
 
-class mcd():
+class mcd_class():
  
     def __repr__(self):
     # print out a help string when help is invoked on the object
@@ -77,17 +77,15 @@ class mcd():
                             # 5 = altitude above mean Mars Radius(=3396000m) (m)
         self.datekey   = 1  # 0 = "Earth time": xdate is given in Julian days (localtime must be set to zero)
                             # 1 = "Mars date": xdate is the value of Ls
-        ## 2. climatological options
-        if "v5" in self.name:
-            self.dust      = 1 # climatological average scenario
-        else:
-            self.dust      = 2  #our best guess MY24 scenario, with solar average conditions
+                            
+        ## 2. climatological options      
+          
+        self.dust      = 1 # climatological average scenario       
         self.hrkey     = 1  #set high resolution mode on (hrkey=0 to set high resolution off)
+     
         ## 3. additional settings for advanced use
-        if "v5" in self.name:
-            self.extvarkey = np.ones(100) # now a table in MCD version 5
-        else:
-            self.extvarkey = 1  #extra output variables (1: yes, 0: no)
+        
+        self.extvarkey = np.ones(100) # now a table since MCD version 5
         self.perturkey = 0  #integer perturkey ! perturbation type (0: none)
         self.seedin    = 1  #random number generator seed (unused if perturkey=0)
         self.gwlength  = 0. #gravity Wave wavelength (unused if perturkey=0)
@@ -125,14 +123,11 @@ class mcd():
 
     def getdustlabel(self):
         if self.dust == 1: 
-            self.dustlabel = "MY24 minimum solar scenario"
-            if "v5" in self.name: self.dustlabel = "climatology average solar scenario"
+            self.dustlabel = "climatology average solar scenario"                        
         elif self.dust == 2: 
-            self.dustlabel = "MY24 average solar scenario"
-            if "v5" in self.name: self.dustlabel = "climatology minimum solar scenario"
+            self.dustlabel = "climatology minimum solar scenario"
         elif self.dust == 3: 
-            self.dustlabel = "MY24 maximum solar scenario"
-            if "v5" in self.name: self.dustlabel = "climatology maximum solar scenario"
+            self.dustlabel = "climatology maximum solar scenario"
         elif self.dust == 4: self.dustlabel = "dust storm minimum solar scenario"
         elif self.dust == 5: self.dustlabel = "dust storm average solar scenario"
         elif self.dust == 6: self.dustlabel = "dust storm maximum solar scenario"
@@ -169,6 +164,7 @@ class mcd():
                 else: self.title = self.title + " (fixed at all longitudes) "
 
     def getextvarlab(self,num):
+        # MCD version 6.1 variables
         whichfield = { \
         91: "Pressure (Pa)", \
         92: "Density (kg/m3)", \
@@ -176,104 +172,93 @@ class mcd():
         94: "W-E wind component (m/s)", \
         95: "S-N wind component (m/s)", \
         96: "Horizontal wind speed (m/s)", \
-	1: "Radial distance from planet center (m)",\
-	2: "Altitude above areoid (Mars geoid) (m)",\
-	3: "Altitude above local surface (m)",\
-	4: "orographic height (m) (surf alt above areoid)",\
-	5: "Ls, solar longitude of Mars (deg)",\
-	6: "LST local true solar time (hrs)",\
-	7: "Universal solar time (LST at lon=0) (hrs)",\
-	8: "Air heat capacity Cp (J kg-1 K-1)",\
-	9: "gamma=Cp/Cv Ratio of specific heats",\
-	10: "density RMS day to day variations (kg/m^3)",\
-        11: "[not defined]",\
-        12: "[not defined]",\
-	13: "scale height H(p) (m)",\
-	14: "GCM orography (m)",\
-	15: "surface temperature (K)",\
-	16: "daily max mean surface temperature (K)",\
-	17: "daily min mean surface temperature (K)",\
-	18: "surf. temperature RMS day to day variations (K)",\
-	19: "surface pressure (Pa)",\
-	20: "GCM surface pressure (Pa)",\
-	21: "atmospheric pressure RMS day to day variations (Pa)",\
-	22: "surface pressure RMS day to day variations (Pa)",\
-	23: "temperature RMS day to day variations (K)",\
-	24: "zonal wind RMS day to day variations (m/s)",\
-	25: "meridional wind RMS day to day variations (m/s)",\
-	26: "vertical wind component (m/s) >0 when downwards!",\
-	27: "vertical wind RMS day to day variations (m/s)",\
-	28: "small scale perturbation (gravity wave) (kg/m^3)",\
-	29: "q2: turbulent kinetic energy (m2/s2)",\
-        30: "[not defined]",\
-	31: "thermal IR flux to surface (W/m2)",\
-	32: "solar flux to surface (W/m2)",\
-	33: "thermal IR flux to space (W/m2)",\
-	34: "solar flux reflected to space (W/m2)",\
-	35: "surface CO2 ice layer (kg/m2)",\
-	36: "DOD: Dust column visible optical depth",\
-	37: "Dust mass mixing ratio (kg/kg)",\
-	38: "DOD RMS day to day variations",\
-	39: "DOD total standard deviation over season",\
-	40: "Water vapor column (kg/m2)",\
-	41: "Water vapor vol. mixing ratio (mol/mol)",\
-	42: "Water ice column (kg/m2)",\
-	43: "Water ice mixing ratio (mol/mol)",\
-	44: "O3 ozone vol. mixing ratio (mol/mol)",\
-	45: "[CO2] vol. mixing ratio (mol/mol)",\
-	46: "[O] vol. mixing ratio (mol/mol)",\
-	47: "[N2] vol. mixing ratio (mol/mol)",\
-	48: "[CO] vol. mixing ratio (mol/mol)",\
-	49: "R: Molecular gas constant (J K-1 kg-1)",\
-	50: "Air viscosity estimation (N s m-2)"
+	1: "Radial distance from planet center (m)", \
+	2: "Altitude above areoid (Mars geoid) (m)", \
+	3: "Altitude above local surface (m)", \
+	4: "orographic height (m) (surface altitude above areoid)", \
+	5: "GCM orography (m)", \
+	6: "Local slope inclination (deg) (HR mode only)", \
+	7: "Local slope orientation (deg) (0 deg Northward) (HR mode only)", \
+	8: "Sun-Mars distance (in Astronomical Unit AU)", \
+	9: "Ls, solar longitude of Mars (deg)", \
+	10: "LST:Local true solar time (hrs)", \
+	11: "LMT:Local mean time (hrs) at sought longitude", \
+	12: "Universal solar time (LST at lon=0) (hrs)", \
+	13: "Solar zenith angle (deg)", \
+	14: "Surface temperature (K)", \
+	15: "Surface pressure (Pa)", \
+	16: "GCM surface pressure (Pa)", \
+	17: "Potential temperature (K) (reference pressure=610Pa)", \
+	18: "Vertical wind component (m/s) (Up-Down)", \
+	19: "Zonal slope wind component (m/s) (HR mode only)", \
+	20: "Meridional slope wind component (m/s) (HR mode only)", \
+	21: "Surface pressure RMS day to day variations (Pa)", \
+	22: "Surface temperature RMS day to day variations (K)", \
+	23: "Atmospheric pressure RMS day to day variations (Pa)", \
+	24: "Density RMS day to day variations (kg/m^3)", \
+	25: "Temperature RMS day to day variations (K)", \
+	26: "Zonal wind RMS day to day variations (m/s)", \
+	27: "Meridional wind RMS day to day variations (m/s)", \
+	28: "Vertical wind RMS day to day variations (m/s)", \
+	29: "Incident solar flux at top of the atmosphere (W/m2)", \
+	30: "solar flux reflected to space (W/m2)", \
+	31: "Incident solar flux on horizontal surface (W/m2)", \
+	32: "Incident solar flux on local slope (W/m2) (HR mode only)", \
+	33: "Reflected solar flux on horizontal surface (W/m2)", \
+	34: "thermal IR flux to space (W/m2)", \
+	35: "thermal IR flux on surface (W/m2)", \
+	36: "GCM surface roughness length z0 (m)", \
+	37: "GCM surface thermal inertia", \
+	38: "GCM surface bare ground albedo", \
+	39: "Monthly mean dust column visible optical depth above surface", \
+	40: "Daily mean dust column visible optical depth above surface", \
+	41: "Dust mass mixing ratio (kg/kg)", \
+	42: "Dust effective radius (m)", \
+	43: "Daily mean dust deposition rate on horizontal surface (kg m-2 s-1)", \
+	44: "Monthly mean surface CO2 ice layer (kg/m2)", \
+	45: "Monthly mean surface H2O layer (kg/m2) (non perennial frost)", \
+	46: "GCM perennial surface water ice (0 or 1)", \
+	47: "Water vapor column (kg/m2)", \
+	48: "Water vapor vol. mixing ratio (mol/mol)", \
+	49: "Water ice column (kg/m2)", \
+	50: "Water ice mixing ratio (mol/mol)", \
+	51: "Water ice effective radius (m)", \
+	52: "Convective Planetary Boundary Layer (PBL) height (m)", \
+	53: "Max. upward convective wind within the PBL (m/s)", \
+	54: "Max. downward convective wind within the PBL (m/s)", \
+	55: "Convective vertical wind variance at level z (m2/s2)", \
+	56: "Convective eddy vertical heat flux at level z (m/s/K)", \
+	57: "Surface wind stress (kg/m/s2)", \
+	58: "Surface sensible heat flux (W/m2) (<0 when flux from surf to atm.)", \
+	59: "Air heat capacity Cp (J kg-1 K-1)", \
+	60: "gamma=Cp/Cv Ratio of specific heats", \
+	61: "R:Molecular gas constant (J K-1 kg-1)", \
+	62: "Air viscosity estimation (N s m-2)", \
+	63: "Scale height H(p) (m)", \
+	64: "[CO2] volume mixing ratio (mol/mol)", \
+	65: "[N2] volume mixing ratio  (mol/mol)", \
+	66: "[Ar] volume mixing ratio  (mol/mol)", \
+	67: "[CO] volume mixing ratio  (mol/mol)", \
+	68: "[O] volume mixing ratio   (mol/mol)", \
+	69: "[O2] volume mixing ratio  (mol/mol)", \
+	70: "[O3] volume mixing ratio  (mol/mol)", \
+	71: "[H] volume mixing ratio   (mol/mol)", \
+	72: "[H2] volume mixing ratio  (mol/mol)", \
+	73: "[He] volume mixing ratio  (mol/mol)", \
+	74: "CO2 column (kg/m2)", \
+	75: "N2 column  (kg/m2)", \
+	76: "Ar column  (kg/m2)", \
+	77: "CO column  (kg/m2)", \
+	78: "O column   (kg/m2)", \
+	79: "O2 column  (kg/m2)", \
+	80: "O3 column  (kg/m2)", \
+	81: "H column   (kg/m2)", \
+	82: "H2 column  (kg/m2)", \
+	83: "He column  (kg/m2)", \
+	84: "Electron number density (particules/cm3)", \
+	85: "Total electonic content (TEC) (particules/m2)"
         }
-        ### MCD version 5 new variables. AS 12/2012.
-        if "v5" in self.name:
-          whichfield[30] = whichfield[34]
-          whichfield[34] = "surface H2O ice layer (kg/m2, 0.5: perennial)"
-          whichfield[29] = "Surface roughness length z0 (m)"
-          whichfield[37] = "DOD RMS day to day variations"
-          whichfield[38] = "Dust mass mixing ratio (kg/kg)"
-          whichfield[39] = "Dust effective radius (m)"
-          whichfield[44] =  whichfield[43]
-          whichfield[43] =  whichfield[42]
-          whichfield[42] =  whichfield[41]
-          whichfield[41] =  whichfield[40]
-          whichfield[40] = "Dust deposition on flat surface (kg m-2 s-1)"
-          whichfield[45] = "Water ice effective radius (m)"
-          whichfield[46] = "Convective PBL height (m)"
-          whichfield[47] = "Max. upward convective wind within the PBL (m/s)"
-          whichfield[48] = "Max. downward convective wind within the PBL (m/s)"
-          whichfield[49] = "Convective vertical wind variance at level z (m2/s2)"
-          whichfield[50] = "Convective eddy vertical heat flux at level z (m/s/K)"
-          whichfield[51] = "Surface wind stress (Kg/m/s2)"
-          whichfield[52] = "Surface sensible heat flux (W/m2) (<0 when flux from surf to atm.)"
-          whichfield[53] = "R: Molecular gas constant (J K-1 kg-1)"
-          whichfield[54] = "Air viscosity estimation (N s m-2)"
-          whichfield[55] = "not used (set to zero)"
-          whichfield[56] = "not used (set to zero)"
-          whichfield[57] = "[CO2] vol. mixing ratio (mol/mol)"
-          whichfield[58] = "[N2] vol. mixing ratio (mol/mol)"
-          whichfield[59] = "[Ar] vol. mixing ratio (mol/mol)"
-          whichfield[60] = "[CO] vol. mixing ratio (mol/mol)"
-          whichfield[61] = "[O] vol. mixing ratio (mol/mol)"
-          whichfield[62] = "[O2] vol. mixing ratio (mol/mol)"
-          whichfield[63] = "[O3] vol. mixing ratio (mol/mol)"
-          whichfield[64] = "[H] vol. mixing ratio (mol/mol)"
-          whichfield[65] = "[H2] vol. mixing ratio (mol/mol)"
-          whichfield[66] = "electron number density (cm-3)"
-          whichfield[67] = "CO2 column (kg/m2)"
-          whichfield[68] = "N2 column (kg/m2)"
-          whichfield[69] = "Ar column (kg/m2)"
-          whichfield[70] = "CO column (kg/m2)"
-          whichfield[71] = "O column (kg/m2)"
-          whichfield[72] = "O2 column (kg/m2)"
-          whichfield[73] = "O3 column (kg/m2)"
-          whichfield[74] = "H column (kg/m2)"
-          whichfield[75] = "H2 column (kg/m2)"
-          whichfield[76] = "Total Electronic Content (TEC) (m-2)"
-          whichfield[77] = "He column (kg/m2)"
-          whichfield[78] = "[He] vol. mixing ratio (mol/mol)"
+
         if num not in whichfield: errormess("Incorrect subscript in extvar.")
         dastuff = whichfield[num]
         expf = "%.1e"
@@ -289,149 +274,105 @@ class mcd():
         else:                     self.fmt=expf
         return dastuff
 
-    def convertlab(self,num):        
+    def convertlab(self,num): 
+
         ## a conversion from text inquiries to extvar numbers. to be completed.
-        if num == "p": num = 91
-        elif num == "rho": num = 92
-        elif num == "t": num = 93
-        elif num == "u": num = 94
-        elif num == "v": num = 95
-        elif num == "wind": num = 96
-        elif num == "tsurf": num = 15
-        elif num == "topo": num = 4
-        elif num == "h": num = 13
-        elif num == "ps": num = 19
-        elif num == "tau": num = 36
-        elif num == "R": 
-            if "v5" in self.name:  num = 53 
-            else:                  num = 49
-        elif num == "mtot": 
-            if "v5" in self.name:  num = 41 
-            else:                  num = 40
-        elif num == "icetot": 
-            if "v5" in self.name:  num = 43
-            else:                  num = 42
-        elif num == "h2ovap": 
-            if "v5" in self.name:  num = 42
-            else:                  num = 41
-        elif num == "h2oice": 
-            if "v5" in self.name:  num = 44
-            else:                  num = 43
-        elif num == "cp": num = 8
-        elif num == "gamma": num = 9
-        elif num == "rho_ddv": num = 10
-        elif num == "ps_ddv": num = 22
-        elif num == "p_ddv": num = 21
-        elif num == "t_ddv": num = 23
-        elif num == "u_ddv": num = 24
-        elif num == "v_ddv": num = 25
-        elif num == "w": num = 26
-        elif num == "w_ddv": num = 27
-        elif num == "tsurfmx": num = 16
-        elif num == "tsurfmn": num = 17
-        elif num == "lwdown": num = 31
-        elif num == "swdown": num = 32
-        elif num == "lwup": num = 33
-        elif num == "swup":
-            if "v5" in self.name:  num = 30
-            else:                  num = 34
-        elif num == "tau": num = 36
-        elif num == "tau_ddv":
-            if "v5" in self.name:  num = 37
-            else:                  num = 38
-        elif num == "qdust":
-            if "v5" in self.name:  num = 38
-            else:                  num = 37
-        elif num == "co2":
-            if "v5" in self.name:  num = 57
-            else:                  num = 45
-        elif num == "o3": 
-            if "v5" in self.name:  num = 63
-            else:                  num = 44
-        elif num == "o": 
-            if "v5" in self.name:  num = 61
-            else:                  num = 46
-        elif num == "co": 
-            if "v5" in self.name:  num = 60
-            else:                  num = 48
-        elif num == "visc": 
-            if "v5" in self.name:  num = 54
-            else:                  num = 50
-        elif num == "co2ice": num = 35
-        elif num == "n2":
-            if "v5" in self.name:  num = 58
-            else:                  num = 47
-        elif num == "n2col":
-            if "v5" in self.name:  num = 68
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "rdust":
-            if "v5" in self.name:  num = 39
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "sdust":
-            if "v5" in self.name:  num = 40
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "pbl":
-            if "v5" in self.name:  num = 46
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "updraft":
-            if "v5" in self.name:  num = 47
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "downdraft":
-            if "v5" in self.name:  num = 48
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "pblwvar":
-            if "v5" in self.name:  num = 49
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "pblhvar":
-            if "v5" in self.name:  num = 50
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "stress":
-            if "v5" in self.name:  num = 51
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "ar":
-            if "v5" in self.name:  num = 59
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "o2":
-            if "v5" in self.name:  num = 62
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "co2col":
-            if "v5" in self.name:  num = 67
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "arcol":
-            if "v5" in self.name:  num = 69
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "cocol":
-            if "v5" in self.name:  num = 70
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "o3col":
-            if "v5" in self.name:  num = 73
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "hydro":
-            if "v5" in self.name:  num = 64
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "hydro2":
-            if "v5" in self.name:  num = 65
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "e":
-            if "v5" in self.name:  num = 66
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "ecol":
-            if "v5" in self.name:  num = 76
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "he":
-            if "v5" in self.name:  num = 78
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "hecol":
-            if "v5" in self.name:  num = 77
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "groundice":
-            if "v5" in self.name:  num = 34
-            else:                  num = 11 # an undefined variable to avoid misleading output
-        elif num == "rice":
-            if "v5" in self.name:  num = 45
-            else:                  num = 11 # an undefined variable to avoid misleading output
+
+
+        if   num == "p":      num = 91
+        elif num == "rho":  num = 92
+        elif num == "t":    num = 93
+        elif num == "u":    num = 94
+        elif num == "v":    num = 95
+        elif num == "wind": num = 96   
+        elif num == "zradius": num=1
+        elif num == "zareoid" : num =2         
+        elif num == "zsurface" : num = 3         
+        elif num == "oroheight" : num = 4         
+        elif num == "oro_gcm" : num = 5          
+        elif num == "theta_s" : num = 6         
+        elif num == "psi_s" : num = 7          
+        elif num == "marsau" : num = 8         
+        elif num == "ls" : num = 9         
+        elif num == "loctime" : num = 10         
+        elif num == "lmeantime" : num = 11          
+        elif num == "utime" : num = 12          
+        elif num == "solzenang" : num = 13         
+        elif num == "tsurf" : num = 14         
+        elif num == "ps" : num = 15         
+        elif num == "ps_gcm" : num = 16        
+        elif num == "potential_temp" : num = 17         
+        elif num == "w_l" : num = 18         
+        elif num == "zonal_slope_wind" : num = 19          
+        elif num == "merid_slope_wind" : num = 20         
+        elif num == "rmsps" : num = 21         
+        elif num == "rmstsurf" : num = 22          
+        elif num == "altrmsp" : num = 23          
+        elif num == "rmsrho" : num = 24         
+        elif num == "rmst" : num = 25          
+        elif num == "rmsu" : num = 26         
+        elif num == "rmsv" : num = 27          
+        elif num == "rmsw" : num = 28         
+        elif num == "fluxtop_dn_sw" : num = 29          
+        elif num == "fluxtop_up_sw" : num = 30          
+        elif num == "fluxsurf_dn_sw" : num = 31        
+        elif num == "fluxsurf_dn_sw_hr" : num = 32          
+        elif num == "fluxsurf_up_sw" : num = 33        
+        elif num == "fluxtop_lw" : num = 34         
+        elif num == "fluxsurf_lw" : num = 35        
+        elif num == "z_0" : num = 36          
+        elif num == "thermal_inertia" : num = 37        
+        elif num == "ground_albedo" : num = 38         
+        elif num == "dod" : num = 39         
+        elif num == "tauref" : num = 40          
+        elif num == "dust_mmr" : num = 41         
+        elif num == "dust_reff" : num = 42        
+        elif num == "dust_dep" : num = 43         
+        elif num == "co2ice" : num = 44         
+        elif num == "surf_h2o_ice" : num = 45          
+        elif num == "water_cap" : num = 46          
+        elif num == "col_h2ovapor" : num = 47          
+        elif num == "vmr_h2o" : num = 48         
+        elif num == "col_h2oice" : num = 49          
+        elif num == "vmr_h2oice" : num = 50          
+        elif num == "h2oice_reff" : num = 51          
+        elif num == "zmax" : num = 52          
+        elif num == "wstar_up" : num = 53         
+        elif num == "wstar_dn" : num = 54       
+        elif num == "vvv" : num = 55        
+        elif num == "vhf" : num = 56        
+        elif num == "surfstress" : num = 57         
+        elif num == "sensib_flux" : num = 58        
+        elif num == "Cp" : num = 59         
+        elif num == "gamma" : num = 60         
+        elif num == "Rgas" : num = 61         
+        elif num == "viscosity" : num = 62         
+        elif num == "pscaleheight" : num = 63          
+        elif num == "vmr_co2" : num = 64         
+        elif num == "vmr_n2" : num = 65         
+        elif num == "vmr_ar" : num = 66          
+        elif num == "vmr_co" : num = 67         
+        elif num == "vmr_o" : num = 68         
+        elif num == "vmr_o2" : num = 69         
+        elif num == "vmr_o3" : num = 70         
+        elif num == "vmr_h" : num = 71         
+        elif num == "vmr_h2" : num = 72         
+        elif num == "vmr_he" : num = 73         
+        elif num == "col_co2" : num = 74         
+        elif num == "col_n2" : num = 75         
+        elif num == "col_ar" : num = 76         
+        elif num == "col_co" : num = 77         
+        elif num == "col_o" : num = 78          
+        elif num == "col_o2" : num = 79          
+        elif num == "col_o3" : num = 80         
+        elif num == "col_h" : num = 81         
+        elif num == "col_h2" : num = 82         
+        elif num == "col_he" : num = 83         
+        elif num == "vmr_elec" : num = 84          
+        elif num == "col_elec" : num = 85         
         elif not isinstance(num, np.int): errormess("field reference not found.")
         return num
+
 
 ###################
 ### One request ###
@@ -451,7 +392,7 @@ class mcd():
         (self.pres, self.dens, self.temp, self.zonwind, self.merwind, \
          self.meanvar, self.extvar, self.seedout, self.ierr) \
          = \
-         call_mcd(self.zkey,self.xz,self.lon,self.lat,self.hrkey, \
+         mcd.call_mcd(self.zkey,self.xz,self.lon,self.lat,self.hrkey, \
              self.datekey,self.xdate,self.loct,self.dset,self.dust, \
              self.perturkey,self.seedin,self.gwlength,self.extvarkey )
         ## we use the end of extvar (unused) to store meanvar. this is convenient for getextvar(lab)
@@ -498,8 +439,7 @@ class mcd():
 
     def printallextvar(self):
     # print all extra MCD variables    
-        if "v5" in self.name:  limit=76
-        else:                  limit=50
+        limit=85 #mcd6 number of extravar
         for i in range(limit): self.printextvar(i+1)
 
     def htmlprinttabextvar(self,tabtodo):
