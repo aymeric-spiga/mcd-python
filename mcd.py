@@ -163,7 +163,10 @@ class mcd_class():
                 if not self.fixedlt:  self.title = self.title + " (at longitude 0) "
                 else: self.title = self.title + " (fixed at all longitudes) "
         if self.proj == "nsper" : 
-            self.title = self.title + "[view from lon "+str(self.plon)+"$\degree$E. lat "+str(self.plat)+"$\degree$N. alt "+str(self.palt)+ " km]"
+            if self.palt  == 99999999. :
+              self.title = self.title + "[view from lon "+str(self.plon)+"$\degree$E. lat "+str(self.plat)+"$\degree$N. infinite altitude]"        
+            else :
+              self.title = self.title + "[view from lon "+str(self.plon)+"$\degree$E. lat "+str(self.plat)+"$\degree$N. alt "+str(self.palt)+ " km]"
 
     def getextvarlab(self,num):
         # MCD version 6.1 variables
