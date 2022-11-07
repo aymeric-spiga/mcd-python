@@ -162,6 +162,8 @@ class mcd_class():
               if self.lons is not None: # if longitude is a free dimension
                 if not self.fixedlt:  self.title = self.title + " (at longitude 0) "
                 else: self.title = self.title + " (fixed at all longitudes) "
+        if self.proj == "nsper" : 
+            self.title = self.title + "[view from lon "+str(self.plon)+"$\degree$E. lat "+str(self.plat)+"$\degree$N. alt "+str(self.palt)+ " km]"
 
     def getextvarlab(self,num):
         # MCD version 6.1 variables
