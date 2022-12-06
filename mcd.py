@@ -194,7 +194,7 @@ class mcd_class():
 	15: "Surface pressure (Pa)", \
 	16: "GCM surface pressure (Pa)", \
 	17: "Potential temperature (K) (reference pressure=610Pa)", \
-	18: "Vertical wind component (m/s) (Up-Down)", \
+	18: "Downward Vertical wind component (m/s)", \
 	19: "Zonal slope wind component (m/s) (HR mode only)", \
 	20: "Meridional slope wind component (m/s) (HR mode only)", \
 	21: "Surface pressure RMS day to day variations (Pa)", \
