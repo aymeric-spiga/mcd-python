@@ -1083,6 +1083,8 @@ class mcd_class():
         ## define contour field levels. define color palette
         ticks = ndiv + 1
         zelevels = np.linspace(zevmin,zevmax,ticks)
+        if zevmin==zevmax: # handle case where all values of the array are the same
+          zelevels = np.linspace(zevmin*0.9,zevmax*1.1,ticks)
         palette = get_cmap(name=self.colorm)
 
         ## topography contours
@@ -1189,6 +1191,8 @@ class mcd_class():
         ## define contour field levels. define color palette
         ticks = ndiv + 1
         zelevels = np.linspace(zevmin,zevmax,ticks)
+        if zevmin==zevmax: # handle case where all values of the array are the same
+          zelevels = np.linspace(zevmin*0.9,zevmax*1.1,ticks)
         palette = get_cmap(name=colorb)
         # contour field
         c = yeah.contourf( self.xcoord, self.ycoord, what_I_plot, zelevels, cmap = palette, extend=limtype )
